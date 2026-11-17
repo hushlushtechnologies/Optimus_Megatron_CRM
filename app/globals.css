@@ -1,0 +1,319 @@
+@import "tailwindcss";
+
+/* ============================================
+   1. CUSTOM VARIANTS
+   ============================================ */
+@custom-variant light (&:where(.light, .light *));
+
+/* ============================================
+   2. RAW RUNTIME COLOR VARIABLES
+   Dark = default (:root). .light overrides.
+   Sidebar vars never change between themes.
+   ============================================ */
+:root {
+  /* Dark theme (default) */
+  --omc-base: #000614;
+  --omc-card: #050d24;
+  --omc-card-hover: #0b1733;
+  --omc-surface: #081120;
+
+  --omc-border: #132140;
+  --omc-text-primary: #f4f7fb;
+  --omc-text-muted: #93c5fd;
+  --omc-text-subtle: #6f89a8;
+  --omc-primary: #ebb811;
+  --omc-primary-hover: #c7a35d;
+  --omc-success: #32b769;
+  --omc-warning: #e3a008;
+  --omc-danger: #e5484d;
+  --omc-info: #4d8fd8;
+
+  --omc-status-text: var(--omc-status-raw, currentColor);
+  /* Glass surfaces (dark) */
+  --omc-glass-bg: rgba(5, 13, 36, 0.5);
+  --omc-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Elevation highlight (dark cards get a faint top edge) */
+  --omc-elevation-highlight: rgba(255, 255, 255, 0.04);
+
+  /* Sidebar — permanent, identical in both themes */
+  --sidebar-background: #000614;
+  --sidebar-card: #050d24;
+  --sidebar-hover: #0b1733;
+  --sidebar-active: #111f42;
+
+  --omc-gradient-primary: linear-gradient(135deg, #f6df8d 0%, #d4af37 38%, #b88a1d 72%, #8f6713 100%);
+
+  --omc-gradient-secondary: linear-gradient(135deg, #132755 0%, #0b1938 42%, #071229 72%, #050b1b 100%);
+
+  --omc-gradient-ghost: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.065) 0%,
+    rgba(255, 255, 255, 0.028) 48%,
+    rgba(255, 255, 255, 0.012) 100%
+  );
+}
+
+.light {
+  --omc-base: #f5f7fa;
+  --omc-card: #ffffff;
+  --omc-card-hover: #f7f8fc;
+  --omc-border: #e4e8ef;
+  --omc-surface: #d0ddf3;
+  --omc-text-primary: #0b1220;
+  --omc-text-muted: #526179;
+  --omc-text-subtle: #5f6f86;
+  --omc-primary: #d6a212;
+  --omc-primary-hover: #cca237;
+  --omc-success: #32b769;
+  --omc-warning: #e3a008;
+  --omc-danger: #e5484d;
+  --omc-info: #3d77ba;
+
+  --omc-glass-bg: rgba(255, 255, 255, 0.6);
+  --omc-glass-border: rgba(11, 18, 32, 0.07);
+  --omc-status-text: color-mix(in srgb, var(--omc-status-raw, currentColor) 60%, black);
+  --omc-elevation-highlight: rgba(11, 18, 32, 0.03);
+
+  --omc-gradient-primary: linear-gradient(135deg, #e2c55d 0%, #bd9630 45%, #9b7520 100%);
+
+  --omc-gradient-secondary: linear-gradient(135deg, #ffffff 0%, #f5f7fb 48%, #edf1f7 100%);
+
+  --omc-gradient-ghost: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.045) 0%,
+    rgba(15, 23, 42, 0.018) 50%,
+    rgba(15, 23, 42, 0.006) 100%
+  );
+}
+
+/* ============================================
+   3. TAILWIND TOKEN MAP
+   "inline" keeps a live var() reference instead
+   of baking the value in at build time — required
+   for runtime theme switching to work.
+   ============================================ */
+@theme inline {
+  /* Color tokens -> generates bg-base, text-primary, border-border, etc. */
+  --color-base: var(--omc-base);
+  --color-card: var(--omc-card);
+  --color-card-hover: var(--omc-card-hover);
+  --color-border: var(--omc-border);
+  --color-text-primary: var(--omc-text-primary);
+  --color-text-muted: var(--omc-text-muted);
+  --color-text-subtle: var(--omc-text-subtle);
+  --color-primary: var(--omc-primary);
+  --color-primary-hover: var(--omc-primary-hover);
+  --color-success: var(--omc-success);
+  --color-warning: var(--omc-warning);
+  --color-danger: var(--omc-danger);
+  --color-surface: var(--omc-surface);
+  --color-info: var(--omc-info);
+
+  --color-sidebar-background: var(--sidebar-background);
+  --color-sidebar-card: var(--sidebar-card);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+
+  /* Font */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radius scale — generates rounded-sm, rounded-md, etc. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Shadow scale — generates shadow-soft-sm, shadow-soft-md, etc. */
+  --shadow-soft-sm: 0 1px 2px rgba(0, 0, 0, 0.16), 0 1px 1px rgba(0, 0, 0, 0.08);
+  --shadow-soft-md: 0 4px 12px rgba(0, 0, 0, 0.22), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-soft-lg: 0 12px 32px rgba(0, 0, 0, 0.28), 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   4. BASE LAYER — resets, body, focus states
+   ============================================ */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  .light html,
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--omc-base);
+    color: var(--omc-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Never rely on color alone for focus — always a visible outline */
+  :focus-visible {
+    outline: 2px solid var(--omc-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect reduced-motion globally */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ============================================
+   5. TYPOGRAPHY HIERARCHY
+   ============================================ */
+@layer utilities {
+  .text-display {
+    font-size: 2.5rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .text-h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  @media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+  .text-h2 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  .text-h3 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .text-body-lg {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .text-body {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .text-body-sm {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  .text-caption {
+    font-size: 0.7rem;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    font-weight: 500;
+    color: var(--omc-text-muted);
+  }
+  .text-label {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--omc-text-subtle);
+  }
+
+  .bg-gradient-primary {
+    background: var(--omc-gradient-primary);
+  }
+
+  .bg-gradient-secondary {
+    background: var(--omc-gradient-secondary);
+  }
+
+  .bg-gradient-ghost {
+    background: var(--omc-gradient-ghost);
+  }
+
+  .text-gradient-primary {
+    background: var(--omc-gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* ============================================
+     6. SURFACE / ELEVATION SYSTEM
+     ============================================ */
+  .surface-card {
+    background-color: var(--omc-card);
+    border: 1px solid var(--omc-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft-sm);
+  }
+  .surface-card-elevated {
+    background-color: var(--omc-card);
+    border: 1px solid var(--omc-border);
+    border-top: 1px solid var(--omc-elevation-highlight);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft-md);
+    transition:
+      box-shadow 200ms ease,
+      transform 200ms ease,
+      background-color 200ms ease;
+  }
+  .surface-card-elevated:hover {
+    background-color: var(--omc-card-hover);
+    box-shadow: var(--shadow-soft-lg);
+    transform: translateY(-1px);
+  }
+
+  /* ============================================
+     7. GLASSMORPHISM — controlled use only
+     (topbar, dropdowns, modals, search overlay,
+     mobile sidebar overlay — NOT primary content cards)
+     ============================================ */
+  .glass-panel {
+    background: var(--omc-glass-bg);
+    border: 1px solid var(--omc-glass-border);
+
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft-md);
+  }
+}
