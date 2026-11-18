@@ -51,8 +51,7 @@ export async function getCustomerSales(customerId: string): Promise<CustomerSale
   });
 
   const summaryRow = (Array.isArray(summary.data) ? summary.data[0] : summary.data) as
-    | Record<string, Numeric | string>
-    | undefined;
+    Record<string, Numeric | string> | undefined;
 
   return {
     summary:
@@ -81,9 +80,7 @@ export async function getCustomerSales(customerId: string): Promise<CustomerSale
               balance_due: num(row.balance_due as Numeric),
             }) as unknown as CustomerDealRow,
         ),
-    reservations: reservations.error
-      ? null
-      : ((reservations.data ?? []) as unknown as ReservationListRow[]),
+    reservations: reservations.error ? null : ((reservations.data ?? []) as unknown as ReservationListRow[]),
     payments: payments.error
       ? null
       : ((payments.data ?? []) as unknown as Record<string, Numeric | string>[]).map(

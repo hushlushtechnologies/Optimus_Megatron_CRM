@@ -1,0 +1,89 @@
+{
+  // ---------------------------------------------------------------
+  // Format on save, with Prettier as the only formatter.
+  //
+  // prettier-plugin-tailwindcss is already in .prettierrc, so every
+  // save also sorts Tailwind classes into Tailwind's own canonical
+  // order. That means class order stops being a review topic: two
+  // people editing the same element produce the same string.
+  // ---------------------------------------------------------------
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnSaveMode": "file",
+
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  // Markdown keeps trailing whitespace: two trailing spaces are a hard line break.
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.trimTrailingWhitespace": false
+  },
+  "[sql]": { "editor.formatOnSave": false },
+
+  "prettier.requireConfig": true,
+  "prettier.configPath": ".prettierrc",
+
+  // ---------------------------------------------------------------
+  // On save: tidy imports and apply safe ESLint fixes.
+  //
+  // "explicit" rather than "always" so these run on a real save and
+  // never on an autosave mid-keystroke.
+  // ---------------------------------------------------------------
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // ---------------------------------------------------------------
+  // TypeScript: use the repo's own version, and prefer the @/ alias
+  // so new imports match the ones already in the codebase.
+  // ---------------------------------------------------------------
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+
+  // ---------------------------------------------------------------
+  // Tailwind v4 IntelliSense.
+  //
+  // The theme lives in app/globals.css via @theme, not a JS config,
+  // so the extension is pointed at the stylesheet. cn() and cva()
+  // get class completion too.
+  // ---------------------------------------------------------------
+  "tailwindCSS.experimental.configFile": "app/globals.css",
+  "tailwindCSS.classFunctions": ["cn", "cva", "clsx", "twMerge"],
+  "tailwindCSS.includeLanguages": { "typescript": "javascript", "typescriptreact": "javascript" },
+  "css.lint.unknownAtRules": "ignore",
+
+  // ---------------------------------------------------------------
+  // Editor behaviour that matches .prettierrc (printWidth 110)
+  // ---------------------------------------------------------------
+  "editor.rulers": [110],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // ---------------------------------------------------------------
+  // Keep search and the file tree focused on real source
+  // ---------------------------------------------------------------
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/package-lock.json": true,
+    "**/tsconfig.tsbuildinfo": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true
+  },
+  "files.associations": { "*.css": "tailwindcss" }
+}

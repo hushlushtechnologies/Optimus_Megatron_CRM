@@ -16,7 +16,10 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
       <div>
         <p className="text-body-sm text-text-primary font-medium">{title}</p>
         <div className="text-body-sm text-text-muted mt-1">{children}</div>
-        <Link href="/admin/sales" className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block">
+        <Link
+          href="/admin/sales"
+          className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
+        >
           Back to Sales
         </Link>
       </div>
@@ -33,7 +36,9 @@ export default async function NewDealPage({ searchParams }: NewDealPageProps) {
 
   if (!user || !permissions?.create) {
     return (
-      <Notice title="You don't have permission to create deals.">Ask an administrator if you need access.</Notice>
+      <Notice title="You don't have permission to create deals.">
+        Ask an administrator if you need access.
+      </Notice>
     );
   }
 
@@ -55,7 +60,11 @@ export default async function NewDealPage({ searchParams }: NewDealPageProps) {
   }
 
   if ((showrooms.data ?? []).length === 0) {
-    return <Notice title="No showrooms are set up yet.">Add at least one active showroom before creating a deal.</Notice>;
+    return (
+      <Notice title="No showrooms are set up yet.">
+        Add at least one active showroom before creating a deal.
+      </Notice>
+    );
   }
 
   const ownerRows = (owners.data ?? []) as unknown as { id: string; full_name: string | null }[];
@@ -64,7 +73,10 @@ export default async function NewDealPage({ searchParams }: NewDealPageProps) {
     <AddDealForm
       lookups={{
         showrooms: showrooms.data ?? [],
-        owners: ownerRows.map((owner) => ({ id: owner.id, name: owner.full_name?.trim() || "Unnamed staff" })),
+        owners: ownerRows.map((owner) => ({
+          id: owner.id,
+          name: owner.full_name?.trim() || "Unnamed staff",
+        })),
       }}
       prefill={prefill}
       currentUserId={user.id}

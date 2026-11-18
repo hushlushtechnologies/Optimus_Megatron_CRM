@@ -27,15 +27,8 @@ export function percentToBps(percent: number): bigint {
  *
  * Both numbers must be positive.
  */
-export function divRoundHalfUp(
-  numerator: bigint,
-  denominator: bigint
-): bigint {
-  return (
-    numerator * TWO + denominator
-  ) / (
-    denominator * TWO
-  );
+export function divRoundHalfUp(numerator: bigint, denominator: bigint): bigint {
+  return (numerator * TWO + denominator) / (denominator * TWO);
 }
 
 /* =========================================================
@@ -46,28 +39,17 @@ export function divRoundHalfUp(
  * Returns the fee in whole fils for a given net price.
  * Matches what the database saves.
  */
-export function feeAmountFils(
-  fee: Pick<FeeType, "calc_mode" | "value">,
-  netFils: bigint
-): bigint {
+export function feeAmountFils(fee: Pick<FeeType, "calc_mode" | "value">, netFils: bigint): bigint {
   if (fee.calc_mode === "fixed") {
     return toFils(fee.value) ?? ZERO_FILS;
   }
 
-  return divRoundHalfUp(
-    netFils * percentToBps(fee.value),
-    BASIS_POINTS_SCALE
-  );
+  return divRoundHalfUp(netFils * percentToBps(fee.value), BASIS_POINTS_SCALE);
 }
 
-export function describeFeeRule(
-  fee: Pick<FeeType, "calc_mode" | "value">,
-  currencyLabel: string
-): string {
+export function describeFeeRule(fee: Pick<FeeType, "calc_mode" | "value">, currencyLabel: string): string {
   if (fee.calc_mode === "fixed") {
-    return `${currencyLabel} ${filsToDecimalString(
-      toFils(fee.value) ?? ZERO_FILS
-    )}`;
+    return `${currencyLabel} ${filsToDecimalString(toFils(fee.value) ?? ZERO_FILS)}`;
   }
 
   return `${fee.value.toFixed(2)}% of the net price`;
@@ -77,14 +59,10 @@ export function describeFeeRule(
  * "1234.50" for a form field,
  * or "" when there is no value.
  */
-export function decimalText(
-  value: number | null
-): string {
+export function decimalText(value: number | null): string {
   const fils = toFils(value);
 
-  return fils === null
-    ? ""
-    : filsToDecimalString(fils);
+  return fils === null ? "" : filsToDecimalString(fils);
 }
 
 /* =========================================================
@@ -137,72 +115,39 @@ export function computePricingPreview(input: {
      PROPOSED PRICE
   ======================================================= */
 
-  const proposedParsed =
-    input.proposed === ""
-      ? null
-      : toFils(input.proposed);
+  const proposedParsed = input.proposed === "" ? null : toFils(input.proposed);
 
   if (input.proposed === "") {
-    errors.proposed =
-      "Enter the proposed price.";
-  } else if (
-    proposedParsed === null ||
-    proposedParsed <= ZERO_FILS
-  ) {
-    errors.proposed =
-      "Enter a price above zero, with at most two decimals.";
+    errors.proposed = "Enter the proposed price.";
+  } else if (proposedParsed === null || proposedParsed <= ZERO_FILS) {
+    errors.proposed = "Enter a price above zero, with at most two decimals.";
   }
 
   /* =======================================================
      DISCOUNT
   ======================================================= */
 
-  const discountParsed =
-    input.discount === ""
-      ? ZERO_FILS
-      : toFils(input.discount);
+  const discountParsed = input.discount === "" ? ZERO_FILS : toFils(input.discount);
 
-  if (
-    discountParsed === null ||
-    discountParsed < ZERO_FILS
-  ) {
-    errors.discount =
-      "Enter a discount of zero or more, with at most two decimals.";
+  if (discountParsed === null || discountParsed < ZERO_FILS) {
+    errors.discount = "Enter a discount of zero or more, with at most two decimals.";
   }
 
-  const proposedFils =
-    !errors.proposed
-      ? proposedParsed
-      : null;
+  const proposedFils = !errors.proposed ? proposedParsed : null;
 
-  const discountFils =
-    !errors.discount &&
-    discountParsed !== null
-      ? discountParsed
-      : ZERO_FILS;
+  const discountFils = !errors.discount && discountParsed !== null ? discountParsed : ZERO_FILS;
 
-  if (
-    proposedFils !== null &&
-    !errors.discount &&
-    discountFils >= proposedFils
-  ) {
-    errors.discount =
-      "The discount can't take the price to zero or below.";
+  if (proposedFils !== null && !errors.discount && discountFils >= proposedFils) {
+    errors.discount = "The discount can't take the price to zero or below.";
   }
 
   /* =======================================================
      NET PRICE
   ======================================================= */
 
-  const valid =
-    !errors.proposed &&
-    !errors.discount;
+  const valid = !errors.proposed && !errors.discount;
 
-  const netFils =
-    valid &&
-    proposedFils !== null
-      ? proposedFils - discountFils
-      : null;
+  const netFils = valid && proposedFils !== null ? proposedFils - discountFils : null;
 
   /* =======================================================
      FEES
@@ -212,62 +157,28 @@ export function computePricingPreview(input: {
     netFils === null
       ? []
       : input.feeTypes
-          .filter((fee) =>
-            input.selectedFeeIds.has(fee.id)
-          )
-          .sort(
-            (a, b) =>
-              a.sort_order - b.sort_order ||
-              a.name.localeCompare(b.name)
-          )
+          .filter((fee) => input.selectedFeeIds.has(fee.id))
+          .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
           .map((fee) => ({
             id: fee.id,
             name: fee.name,
-            rule: describeFeeRule(
-              fee,
-              input.currencyLabel
-            ),
-            amountFils: feeAmountFils(
-              fee,
-              netFils
-            ),
+            rule: describeFeeRule(fee, input.currencyLabel),
+            amountFils: feeAmountFils(fee, netFils),
           }));
 
-  const feesFils =
-    feeLines.reduce(
-      (total, line) =>
-        total + line.amountFils,
-      ZERO_FILS
-    );
+  const feesFils = feeLines.reduce((total, line) => total + line.amountFils, ZERO_FILS);
 
   /* =======================================================
      APPROVAL THRESHOLD
   ======================================================= */
 
-  const thresholdBps =
-    percentToBps(
-      input.autoApprovePercent
-    );
+  const thresholdBps = percentToBps(input.autoApprovePercent);
 
   const discountBps =
-    valid &&
-    proposedFils !== null
-      ? Number(
-          (
-            discountFils *
-            BASIS_POINTS_SCALE
-          ) /
-            proposedFils
-        )
-      : null;
+    valid && proposedFils !== null ? Number((discountFils * BASIS_POINTS_SCALE) / proposedFils) : null;
 
   const needsApproval =
-    valid &&
-    proposedFils !== null &&
-    discountFils *
-      BASIS_POINTS_SCALE >
-      proposedFils *
-        thresholdBps;
+    valid && proposedFils !== null && discountFils * BASIS_POINTS_SCALE > proposedFils * thresholdBps;
 
   /* =======================================================
      RESULT
@@ -280,10 +191,7 @@ export function computePricingPreview(input: {
     feeLines,
     feesFils,
 
-    estimatedTotalFils:
-      netFils !== null
-        ? netFils + feesFils
-        : null,
+    estimatedTotalFils: netFils !== null ? netFils + feesFils : null,
 
     discountBps,
     thresholdBps,

@@ -54,12 +54,16 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
   const [saving, setSaving] = useState(false);
 
   const dirty = !!values && !!initial && JSON.stringify(values) !== JSON.stringify(initial);
-  const patch = (change: Partial<Values>) => setValues((previous) => (previous ? { ...previous, ...change } : previous));
+  const patch = (change: Partial<Values>) =>
+    setValues((previous) => (previous ? { ...previous, ...change } : previous));
 
   const save = async () => {
     if (!values) return;
 
-    const parsed = companyProfileSchema.safeParse({ ...values, quotationValidDays: Number(values.quotationValidDays) });
+    const parsed = companyProfileSchema.safeParse({
+      ...values,
+      quotationValidDays: Number(values.quotationValidDays),
+    });
     if (!parsed.success) {
       const next: Record<string, string> = {};
       parsed.error.issues.forEach((issue) => {
@@ -74,7 +78,10 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
 
     setSaving(true);
     try {
-      const result = await saveCompanyProfileAction({ ...values, quotationValidDays: Number(values.quotationValidDays) });
+      const result = await saveCompanyProfileAction({
+        ...values,
+        quotationValidDays: Number(values.quotationValidDays),
+      });
       if (result.error) {
         toast.error(result.error);
         return;
@@ -88,7 +95,11 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
     }
   };
 
-  const field = (key: keyof Values, label: string, options?: { multiline?: boolean; helper?: string; max?: number }) => {
+  const field = (
+    key: keyof Values,
+    label: string,
+    options?: { multiline?: boolean; helper?: string; max?: number },
+  ) => {
     if (!values) return null;
     return options?.multiline ? (
       <Textarea
@@ -114,7 +125,11 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
   };
 
   return (
-    <motion.section {...fadeUp(5)} aria-label="Company details" className="surface-card flex flex-col gap-4 p-5">
+    <motion.section
+      {...fadeUp(5)}
+      aria-label="Company details"
+      className="surface-card flex flex-col gap-4 p-5"
+    >
       <header className="flex items-center gap-2.5">
         <span className="text-primary">
           <FileText className="size-5" aria-hidden="true" />
@@ -142,8 +157,8 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
           )}
 
           <p className="text-body-sm text-text-muted">
-            These are printed on every quotation, invoice, receipt and reservation confirmation. A document keeps the
-            details it was created with, so changing them here never alters one already created.
+            These are printed on every quotation, invoice, receipt and reservation confirmation. A document
+            keeps the details it was created with, so changing them here never alters one already created.
           </p>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -158,7 +173,8 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
           </div>
           {field("taxRegistrationNumber", "Tax registration number (TRN)", {
             max: 40,
-            helper: "Printed on documents when set. Invoices are titled “Sales Invoice” and show tax as not applied until your accountant confirms how VAT applies.",
+            helper:
+              "Printed on documents when set. Invoices are titled “Sales Invoice” and show tax as not applied until your accountant confirms how VAT applies.",
           })}
           {field("bankDetails", "Bank details for payments", {
             multiline: true,
@@ -185,7 +201,11 @@ export function CompanyProfileCard({ company }: { company: CompanyProfile | null
             <p role="status" className="text-caption text-text-subtle mr-auto">
               {dirty ? "You have unsaved changes." : "All changes saved."}
             </p>
-            <Button variant="outline" disabled={!dirty || saving} onClick={() => initial && setValues(initial)}>
+            <Button
+              variant="outline"
+              disabled={!dirty || saving}
+              onClick={() => initial && setValues(initial)}
+            >
               Discard
             </Button>
             <Button variant="gradient" isLoading={saving} disabled={!dirty} onClick={save}>

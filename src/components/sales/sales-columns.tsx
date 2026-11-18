@@ -39,7 +39,11 @@ export function getSalesColumns(): ColumnDef<SalesListRow, unknown>[] {
       size: 230,
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
-          <CustomerAvatar fullName={row.original.customer_name} photoUrl={row.original.customer_photo_url} size="sm" />
+          <CustomerAvatar
+            fullName={row.original.customer_name}
+            photoUrl={row.original.customer_photo_url}
+            size="sm"
+          />
           <div className="min-w-0">
             <Link
               href={`/admin/customers/${row.original.customer_id}`}

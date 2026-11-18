@@ -1,46 +1,29 @@
-import type {
-  PaymentDirection,
-  PaymentKind,
-  PaymentMethod,
-  PaymentStatus,
-} from "@/src/lib/types/sales";
+import type { PaymentDirection, PaymentKind, PaymentMethod, PaymentStatus } from "@/src/lib/types/sales";
 
-import {
-  toFils,
-} from "@/src/lib/utils/sales-money";
+import { toFils } from "@/src/lib/utils/sales-money";
 
 /* =========================================================
    BIGINT CONSTANTS
 ========================================================= */
 
-const ZERO_FILS =
-  BigInt(0);
+const ZERO_FILS = BigInt(0);
 
 /* =========================================================
    PAYMENT OPTIONS
 ========================================================= */
 
-export const PAYMENT_METHODS:
-  PaymentMethod[] = [
-    "Cash",
-    "Card",
-    "Bank Transfer",
-    "Cheque",
-    "Finance Company",
-    "Other",
-  ];
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  "Cash",
+  "Card",
+  "Bank Transfer",
+  "Cheque",
+  "Finance Company",
+  "Other",
+];
 
-export const DEAL_PAYMENT_KINDS:
-  PaymentKind[] = [
-    "Deposit",
-    "Instalment",
-    "Balance",
-  ];
+export const DEAL_PAYMENT_KINDS: PaymentKind[] = ["Deposit", "Instalment", "Balance"];
 
-export const RESERVATION_PAYMENT_KINDS:
-  PaymentKind[] = [
-    "Reservation Deposit",
-  ];
+export const RESERVATION_PAYMENT_KINDS: PaymentKind[] = ["Reservation Deposit"];
 
 /* =========================================================
    REFERENCE HELPERS
@@ -52,15 +35,11 @@ export const RESERVATION_PAYMENT_KINDS:
  * The reference is also what helps prevent the
  * same payment from being entered twice.
  */
-export function referenceRequired(
-  method: PaymentMethod
-): boolean {
+export function referenceRequired(method: PaymentMethod): boolean {
   return method !== "Cash";
 }
 
-export function referenceLabel(
-  method: PaymentMethod
-): string {
+export function referenceLabel(method: PaymentMethod): string {
   switch (method) {
     case "Bank Transfer":
       return "Transfer reference";
@@ -95,71 +74,47 @@ export function referenceLabel(
 export interface PaymentLike {
   id: string;
 
-  kind:
-    PaymentKind;
+  kind: PaymentKind;
 
-  direction:
-    PaymentDirection;
+  direction: PaymentDirection;
 
-  amount:
-    number;
+  amount: number;
 
-  currency:
-    string;
+  currency: string;
 
-  method:
-    PaymentMethod;
+  method: PaymentMethod;
 
-  reference:
-    string | null;
+  reference: string | null;
 
-  paid_on:
-    string;
+  paid_on: string;
 
-  status:
-    PaymentStatus;
+  status: PaymentStatus;
 
-  status_reason:
-    string | null;
+  status_reason: string | null;
 
-  recorded_by:
-    string | null;
+  recorded_by: string | null;
 
-  recorded_by_name:
-    string;
+  recorded_by_name: string;
 
-  recorded_at:
-    string;
+  recorded_at: string;
 
-  verified_by_name:
-    string | null;
+  verified_by_name: string | null;
 
-  verified_at:
-    string | null;
+  verified_at: string | null;
 
-  reversed_by_name:
-    string | null;
+  reversed_by_name: string | null;
 
-  reversed_at:
-    string | null;
+  reversed_at: string | null;
 }
 
 /* =========================================================
    SIGNED PAYMENT VALUE
 ========================================================= */
 
-function signed(
-  payment: PaymentLike
-): bigint {
-  const fils =
-    toFils(
-      payment.amount
-    ) ?? ZERO_FILS;
+function signed(payment: PaymentLike): bigint {
+  const fils = toFils(payment.amount) ?? ZERO_FILS;
 
-  return payment.direction ===
-    "in"
-    ? fils
-    : -fils;
+  return payment.direction === "in" ? fils : -fils;
 }
 
 /* =========================================================
@@ -170,26 +125,10 @@ function signed(
  * Money received less refunds,
  * counting only verified payments.
  */
-export function verifiedNetFils(
-  payments: readonly PaymentLike[]
-): bigint {
+export function verifiedNetFils(payments: readonly PaymentLike[]): bigint {
   return payments
-    .filter(
-      (payment) =>
-        payment.status ===
-        "Verified"
-    )
-    .reduce(
-      (
-        total,
-        payment
-      ) =>
-        total +
-        signed(
-          payment
-        ),
-      ZERO_FILS
-    );
+    .filter((payment) => payment.status === "Verified")
+    .reduce((total, payment) => total + signed(payment), ZERO_FILS);
 }
 
 /* =========================================================
@@ -202,28 +141,10 @@ export function verifiedNetFils(
  *
  * This is the value the database limits.
  */
-export function activeNetFils(
-  payments: readonly PaymentLike[]
-): bigint {
+export function activeNetFils(payments: readonly PaymentLike[]): bigint {
   return payments
-    .filter(
-      (payment) =>
-        payment.status ===
-          "Recorded" ||
-        payment.status ===
-          "Verified"
-    )
-    .reduce(
-      (
-        total,
-        payment
-      ) =>
-        total +
-        signed(
-          payment
-        ),
-      ZERO_FILS
-    );
+    .filter((payment) => payment.status === "Recorded" || payment.status === "Verified")
+    .reduce((total, payment) => total + signed(payment), ZERO_FILS);
 }
 
 /* =========================================================
@@ -237,49 +158,20 @@ export function activeNetFils(
  * minus refunds already verified
  * or still awaiting verification.
  */
-export function refundableFils(
-  payments: readonly PaymentLike[]
-): bigint {
-  const total =
-    payments.reduce(
-      (
-        sum,
-        payment
-      ) => {
-        const fils =
-          toFils(
-            payment.amount
-          ) ?? ZERO_FILS;
+export function refundableFils(payments: readonly PaymentLike[]): bigint {
+  const total = payments.reduce((sum, payment) => {
+    const fils = toFils(payment.amount) ?? ZERO_FILS;
 
-        if (
-          payment.direction ===
-            "in" &&
-          payment.status ===
-            "Verified"
-        ) {
-          return sum + fils;
-        }
+    if (payment.direction === "in" && payment.status === "Verified") {
+      return sum + fils;
+    }
 
-        if (
-          payment.direction ===
-            "out" &&
-          (
-            payment.status ===
-              "Verified" ||
-            payment.status ===
-              "Recorded"
-          )
-        ) {
-          return sum - fils;
-        }
+    if (payment.direction === "out" && (payment.status === "Verified" || payment.status === "Recorded")) {
+      return sum - fils;
+    }
 
-        return sum;
-      },
-      ZERO_FILS
-    );
+    return sum;
+  }, ZERO_FILS);
 
-  return total >
-    ZERO_FILS
-    ? total
-    : ZERO_FILS;
+  return total > ZERO_FILS ? total : ZERO_FILS;
 }

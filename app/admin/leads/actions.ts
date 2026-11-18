@@ -600,16 +600,14 @@ export async function bulkArchiveLeads(leadIds: string[]): Promise<BulkResult> {
     return { error: "Unable to archive the selected leads. Please try again." };
   }
 
-  await supabase
-    .from("lead_activities")
-    .insert(
-      ids.map((lead_id) => ({
-        lead_id,
-        activity_type: "archived",
-        description: "Lead archived",
-        changed_by: user?.id ?? null,
-      })),
-    );
+  await supabase.from("lead_activities").insert(
+    ids.map((lead_id) => ({
+      lead_id,
+      activity_type: "archived",
+      description: "Lead archived",
+      changed_by: user?.id ?? null,
+    })),
+  );
 
   revalidatePath("/admin/leads");
   return { error: null };
@@ -634,16 +632,14 @@ export async function bulkRestoreLeads(leadIds: string[]): Promise<BulkResult> {
     return { error: "Unable to restore the selected leads. Please try again." };
   }
 
-  await supabase
-    .from("lead_activities")
-    .insert(
-      ids.map((lead_id) => ({
-        lead_id,
-        activity_type: "restored",
-        description: "Lead restored",
-        changed_by: user?.id ?? null,
-      })),
-    );
+  await supabase.from("lead_activities").insert(
+    ids.map((lead_id) => ({
+      lead_id,
+      activity_type: "restored",
+      description: "Lead restored",
+      changed_by: user?.id ?? null,
+    })),
+  );
 
   revalidatePath("/admin/leads");
   return { error: null };

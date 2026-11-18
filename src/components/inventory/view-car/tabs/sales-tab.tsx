@@ -105,7 +105,8 @@ export function VehicleSalesTab({
               {detail && <p className="text-body-sm text-text-muted mt-0.5">{detail}</p>}
               {ctx && ctx.openDeals > 0 && (
                 <p className="text-caption text-text-subtle mt-1">
-                  {ctx.openDeals} {ctx.openDeals === 1 ? "deal is" : "deals are"} in progress. Only one can hold the vehicle.
+                  {ctx.openDeals} {ctx.openDeals === 1 ? "deal is" : "deals are"} in progress. Only one can
+                  hold the vehicle.
                 </p>
               )}
               {ctx?.reservationExpiresAt && ctx.reservationNumber && (
@@ -119,14 +120,22 @@ export function VehicleSalesTab({
           <div className="flex flex-wrap gap-2">
             {canCreateDeal && (
               <Link href={`/admin/sales/new?carId=${carId}`}>
-                <Button variant="secondary" size="sm" leftIcon={<Handshake className="size-4" aria-hidden="true" />}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Handshake className="size-4" aria-hidden="true" />}
+                >
                   Start a deal
                 </Button>
               </Link>
             )}
             {canRequestReservation && (
               <Link href={`/admin/reservations/new?carId=${carId}`}>
-                <Button variant="secondary" size="sm" leftIcon={<Tag className="size-4" aria-hidden="true" />}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Tag className="size-4" aria-hidden="true" />}
+                >
                   Reserve
                 </Button>
               </Link>
@@ -145,9 +154,15 @@ export function VehicleSalesTab({
           ) : (
             <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
               {data.deals.map((deal) => (
-                <li key={deal.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={deal.id}
+                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0">
-                    <Link href={`/admin/sales/${deal.id}`} className="text-text-primary hover:text-primary-text font-medium">
+                    <Link
+                      href={`/admin/sales/${deal.id}`}
+                      className="text-text-primary hover:text-primary-text font-medium"
+                    >
                       {deal.deal_number}
                     </Link>
                     <p className="text-caption text-text-subtle truncate">
@@ -168,7 +183,11 @@ export function VehicleSalesTab({
       )}
 
       {canViewReservations && (
-        <motion.section {...fadeUp(2)} aria-label="Reservations" className="surface-card flex flex-col gap-4 p-5">
+        <motion.section
+          {...fadeUp(2)}
+          aria-label="Reservations"
+          className="surface-card flex flex-col gap-4 p-5"
+        >
           <p className="text-label">Reservations on this vehicle</p>
           {data.reservations === null ? (
             <ListFailed what="reservations" />
@@ -193,7 +212,10 @@ export function VehicleSalesTab({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    <SalesExpiryChip expiresAt={reservation.expires_at} reservationStatus={reservation.status} />
+                    <SalesExpiryChip
+                      expiresAt={reservation.expires_at}
+                      reservationStatus={reservation.status}
+                    />
                     <ReservationStatusBadge status={effectiveReservationStatus(reservation)} size="sm" />
                   </div>
                 </li>

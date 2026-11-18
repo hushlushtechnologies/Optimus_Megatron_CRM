@@ -57,17 +57,18 @@ export async function getDealPricingExtras(dealId: string): Promise<PricingExtra
   return {
     fees: fees.error
       ? null
-      : ((fees.data ?? []) as unknown as FeeRow[]).map(
-          (row): DealFee => ({
-            id: row.id,
-            fee_type_id: row.fee_type_id,
-            name: row.name,
-            calc_mode: row.calc_mode,
-            rate: Number(row.rate),
-            amount: Number(row.amount),
-          }),
-        ),
+      : ((fees.data ?? []) as unknown as FeeRow[]).map((row): DealFee => ({
+          id: row.id,
+          fee_type_id: row.fee_type_id,
+          name: row.name,
+          calc_mode: row.calc_mode,
+          rate: Number(row.rate),
+          amount: Number(row.amount),
+        })),
     feeTypes: types.error ? null : ((types.data ?? []) as unknown as FeeTypeRow[]).map(toFeeType),
-    feesEnabled: settings.error || !settings.data ? null : Boolean((settings.data as { fees_enabled: boolean }).fees_enabled),
+    feesEnabled:
+      settings.error || !settings.data
+        ? null
+        : Boolean((settings.data as { fees_enabled: boolean }).fees_enabled),
   };
 }

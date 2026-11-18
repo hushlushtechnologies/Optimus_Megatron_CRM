@@ -22,9 +22,7 @@ export interface TestDriveDealLink {
 }
 
 /** Null means the lookup failed; undefined-free "no deal" is an empty result. */
-export type TestDriveDealResult =
-  | { status: "ok"; deal: TestDriveDealLink | null }
-  | { status: "error" };
+export type TestDriveDealResult = { status: "ok"; deal: TestDriveDealLink | null } | { status: "error" };
 
 const DEAL_COLUMNS = "id, deal_number, status, vehicle_title, owner_name, created_at";
 
@@ -91,7 +89,9 @@ export async function getSourceTestDriveForDeal(dealId: string): Promise<string 
 
   const { data, error } = await supabase
     .from("sales_deals")
-    .select("source_test_drive_id, source_drive:test_drives!sales_deals_source_test_drive_id_fkey(test_drive_number)")
+    .select(
+      "source_test_drive_id, source_drive:test_drives!sales_deals_source_test_drive_id_fkey(test_drive_number)",
+    )
     .eq("id", dealId)
     .maybeSingle();
 
@@ -100,12 +100,10 @@ export async function getSourceTestDriveForDeal(dealId: string): Promise<string 
     return null;
   }
 
-  const row = data as unknown as
-    | {
-        source_test_drive_id: string | null;
-        source_drive: { test_drive_number: string } | { test_drive_number: string }[] | null;
-      }
-    | null;
+  const row = data as unknown as {
+    source_test_drive_id: string | null;
+    source_drive: { test_drive_number: string } | { test_drive_number: string }[] | null;
+  } | null;
 
   if (!row?.source_test_drive_id) return null;
 

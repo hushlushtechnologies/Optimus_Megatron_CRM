@@ -52,7 +52,8 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const initialLocation =
-    prefill.vehicle?.location_id && lookups.showrooms.some((showroom) => showroom.id === prefill.vehicle?.location_id)
+    prefill.vehicle?.location_id &&
+    lookups.showrooms.some((showroom) => showroom.id === prefill.vehicle?.location_id)
       ? prefill.vehicle.location_id
       : lookups.showrooms.length === 1
         ? lookups.showrooms[0].id
@@ -120,7 +121,9 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
   /* ---------- What the database says about this vehicle ---------- */
 
   const contextKey = carId ? [carId, customerId, leadId ?? ""].join("|") : null;
-  const [contextState, setContextState] = useState<{ key: string; result: VehicleDealContextResult } | null>(null);
+  const [contextState, setContextState] = useState<{ key: string; result: VehicleDealContextResult } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!contextKey) return;
@@ -139,7 +142,8 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
     };
   }, [contextKey, carId, customerId, leadId]);
 
-  const contextResult = contextKey && contextState && contextState.key === contextKey ? contextState.result : null;
+  const contextResult =
+    contextKey && contextState && contextState.key === contextKey ? contextState.result : null;
   const context = contextResult?.status === "ok" ? contextResult.context : null;
   const checking = !!contextKey && !contextResult;
   const checkFailed = contextResult?.status === "error";
@@ -181,7 +185,11 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
     setVehicle(next);
     setField("carId", next?.id ?? "");
 
-    if (next?.location_id && !locationId && lookups.showrooms.some((showroom) => showroom.id === next.location_id)) {
+    if (
+      next?.location_id &&
+      !locationId &&
+      lookups.showrooms.some((showroom) => showroom.id === next.location_id)
+    ) {
       setField("locationId", next.location_id);
     }
   };
@@ -207,7 +215,9 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
 
     skipUnloadWarning.current = true;
     toast.success(`Deal created${result.dealNumber ? ` · ${result.dealNumber}` : ""}`);
-    router.push(result.dealNumber ? `/admin/sales?q=${encodeURIComponent(result.dealNumber)}` : "/admin/sales");
+    router.push(
+      result.dealNumber ? `/admin/sales?q=${encodeURIComponent(result.dealNumber)}` : "/admin/sales",
+    );
   };
 
   const onInvalid = () => {
@@ -255,15 +265,15 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
         <div>
           <h1 className="text-h1">New Deal</h1>
           <p className="text-body-sm text-text-muted">
-            Start a deal for a customer and a vehicle. It&apos;s saved as a draft, and nothing is held until you
-            reserve or confirm it.
+            Start a deal for a customer and a vehicle. It&apos;s saved as a draft, and nothing is held until
+            you reserve or confirm it.
           </p>
         </div>
       </motion.div>
 
       <form onSubmit={handleFormSubmit} noValidate>
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_340px]">
-                    <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6">
             {/*
               Where this deal came from. Shown only when the form was opened
               from a test drive, so staff can see the origin is being kept and
@@ -290,7 +300,11 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
             )}
 
             <motion.div {...fadeUp(1)}>
-              <DealCustomerSection value={customer} onChange={handleCustomerChange} error={errors.customerId?.message} />
+              <DealCustomerSection
+                value={customer}
+                onChange={handleCustomerChange}
+                error={errors.customerId?.message}
+              />
             </motion.div>
 
             <motion.div {...fadeUp(2)}>

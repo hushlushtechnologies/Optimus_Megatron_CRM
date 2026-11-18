@@ -1,39 +1,27 @@
-import {
-  formatDateTimeFull,
-} from "@/src/lib/utils/test-drive-format";
+import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
 
-import {
-  toFils,
-} from "@/src/lib/utils/sales-money";
+import { toFils } from "@/src/lib/utils/sales-money";
 
-import type {
-  DealPricing,
-  VehicleDealContext,
-} from "@/src/lib/types/sales-deal-form";
+import type { DealPricing, VehicleDealContext } from "@/src/lib/types/sales-deal-form";
 
 /* =========================================================
    BIGINT CONSTANTS
 ========================================================= */
 
-const ZERO_FILS =
-  BigInt(0);
+const ZERO_FILS = BigInt(0);
 
-const BASIS_POINTS_SCALE =
-  BigInt(10_000);
+const BASIS_POINTS_SCALE = BigInt(10_000);
 
 /* =========================================================
    TYPES
 ========================================================= */
 
 export interface ContextMessages {
-  blockers:
-    string[];
+  blockers: string[];
 
-  warnings:
-    string[];
+  warnings: string[];
 
-  notes:
-    string[];
+  notes: string[];
 }
 
 /* =========================================================
@@ -51,40 +39,26 @@ export interface ContextMessages {
  * vehicle that another deal currently holds.
  */
 export function describeVehicleContext(
-  context:
-    VehicleDealContext | null,
+  context: VehicleDealContext | null,
 
   vehicle: {
-    is_sold:
-      boolean;
+    is_sold: boolean;
 
-    status_name:
-      string | null;
-  } | null
+    status_name: string | null;
+  } | null,
 ): ContextMessages {
-  const blockers:
-    string[] = [];
+  const blockers: string[] = [];
 
-  const warnings:
-    string[] = [];
+  const warnings: string[] = [];
 
-  const notes:
-    string[] = [];
+  const notes: string[] = [];
 
   /* =========================================================
      INVENTORY SOLD STATE
   ========================================================= */
 
-  if (
-    vehicle?.is_sold
-  ) {
-    blockers.push(
-      `This vehicle is marked ${
-        vehicle.status_name
-          ?.toLowerCase() ??
-        "sold"
-      } in inventory.`
-    );
+  if (vehicle?.is_sold) {
+    blockers.push(`This vehicle is marked ${vehicle.status_name?.toLowerCase() ?? "sold"} in inventory.`);
   }
 
   if (!context) {
@@ -99,17 +73,11 @@ export function describeVehicleContext(
      EXISTING CONFIRMED / COMPLETED DEAL
   ========================================================= */
 
-  if (
-    context.holderStatus ===
-      "Completed" ||
-    context.holderStatus ===
-      "Confirmed"
-  ) {
+  if (context.holderStatus === "Completed" || context.holderStatus === "Confirmed") {
     blockers.push(
-      context.holderStatus ===
-        "Completed"
+      context.holderStatus === "Completed"
         ? `This vehicle has already been sold (deal ${context.holderDealNumber}).`
-        : `This vehicle is committed to a confirmed deal (${context.holderDealNumber}).`
+        : `This vehicle is committed to a confirmed deal (${context.holderDealNumber}).`,
     );
   }
 
@@ -117,11 +85,9 @@ export function describeVehicleContext(
      SAME CUSTOMER OPEN DEAL
   ========================================================= */
 
-  if (
-    context.customerOpenDealNumber
-  ) {
+  if (context.customerOpenDealNumber) {
     blockers.push(
-      `This customer already has an open deal for this vehicle (${context.customerOpenDealNumber}). Continue that deal instead of starting a second one.`
+      `This customer already has an open deal for this vehicle (${context.customerOpenDealNumber}). Continue that deal instead of starting a second one.`,
     );
   }
 
@@ -129,21 +95,15 @@ export function describeVehicleContext(
      RESERVED / HELD
   ========================================================= */
 
-  if (
-    context.holderStatus ===
-    "Reserved"
-  ) {
+  if (context.holderStatus === "Reserved") {
     warnings.push(
-      `This vehicle is reserved by another deal (${context.holderDealNumber}). You can prepare a draft, but it can't be reserved or confirmed until that hold ends.`
+      `This vehicle is reserved by another deal (${context.holderDealNumber}). You can prepare a draft, but it can't be reserved or confirmed until that hold ends.`,
     );
-  } else if (
-    context.reservationNumber &&
-    context.reservationExpiresAt
-  ) {
+  } else if (context.reservationNumber && context.reservationExpiresAt) {
     warnings.push(
       `This vehicle is held by reservation ${context.reservationNumber} until ${formatDateTimeFull(
-        context.reservationExpiresAt
-      )}.`
+        context.reservationExpiresAt,
+      )}.`,
     );
   }
 
@@ -151,29 +111,19 @@ export function describeVehicleContext(
      LEAD ALREADY HAS DEAL
   ========================================================= */
 
-  if (
-    context.leadDealNumber
-  ) {
-    warnings.push(
-      `This lead already has a deal (${context.leadDealNumber}). Check it isn't a duplicate.`
-    );
+  if (context.leadDealNumber) {
+    warnings.push(`This lead already has a deal (${context.leadDealNumber}). Check it isn't a duplicate.`);
   }
 
   /* =========================================================
      OTHER OPEN DEALS
   ========================================================= */
 
-  if (
-    context.openDeals >
-    0
-  ) {
+  if (context.openDeals > 0) {
     notes.push(
       `${context.openDeals} other ${
-        context.openDeals ===
-        1
-          ? "deal is"
-          : "deals are"
-      } in progress on this vehicle. Only one can hold it.`
+        context.openDeals === 1 ? "deal is" : "deals are"
+      } in progress on this vehicle. Only one can hold it.`,
     );
   }
 
@@ -188,121 +138,61 @@ export function describeVehicleContext(
    DEAL PRICING
 ========================================================= */
 
-export function computeDealPricing(
-  input: {
-    proposed:
-      string;
+export function computeDealPricing(input: {
+  proposed: string;
 
-    discount:
-      string;
+  discount: string;
 
-    listedPrice:
-      number | null;
+  listedPrice: number | null;
 
-    autoApprovePercent:
-      number;
-  }
-): DealPricing {
+  autoApprovePercent: number;
+}): DealPricing {
   /* =========================================================
      PROPOSED PRICE
   ========================================================= */
 
-  const proposedParsed =
-    input.proposed ===
-    ""
-      ? null
-      : toFils(
-          input.proposed
-        );
+  const proposedParsed = input.proposed === "" ? null : toFils(input.proposed);
 
-  const proposedFils =
-    proposedParsed !==
-      null &&
-    proposedParsed >
-      ZERO_FILS
-      ? proposedParsed
-      : null;
+  const proposedFils = proposedParsed !== null && proposedParsed > ZERO_FILS ? proposedParsed : null;
 
   /* =========================================================
      DISCOUNT
   ========================================================= */
 
-  const discountParsed =
-    input.discount ===
-    ""
-      ? ZERO_FILS
-      : toFils(
-          input.discount
-        );
+  const discountParsed = input.discount === "" ? ZERO_FILS : toFils(input.discount);
 
-  const discountFils =
-    discountParsed !==
-      null &&
-    discountParsed >=
-      ZERO_FILS
-      ? discountParsed
-      : ZERO_FILS;
+  const discountFils = discountParsed !== null && discountParsed >= ZERO_FILS ? discountParsed : ZERO_FILS;
 
   /* =========================================================
      LISTED PRICE
   ========================================================= */
 
-  const listedFils =
-    toFils(
-      input.listedPrice
-    );
+  const listedFils = toFils(input.listedPrice);
 
   /* =========================================================
      APPROVAL THRESHOLD
   ========================================================= */
 
-  const thresholdBps =
-    Math.max(
-      0,
-      Math.round(
-        input.autoApprovePercent *
-          100
-      )
-    );
+  const thresholdBps = Math.max(0, Math.round(input.autoApprovePercent * 100));
 
   /* =========================================================
      VALID PRICING STATE
   ========================================================= */
 
-  const usable =
-    proposedFils !==
-      null &&
-    discountFils <=
-      proposedFils;
+  const usable = proposedFils !== null && discountFils <= proposedFils;
 
   /* =========================================================
      NET PRICE
   ========================================================= */
 
-  const netFils =
-    usable &&
-    proposedFils !==
-      null
-      ? proposedFils -
-        discountFils
-      : null;
+  const netFils = usable && proposedFils !== null ? proposedFils - discountFils : null;
 
   /* =========================================================
      DISCOUNT BASIS POINTS
   ========================================================= */
 
   const discountBps =
-    proposedFils !==
-      null &&
-    usable
-      ? Number(
-          (
-            discountFils *
-            BASIS_POINTS_SCALE
-          ) /
-            proposedFils
-        )
-      : null;
+    proposedFils !== null && usable ? Number((discountFils * BASIS_POINTS_SCALE) / proposedFils) : null;
 
   /* =========================================================
      APPROVAL REQUIRED
@@ -324,27 +214,14 @@ export function computeDealPricing(
    */
   const needsApproval =
     usable &&
-    proposedFils !==
-      null &&
-    discountFils *
-      BASIS_POINTS_SCALE >
-      proposedFils *
-        BigInt(
-          thresholdBps
-        );
+    proposedFils !== null &&
+    discountFils * BASIS_POINTS_SCALE > proposedFils * BigInt(thresholdBps);
 
   /* =========================================================
      DIFFERENCE VS LISTED PRICE
   ========================================================= */
 
-  const vsListedFils =
-    proposedFils !==
-      null &&
-    listedFils !==
-      null
-      ? proposedFils -
-        listedFils
-      : null;
+  const vsListedFils = proposedFils !== null && listedFils !== null ? proposedFils - listedFils : null;
 
   /* =========================================================
      RESULT
@@ -380,12 +257,6 @@ export function computeDealPricing(
  *
  * Display only.
  */
-export function formatBasisPoints(
-  bps:
-    number
-): string {
-  return `${(
-    bps /
-    100
-  ).toFixed(2)}%`;
+export function formatBasisPoints(bps: number): string {
+  return `${(bps / 100).toFixed(2)}%`;
 }

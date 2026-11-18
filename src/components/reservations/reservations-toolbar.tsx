@@ -39,7 +39,12 @@ interface ReservationsToolbarProps {
   summary: ReservationSummary | null;
 }
 
-export function ReservationsToolbar({ resultCount, lookups, lookupsFailed, summary }: ReservationsToolbarProps) {
+export function ReservationsToolbar({
+  resultCount,
+  lookups,
+  lookupsFailed,
+  summary,
+}: ReservationsToolbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -119,10 +124,18 @@ export function ReservationsToolbar({ resultCount, lookups, lookupsFailed, summa
   };
 
   const countFor = (key: ReservationTab): number | null =>
-    !summary ? null : key === "requests" ? summary.requestsWaiting : key === "active" ? summary.activeHolds : null;
+    !summary
+      ? null
+      : key === "requests"
+        ? summary.requestsWaiting
+        : key === "active"
+          ? summary.activeHolds
+          : null;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-3 transition-opacity duration-200", isPending && "opacity-75")}>
+    <div
+      className={cn("flex min-w-0 flex-col gap-3 transition-opacity duration-200", isPending && "opacity-75")}
+    >
       <div
         role="group"
         aria-label="Filter by stage"
@@ -177,9 +190,14 @@ export function ReservationsToolbar({ resultCount, lookups, lookupsFailed, summa
         </div>
 
         <div className="flex shrink-0 items-center gap-2 lg:ml-auto" role="status" aria-live="polite">
-          <span aria-hidden="true" className="bg-success size-1.5 rounded-full shadow-[0_0_8px_rgba(50,183,105,0.4)]" />
+          <span
+            aria-hidden="true"
+            className="bg-success size-1.5 rounded-full shadow-[0_0_8px_rgba(50,183,105,0.4)]"
+          />
           <span className="text-text-subtle text-xs whitespace-nowrap">
-            <strong className="text-text-primary font-semibold tabular-nums">{resultCount.toLocaleString()}</strong>{" "}
+            <strong className="text-text-primary font-semibold tabular-nums">
+              {resultCount.toLocaleString()}
+            </strong>{" "}
             {resultCount === 1 ? "reservation" : "reservations"}
           </span>
         </div>
@@ -188,7 +206,10 @@ export function ReservationsToolbar({ resultCount, lookups, lookupsFailed, summa
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Select
           aria-label="Showroom"
-          options={[{ value: "", label: "All showrooms" }, ...lookups.showrooms.map((s) => ({ value: s.id, label: s.name }))]}
+          options={[
+            { value: "", label: "All showrooms" },
+            ...lookups.showrooms.map((s) => ({ value: s.id, label: s.name })),
+          ]}
           value={parsed.showroom ?? ""}
           onChange={(event) => setParam("showroom", event.target.value || null)}
         />
@@ -227,8 +248,8 @@ export function ReservationsToolbar({ resultCount, lookups, lookupsFailed, summa
           className="text-body-sm text-text-primary flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />
-          Some options couldn&apos;t be loaded, so those lists may be incomplete. Search and sorting still work.
-          Refresh the page to try again.
+          Some options couldn&apos;t be loaded, so those lists may be incomplete. Search and sorting still
+          work. Refresh the page to try again.
         </p>
       )}
     </div>

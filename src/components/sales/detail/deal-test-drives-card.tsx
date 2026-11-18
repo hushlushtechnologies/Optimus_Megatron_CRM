@@ -22,11 +22,7 @@ interface DealTestDrivesCardProps {
  * identically everywhere. Deliberately read-only: the Test Drive module stays
  * the only place a drive is changed.
  */
-export function DealTestDrivesCard({
-  load,
-  sourceTestDriveNumber,
-  customerName,
-}: DealTestDrivesCardProps) {
+export function DealTestDrivesCard({ load, sourceTestDriveNumber, customerName }: DealTestDrivesCardProps) {
   const { fadeUp } = useMotion();
 
   return (

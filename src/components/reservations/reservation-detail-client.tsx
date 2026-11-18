@@ -34,7 +34,7 @@ interface ReservationDetailClientProps {
   data: ReservationDetailData;
   permissions: SalesPermissions;
   currentUserId: string;
-    payments: DealPayment[] | null;
+  payments: DealPayment[] | null;
   separateVerifier: boolean | null;
   documents: SalesDocumentItem[] | null;
 }
@@ -48,7 +48,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export function ReservationDetailClient({ data, permissions, currentUserId, payments, separateVerifier, documents, }: ReservationDetailClientProps) {
+export function ReservationDetailClient({
+  data,
+  permissions,
+  currentUserId,
+  payments,
+  separateVerifier,
+  documents,
+}: ReservationDetailClientProps) {
   const { reservation: r, timeline, settings } = data;
   const { fadeUp } = useMotion();
   const actions = useReservationActions(settings);
@@ -56,8 +63,9 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
   const effective = effectiveReservationStatus(r);
   const available = availableReservationActions(r, permissions, currentUserId);
   const deposit = requiredReservationDeposit(settings, r.listed_price);
-    const heldDeposit = toFils(r.deposit_verified) ?? BigInt(0);
-  const endedWithMoney = !["Requested", "Confirmed", "Converted"].includes(r.status) && heldDeposit > BigInt(0);
+  const heldDeposit = toFils(r.deposit_verified) ?? BigInt(0);
+  const endedWithMoney =
+    !["Requested", "Confirmed", "Converted"].includes(r.status) && heldDeposit > BigInt(0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -82,13 +90,19 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
               <p className="text-body-sm text-text-muted mt-1.5">
                 {r.vehicle_title} for {r.customer_name}
               </p>
-              <p className="text-caption text-text-subtle mt-0.5">{RESERVATION_STATUS_META[effective].description}</p>
+              <p className="text-caption text-text-subtle mt-0.5">
+                {RESERVATION_STATUS_META[effective].description}
+              </p>
             </div>
 
             {r.status === "Confirmed" && r.expires_at && (
               <div className="lg:text-right">
-                <p className="text-caption text-text-subtle">{r.is_live ? "Held until" : "Held until (ended)"}</p>
-                <p className="text-text-primary text-lg font-semibold tabular-nums">{formatDateTimeFull(r.expires_at)}</p>
+                <p className="text-caption text-text-subtle">
+                  {r.is_live ? "Held until" : "Held until (ended)"}
+                </p>
+                <p className="text-text-primary text-lg font-semibold tabular-nums">
+                  {formatDateTimeFull(r.expires_at)}
+                </p>
               </div>
             )}
           </div>
@@ -101,7 +115,13 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
                 return (
                   <Button
                     key={kind}
-                    variant={kind === "convert" || kind === "confirm" ? "gradient" : meta.destructive ? "destructive" : "outline"}
+                    variant={
+                      kind === "convert" || kind === "confirm"
+                        ? "gradient"
+                        : meta.destructive
+                          ? "destructive"
+                          : "outline"
+                    }
                     className="h-11 sm:h-10"
                     leftIcon={<Icon className="size-4" aria-hidden="true" />}
                     onClick={() => actions.request(kind, r)}
@@ -118,7 +138,11 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <motion.section {...fadeUp(1)} aria-label="Customer" className="surface-card flex flex-col gap-4 p-5">
+            <motion.section
+              {...fadeUp(1)}
+              aria-label="Customer"
+              className="surface-card flex flex-col gap-4 p-5"
+            >
               <p className="text-label">Customer</p>
               <div className="flex items-center gap-3">
                 <CustomerAvatar fullName={r.customer_name} photoUrl={r.customer_photo_url} size="md" />
@@ -143,7 +167,11 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
               )}
             </motion.section>
 
-            <motion.section {...fadeUp(2)} aria-label="Vehicle" className="surface-card flex flex-col gap-3 p-5">
+            <motion.section
+              {...fadeUp(2)}
+              aria-label="Vehicle"
+              className="surface-card flex flex-col gap-3 p-5"
+            >
               <p className="text-label">Vehicle</p>
               <div className="min-w-0">
                 <Link
@@ -167,18 +195,22 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
             </motion.section>
           </div>
 
-                    {endedWithMoney && (
+          {endedWithMoney && (
             <p
               role="status"
               className="text-body-sm text-text-primary rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5"
             >
-              This reservation ended, but a verified deposit of {formatFils(heldDeposit, settings.currency)} is still held
-              on it. Record a refund below, or move the deposit by agreeing it with the customer.
+              This reservation ended, but a verified deposit of {formatFils(heldDeposit, settings.currency)}{" "}
+              is still held on it. Record a refund below, or move the deposit by agreeing it with the
+              customer.
             </p>
           )}
 
           {r.deposit_waived && (
-            <p role="status" className="border-border bg-card-hover/40 text-body-sm text-text-primary rounded-md border px-3 py-2.5">
+            <p
+              role="status"
+              className="border-border bg-card-hover/40 text-body-sm text-text-primary rounded-md border px-3 py-2.5"
+            >
               The deposit was waived when this reservation was confirmed. The reason is in the activity below.
             </p>
           )}
@@ -198,7 +230,7 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
             intro="Deposits taken to hold the vehicle. When the reservation becomes a deal, the deposit moves onto the deal."
           />
 
-                    <DocumentsPanel
+          <DocumentsPanel
             documents={documents}
             dealId={null}
             reservationId={r.id}
@@ -217,7 +249,11 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
             )}
           </motion.section>
 
-          <motion.section {...fadeUp(4)} aria-label="Activity" className="surface-card flex flex-col gap-4 p-5">
+          <motion.section
+            {...fadeUp(4)}
+            aria-label="Activity"
+            className="surface-card flex flex-col gap-4 p-5"
+          >
             <p className="text-label">Activity</p>
             {timeline === null ? (
               <p
@@ -232,32 +268,45 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
           </motion.section>
         </div>
 
-        <motion.section {...fadeUp(2)} aria-label="Reservation details" className="surface-card flex flex-col gap-2 p-5">
+        <motion.section
+          {...fadeUp(2)}
+          aria-label="Reservation details"
+          className="surface-card flex flex-col gap-2 p-5"
+        >
           <p className="text-label">Details</p>
           <dl className="divide-border divide-y">
             <Row label="Owner">{r.owner_name ?? <span className="text-text-subtle">Unassigned</span>}</Row>
             <Row label="Source">{RESERVATION_SOURCE_LABELS[r.source]}</Row>
             <Row label="Requested">
               {formatDateTimeFull(r.requested_at)}
-              {r.requested_by_name && <span className="text-caption text-text-subtle block">by {r.requested_by_name}</span>}
+              {r.requested_by_name && (
+                <span className="text-caption text-text-subtle block">by {r.requested_by_name}</span>
+              )}
             </Row>
             {r.confirmed_at && (
               <Row label="Confirmed">
                 {formatDateTimeFull(r.confirmed_at)}
-                {r.confirmed_by_name && <span className="text-caption text-text-subtle block">by {r.confirmed_by_name}</span>}
+                {r.confirmed_by_name && (
+                  <span className="text-caption text-text-subtle block">by {r.confirmed_by_name}</span>
+                )}
               </Row>
             )}
             {r.starts_at && r.expires_at && (
               <Row label="Hold period">
                 {formatDateTimeFull(r.starts_at)}
-                <span className="text-caption text-text-subtle block">to {formatDateTimeFull(r.expires_at)}</span>
+                <span className="text-caption text-text-subtle block">
+                  to {formatDateTimeFull(r.expires_at)}
+                </span>
               </Row>
             )}
             {r.closed_at && <Row label="Ended">{formatDateTimeFull(r.closed_at)}</Row>}
             {r.closed_reason && <Row label="Reason">{r.closed_reason}</Row>}
             <Row label="Lead">
               {r.lead_id ? (
-                <Link href={`/admin/leads/${r.lead_id}`} className="text-primary-text hover:text-primary-hover">
+                <Link
+                  href={`/admin/leads/${r.lead_id}`}
+                  className="text-primary-text hover:text-primary-hover"
+                >
                   {r.lead_number}
                 </Link>
               ) : (
@@ -266,7 +315,10 @@ export function ReservationDetailClient({ data, permissions, currentUserId, paym
             </Row>
             <Row label="Deal">
               {r.deal_id ? (
-                <Link href={`/admin/sales/${r.deal_id}`} className="text-primary-text hover:text-primary-hover">
+                <Link
+                  href={`/admin/sales/${r.deal_id}`}
+                  className="text-primary-text hover:text-primary-hover"
+                >
                   {r.deal_number ?? "Open deal"}
                 </Link>
               ) : (

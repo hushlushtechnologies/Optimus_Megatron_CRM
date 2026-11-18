@@ -21,7 +21,10 @@ export interface DocumentOption {
 }
 
 /** Which documents can be created for a deal right now. Receipts are created from the payments. */
-export function dealDocumentOptions(deal: SalesDealDetail, documents: SalesDocumentItem[] | null): DocumentOption[] {
+export function dealDocumentOptions(
+  deal: SalesDealDetail,
+  documents: SalesDocumentItem[] | null,
+): DocumentOption[] {
   const hasLiveInvoice = !!documents?.some((doc) => doc.doc_type === "Invoice" && doc.status === "Issued");
 
   const quotationReason =
@@ -48,7 +51,9 @@ export function reservationDocumentOptions(
   reservation: Pick<ReservationListRow, "status">,
   documents: SalesDocumentItem[] | null,
 ): DocumentOption[] {
-  const hasLive = !!documents?.some((doc) => doc.doc_type === "Reservation Confirmation" && doc.status === "Issued");
+  const hasLive = !!documents?.some(
+    (doc) => doc.doc_type === "Reservation Confirmation" && doc.status === "Issued",
+  );
 
   const reason =
     reservation.status !== "Confirmed" && reservation.status !== "Converted"

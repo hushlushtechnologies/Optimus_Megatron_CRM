@@ -3,11 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
 import { NOTIFICATION_PAGE_SIZE } from "@/src/lib/types/notification";
-import type {
-  AppNotification,
-  NotificationFeed,
-  NotificationFilter,
-} from "@/src/lib/types/notification";
+import type { AppNotification, NotificationFeed, NotificationFilter } from "@/src/lib/types/notification";
 
 /*
  * A "use server" file may only export async functions, so the page size, the
@@ -104,10 +100,7 @@ export async function getNotificationFeed(
       .select("*", { count: "exact", head: true })
       .eq("recipient_id", user.id)
       .is("read_at", null),
-    supabase
-      .from("notifications")
-      .select("*", { count: "exact", head: true })
-      .eq("recipient_id", user.id),
+    supabase.from("notifications").select("*", { count: "exact", head: true }).eq("recipient_id", user.id),
   ]);
 
   if (page_.error) {

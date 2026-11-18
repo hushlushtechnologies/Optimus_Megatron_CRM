@@ -41,7 +41,13 @@ interface IssueDocumentDialogProps {
 }
 
 // The parent mounts this only while it is open, so every opening starts clean.
-export function IssueDocumentDialog({ type, dealId, reservationId, onClose, onDone }: IssueDocumentDialogProps) {
+export function IssueDocumentDialog({
+  type,
+  dealId,
+  reservationId,
+  onClose,
+  onDone,
+}: IssueDocumentDialogProps) {
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -51,7 +57,13 @@ export function IssueDocumentDialog({ type, dealId, reservationId, onClose, onDo
     setError(null);
     setSaving(true);
     try {
-      const result = await issueDocumentAction({ type, dealId, reservationId, paymentId: null, note: note.trim() });
+      const result = await issueDocumentAction({
+        type,
+        dealId,
+        reservationId,
+        paymentId: null,
+        note: note.trim(),
+      });
       if (result.error || !result.documentId) {
         const message = result.error ?? "The document could not be created.";
         setError(message);
@@ -62,7 +74,8 @@ export function IssueDocumentDialog({ type, dealId, reservationId, onClose, onDo
       toast.success(`${label} ${result.documentNumber}${result.created ? " created" : " already exists"}`, {
         action: {
           label: "Open PDF",
-          onClick: () => window.open(documentPdfPath(result.documentId as string), "_blank", "noopener,noreferrer"),
+          onClick: () =>
+            window.open(documentPdfPath(result.documentId as string), "_blank", "noopener,noreferrer"),
         },
         duration: 8000,
       });
@@ -98,8 +111,8 @@ export function IssueDocumentDialog({ type, dealId, reservationId, onClose, onDo
       <div className="flex flex-col gap-4">
         <p className="text-body-sm text-text-muted">{ISSUE_NOTES[type]}</p>
         <p className="text-body-sm text-text-muted">
-          Once created, a document can&apos;t be edited. If something is wrong, void it with a reason and create a new
-          one.
+          Once created, a document can&apos;t be edited. If something is wrong, void it with a reason and
+          create a new one.
         </p>
         <Textarea
           label="Note on the document (optional)"
@@ -161,7 +174,12 @@ export function VoidDocumentDialog({ document, onClose, onDone }: VoidDocumentDi
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Go back
           </Button>
-          <Button variant="destructiveSolid" onClick={submit} isLoading={saving} disabled={reason.trim().length < 3}>
+          <Button
+            variant="destructiveSolid"
+            onClick={submit}
+            isLoading={saving}
+            disabled={reason.trim().length < 3}
+          >
             Void document
           </Button>
         </>
@@ -173,8 +191,8 @@ export function VoidDocumentDialog({ document, onClose, onDone }: VoidDocumentDi
           <p className="text-text-primary font-medium">{document.doc_number}</p>
         </div>
         <p className="text-body-sm text-text-muted">
-          A voided document stays on record and can still be downloaded, marked VOIDED with your reason. This can&apos;t
-          be undone. Create a new document if one is needed.
+          A voided document stays on record and can still be downloaded, marked VOIDED with your reason. This
+          can&apos;t be undone. Create a new document if one is needed.
         </p>
         <Textarea
           label="Reason"

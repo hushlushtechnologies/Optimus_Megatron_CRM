@@ -1,5 +1,11 @@
 import type { ReservationListRow } from "@/src/lib/types/reservations";
-import type { PaymentDirection, PaymentKind, PaymentMethod, PaymentStatus, SalesDealStatus } from "@/src/lib/types/sales";
+import type {
+  PaymentDirection,
+  PaymentKind,
+  PaymentMethod,
+  PaymentStatus,
+  SalesDealStatus,
+} from "@/src/lib/types/sales";
 
 export interface CustomerSalesSummary {
   openDeals: number;

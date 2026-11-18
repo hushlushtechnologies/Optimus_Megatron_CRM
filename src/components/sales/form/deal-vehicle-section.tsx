@@ -82,8 +82,8 @@ export function DealVehicleSection({
           role="status"
           className="text-body-sm text-text-primary rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2"
         >
-          We couldn&apos;t check this vehicle&apos;s current deals. You can still continue. The system re-checks
-          when you save, and it blocks conflicts.
+          We couldn&apos;t check this vehicle&apos;s current deals. You can still continue. The system
+          re-checks when you save, and it blocks conflicts.
         </p>
       )}
 

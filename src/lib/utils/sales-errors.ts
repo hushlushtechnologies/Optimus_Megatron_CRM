@@ -26,10 +26,10 @@ export function mapSalesDbError(error: SalesDbErrorLike): string {
         return "This customer already has an open deal for this vehicle.";
       if (text.includes("sales_deals_reservation_once"))
         return "That reservation is already linked to a deal.";
-            if (text.includes("sales_fee_types_name_unique")) return "A fee with that name already exists.";
+      if (text.includes("sales_fee_types_name_unique")) return "A fee with that name already exists.";
       if (text.includes("sales_payments_unique_reference"))
         return "A payment with this method and reference is already recorded.";
-            if (text.includes("vehicle_reservations_one_active_per_customer_car"))
+      if (text.includes("vehicle_reservations_one_active_per_customer_car"))
         return "This customer already has an active reservation or request for this vehicle.";
       return "That record already exists.";
     case "23514":
@@ -42,5 +42,9 @@ export function mapSalesDbError(error: SalesDbErrorLike): string {
 }
 
 export function isVehicleConflictError(error: SalesDbErrorLike): boolean {
-  return error.code === "23P01" || error.code === "SL003" || (error.code === "23505" && (error.message ?? "").includes("one_hold_per_car"));
+  return (
+    error.code === "23P01" ||
+    error.code === "SL003" ||
+    (error.code === "23505" && (error.message ?? "").includes("one_hold_per_car"))
+  );
 }

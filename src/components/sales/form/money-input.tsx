@@ -21,7 +21,8 @@ export function MoneyInput({ label, value, onChange, currency, error, helper, re
   const inputId = `${baseId}-input`;
   const helperId = `${baseId}-helper`;
   const errorId = `${baseId}-error`;
-  const describedBy = [helper ? helperId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [helper ? helperId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className="flex flex-col gap-1.5">

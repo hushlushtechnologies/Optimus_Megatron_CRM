@@ -59,7 +59,12 @@ export function DeliveryWaiveDialog({ item, onClose, onDone }: DeliveryWaiveDial
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Go back
           </Button>
-          <Button variant="destructiveSolid" onClick={submit} isLoading={saving} disabled={reason.trim().length < 3}>
+          <Button
+            variant="destructiveSolid"
+            onClick={submit}
+            isLoading={saving}
+            disabled={reason.trim().length < 3}
+          >
             Waive check
           </Button>
         </>
@@ -70,8 +75,8 @@ export function DeliveryWaiveDialog({ item, onClose, onDone }: DeliveryWaiveDial
           <p className="text-text-primary font-medium">{item.label}</p>
         </div>
         <p className="text-body-sm text-text-muted">
-          Waiving lets the vehicle be handed over without this check. Your name and reason are recorded on the deal. Use it
-          only when the check truly doesn&apos;t apply or has been settled another way.
+          Waiving lets the vehicle be handed over without this check. Your name and reason are recorded on the
+          deal. Use it only when the check truly doesn&apos;t apply or has been settled another way.
         </p>
         <Textarea
           label="Reason"

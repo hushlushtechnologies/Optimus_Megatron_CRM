@@ -102,12 +102,7 @@ export function TestDriveFilterDrawer(props: TestDriveFilterDrawerProps) {
   );
 }
 
-function TestDriveFilterDrawerContent({
-  onClose,
-  filters,
-  onApply,
-  lookups,
-}: TestDriveFilterDrawerProps) {
+function TestDriveFilterDrawerContent({ onClose, filters, onApply, lookups }: TestDriveFilterDrawerProps) {
   const [draft, setDraft] = useState<TestDriveListFilters>(filters);
   const [draftVehicle, setDraftVehicle] = useState<TestDriveFilterVehicleOption | null>(
     filters.vehicle && lookups.vehicle?.id === filters.vehicle ? lookups.vehicle : null,
@@ -257,7 +252,9 @@ function TestDriveFilterDrawerContent({
               options={CHECK_IN_OPTIONS}
               value={draft.checkedIn ?? ""}
               onChange={(e) =>
-                patch({ checkedIn: e.target.value === "yes" || e.target.value === "no" ? e.target.value : null })
+                patch({
+                  checkedIn: e.target.value === "yes" || e.target.value === "no" ? e.target.value : null,
+                })
               }
             />
           </Section>
@@ -297,7 +294,9 @@ function TestDriveFilterDrawerContent({
               options={LEAD_OPTIONS}
               value={draft.lead ?? ""}
               onChange={(e) =>
-                patch({ lead: e.target.value === "linked" || e.target.value === "none" ? e.target.value : null })
+                patch({
+                  lead: e.target.value === "linked" || e.target.value === "none" ? e.target.value : null,
+                })
               }
             />
           </Section>

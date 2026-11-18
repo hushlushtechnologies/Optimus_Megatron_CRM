@@ -33,7 +33,7 @@ export function useTestDriveExport() {
         } else {
           const sort = searchParams.get("sort");
           if (sort) params.set("sort", sort);
-                    if (searchParams.get("archived") === "true") params.set("archived", "true");
+          if (searchParams.get("archived") === "true") params.set("archived", "true");
           params.set("ids", ids.join(","));
         }
         params.set("format", format);

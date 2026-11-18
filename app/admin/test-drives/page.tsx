@@ -26,8 +26,8 @@ const NO_FILTER_OPTIONS: TestDriveCalendarFilterOptions = { showrooms: [], staff
 
 export default async function TestDrivesPage({ searchParams }: TestDrivesPageProps) {
   const params = await searchParams;
-   const { page, pageSize, sort, search, filters, archived } = parseTestDriveListParams(params);
-  const calendarParams = parseCalendarParams(params) ;
+  const { page, pageSize, sort, search, filters, archived } = parseTestDriveListParams(params);
+  const calendarParams = parseCalendarParams(params);
 
   const cookieStore = await cookies();
   // The server knows the chosen view from a cookie, so only that view's data is fetched.

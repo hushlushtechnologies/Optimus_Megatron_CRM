@@ -3,10 +3,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { getMySalesPermissions } from "@/src/lib/supabase/sales-permissions";
 import { cleanSearchTerm } from "@/src/lib/utils/test-drive-list-filters";
-import type {
-  SalesFilterCustomerOption,
-  SalesFilterVehicleOption,
-} from "@/src/lib/utils/sales-list-filters";
+import type { SalesFilterCustomerOption, SalesFilterVehicleOption } from "@/src/lib/utils/sales-list-filters";
 import type { SearchResult } from "@/src/lib/types/test-drive";
 
 /** Read-only searches for the filter drawer. They need signed-in staff who may view deals. */
@@ -90,4 +87,3 @@ export async function searchSalesFilterVehiclesAction(
     }),
   };
 }
-

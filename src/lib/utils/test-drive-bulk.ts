@@ -8,7 +8,7 @@ export const BULK_ELIGIBLE_STATUSES: Record<BulkActionKind, TestDriveStatus[]> =
   cancel: ["Pending", "Approved", "Rescheduled"],
   assign: ["Pending", "Approved", "Rescheduled"],
   archive: ["Completed", "Cancelled", "Rejected", "No Show"],
-    restore: ["Pending", "Approved", "Rescheduled", "Completed", "Cancelled", "Rejected", "No Show"],
+  restore: ["Pending", "Approved", "Rescheduled", "Completed", "Cancelled", "Rejected", "No Show"],
 };
 
 export const BULK_CANCEL_SUGGESTIONS = [

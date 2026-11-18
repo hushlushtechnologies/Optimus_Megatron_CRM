@@ -126,7 +126,7 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: CreditCard,
         status: "live",
       },
-            {
+      {
         label: "Reports",
         href: "/admin/reports",
         icon: BarChart3,

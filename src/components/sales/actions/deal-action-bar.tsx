@@ -19,7 +19,9 @@ export function DealActionBar({ status, permissions, canReserve, onRequest }: De
   const canNegotiate = permissions.edit && status === "Draft" && canTransitionDeal(status, "Negotiation");
   const canHold = permissions.edit && canReserve && canTransitionDeal(status, "Reserved");
   const canConfirm =
-    permissions.confirm && (status === "Negotiation" || status === "Reserved") && canTransitionDeal(status, "Confirmed");
+    permissions.confirm &&
+    (status === "Negotiation" || status === "Reserved") &&
+    canTransitionDeal(status, "Confirmed");
   const canCancel = permissions.cancel && canTransitionDeal(status, "Cancelled");
 
   if (!canNegotiate && !canHold && !canConfirm && !canCancel) return null;

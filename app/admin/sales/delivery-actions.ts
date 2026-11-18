@@ -74,7 +74,9 @@ export async function setDeliveryItemAction(input: unknown): Promise<DeliveryAct
   const v = parsed.data;
 
   // A friendly early refusal. The database checks the same permission again.
-  const start = await beginSalesAction(v.action === "waive" || v.action === "unwaive" ? "confirm" : "complete");
+  const start = await beginSalesAction(
+    v.action === "waive" || v.action === "unwaive" ? "confirm" : "complete",
+  );
   if (!start.ok) return { error: start.error };
 
   const { error } = await start.supabase.rpc("set_delivery_item", {

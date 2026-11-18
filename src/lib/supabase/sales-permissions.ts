@@ -37,7 +37,8 @@ export async function requireSalesPermission(
 }
 
 export type BeginSalesResult =
-  { ok: true; supabase: SalesSupabaseClient; userId: string; permissions: SalesPermissions } | { ok: false; error: string };
+  | { ok: true; supabase: SalesSupabaseClient; userId: string; permissions: SalesPermissions }
+  | { ok: false; error: string };
 
 /**
  * Every changing sales action starts here: signed in and holding the permission for what it does.

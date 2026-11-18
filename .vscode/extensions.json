@@ -1,0 +1,16 @@
+{
+  // Everyone working on this repo should install these, so formatting
+  // and class sorting behave identically on every machine.
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag"
+  ],
+  "unwantedRecommendations": [
+    // These fight with Prettier over the same files.
+    "hookyqr.beautify",
+    "ms-vscode.vscode-typescript-tslint-plugin"
+  ]
+}

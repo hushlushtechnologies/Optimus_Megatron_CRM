@@ -34,7 +34,11 @@ export function DealInfoCard({ deal, reservation, assignedBy }: DealInfoCardProp
   ].filter((item): item is { label: string; at: string } => !!item.at);
 
   return (
-    <motion.section {...fadeUp(3)} aria-label="Deal information" className="surface-card flex flex-col gap-2 p-5">
+    <motion.section
+      {...fadeUp(3)}
+      aria-label="Deal information"
+      className="surface-card flex flex-col gap-2 p-5"
+    >
       <p className="text-label">Deal information</p>
 
       <dl className="divide-border divide-y">
@@ -49,7 +53,10 @@ export function DealInfoCard({ deal, reservation, assignedBy }: DealInfoCardProp
         <Row label="Showroom">{deal.location_name}</Row>
         <Row label="Lead">
           {deal.lead_id ? (
-            <Link href={`/admin/leads/${deal.lead_id}`} className="text-primary-text hover:text-primary-hover">
+            <Link
+              href={`/admin/leads/${deal.lead_id}`}
+              className="text-primary-text hover:text-primary-hover"
+            >
               {deal.lead_number}
             </Link>
           ) : (
@@ -66,7 +73,10 @@ export function DealInfoCard({ deal, reservation, assignedBy }: DealInfoCardProp
               </span>
               {reservation.status === "Confirmed" && (
                 <span className="mt-1 inline-block">
-                  <SalesExpiryChip expiresAt={reservation.expires_at} reservationStatus={reservation.status} />
+                  <SalesExpiryChip
+                    expiresAt={reservation.expires_at}
+                    reservationStatus={reservation.status}
+                  />
                 </span>
               )}
               {reservation.closed_reason && (
@@ -79,7 +89,9 @@ export function DealInfoCard({ deal, reservation, assignedBy }: DealInfoCardProp
         </Row>
         <Row label="Created">
           {formatDateTimeFull(deal.created_at)}
-          {deal.created_by_name && <span className="text-caption text-text-subtle block">by {deal.created_by_name}</span>}
+          {deal.created_by_name && (
+            <span className="text-caption text-text-subtle block">by {deal.created_by_name}</span>
+          )}
         </Row>
         {milestones.map((item) => (
           <Row key={item.label} label={item.label}>

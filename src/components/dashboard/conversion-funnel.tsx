@@ -210,8 +210,6 @@ export function ConversionFunnel({ data: conversion }: { data: ConversionCounts 
               const stageConversion =
                 index === 0 ? 100 : previousValue > 0 ? (value / previousValue) * 100 : 0;
 
-              
-
               const Icon = stage.Icon;
 
               return (

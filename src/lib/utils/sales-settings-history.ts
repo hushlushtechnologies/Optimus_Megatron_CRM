@@ -14,7 +14,7 @@ const LABELS: Record<string, string> = {
   calc_mode: "Type",
   value: "Value",
   is_active: "Active",
-    legal_name: "Company name",
+  legal_name: "Company name",
   trade_name: "Trading name",
   address: "Address",
   phone: "Phone",
@@ -25,25 +25,39 @@ const LABELS: Record<string, string> = {
   quotation_terms: "Quotation terms",
   invoice_footer: "Invoice notes",
   quotation_valid_days: "Quotation validity (days)",
-    label: "Name",
+  label: "Name",
   SWITCH_KEYS: "Required",
 };
 
 const IGNORED = new Set([
-  "id", "updated_at", "updated_by", "created_at", "sort_order", "rule",
-  "inventory_status_available", "inventory_status_reserved", "inventory_status_sold",
+  "id",
+  "updated_at",
+  "updated_by",
+  "created_at",
+  "sort_order",
+  "rule",
+  "inventory_status_available",
+  "inventory_status_reserved",
+  "inventory_status_sold",
 ]);
 
-const PERCENT_KEYS = new Set(["discount_auto_approve_percent", "confirm_min_deposit_percent", "vat_rate_percent"]);
+const PERCENT_KEYS = new Set([
+  "discount_auto_approve_percent",
+  "confirm_min_deposit_percent",
+  "vat_rate_percent",
+]);
 const SWITCH_KEYS = new Set([
-  "fees_enabled", "payments_require_separate_verifier", "inventory_sync_enabled", "is_active",
+  "fees_enabled",
+  "payments_require_separate_verifier",
+  "inventory_sync_enabled",
+  "is_active",
 ]);
 
 function show(key: string, value: unknown): string {
   if (value === null || value === undefined) return "not set";
   if (SWITCH_KEYS.has(key)) return value ? "On" : "Off";
   if (PERCENT_KEYS.has(key)) return `${value}%`;
-    const text = String(value);
+  const text = String(value);
   return text.length > 40 ? `${text.slice(0, 40)}…` : text;
 }
 
@@ -57,7 +71,7 @@ export function describeSettingsChange(
 ): string[] {
   if (!newValues) return [];
 
-    if (entity === "fee" && !oldValues) return [`Fee added: ${String(newValues.name ?? "")}`];
+  if (entity === "fee" && !oldValues) return [`Fee added: ${String(newValues.name ?? "")}`];
   if (entity === "checklist" && !oldValues) return [`Delivery check added: ${String(newValues.label ?? "")}`];
 
   const prefix =

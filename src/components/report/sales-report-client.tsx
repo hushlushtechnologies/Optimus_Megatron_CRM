@@ -1,36 +1,57 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { motion } from "motion/react";
-import { toast } from "sonner";
 import {
-  ArrowUpRight,
   Banknote,
+  BarChart3,
   FileSpreadsheet,
   FileText,
   Handshake,
   Percent,
+  Table2,
   TrendingUp,
   TriangleAlert,
   Wallet,
 } from "lucide-react";
+import { motion } from "motion/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
+import { ReportBreakdownTable } from "@/src/components/report/report-breakdown-table";
+import { ReportDealTable } from "@/src/components/report/report-deal-table";
+import { ReportSummaryView } from "@/src/components/report/report-summary-view";
+import { SalesStatusBadge } from "@/src/components/sales/sales-status-badge";
 import { MetricCard } from "@/src/components/shared/metric-card";
 import { Button } from "@/src/components/ui/button";
-import { SalesStatusBadge } from "@/src/components/sales/sales-status-badge";
 
 import { useMotion } from "@/src/hooks/use-motion";
+import {
+  REPORT_RANGES,
+  type MonthlyPoint,
+  type OwnerPerformanceRow,
+  type ReportDealsResult,
+  type ReportRange,
+  type ReportView,
+  type SalesReportData,
+  type ShowroomPerformanceRow,
+  type StatusBreakdownRow,
+} from "@/src/lib/types/sales-reports";
 import { cn } from "@/src/lib/utils/cn";
-import { formatMoney } from "@/src/lib/utils/sales-format";
 import { downloadExportFile } from "@/src/lib/utils/download-export-file";
-import { REPORT_RANGES, type ReportRange, type SalesReportData } from "@/src/lib/types/sales-reports";
+import { formatMoney } from "@/src/lib/utils/sales-format";
 
 interface SalesReportClientProps {
   data: SalesReportData;
+  /** Deal rows for the table view. */
+  deals: ReportDealsResult;
+  view: ReportView;
   canExport: boolean;
 }
+
+const VIEWS: { id: ReportView; label: string; Icon: typeof BarChart3 }[] = [
+  { id: "summary", label: "Summary", Icon: BarChart3 },
+  { id: "table", label: "Table", Icon: Table2 },
+];
 
 type ExportFormat = "excel" | "pdf";
 
@@ -54,7 +75,7 @@ function SectionFailed({ what }: { what: string }) {
  * money is attributed to the month a deal **completed**, and counts of work
  * started are attributed to the month a deal was **created**.
  */
-export function SalesReportClient({ data, canExport }: SalesReportClientProps) {
+export function SalesReportClient({ data, deals, view, canExport }: SalesReportClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,13 +93,25 @@ export function SalesReportClient({ data, canExport }: SalesReportClientProps) {
     startSwitching(() => router.replace(`${pathname}?${params.toString()}`));
   };
 
+  /*
+   * The view lives in the URL, so a table view can be linked, bookmarked and
+   * shared, and the browser's back button behaves the way people expect.
+   */
+  const changeView = (next: ReportView) => {
+    if (next === view) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "summary") params.delete("view");
+    else params.set("view", next);
+
+    startSwitching(() => router.replace(`${pathname}?${params.toString()}`));
+  };
+
   const handleExport = async (format: ExportFormat) => {
     setExporting(format);
 
     try {
-      const result = await downloadExportFile(
-        `/admin/sales/export?format=${format}&range=${data.range}`,
-      );
+      const result = await downloadExportFile(`/admin/sales/export?format=${format}&range=${data.range}`);
 
       if (result.error) {
         toast.error(result.error);
@@ -244,173 +277,158 @@ export function SalesReportClient({ data, canExport }: SalesReportClientProps) {
       )}
 
       {/* =====================================================
-          BREAKDOWNS
+          VIEW SWITCH
+
+          The summary answers "how are we doing". The table answers
+          "which deals", which is the question a bar chart cannot be
+          asked. Both read exactly the same figures.
       ===================================================== */}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {/* By status */}
-        <motion.section {...fadeUp(2)} aria-label="By status" className="surface-card flex flex-col gap-3 p-5">
-          <p className="text-label">Deals created, by status</p>
+      <div
+        role="group"
+        aria-label="Report view"
+        className="border-border bg-card flex w-fit gap-1 rounded-lg border p-1"
+      >
+        {VIEWS.map((option) => {
+          const isSelected = view === option.id;
 
-          {data.byStatus === null ? (
-            <SectionFailed what="status breakdown" />
-          ) : data.byStatus.length === 0 ? (
-            <p className="text-body-sm text-text-muted">No deals were created in this period.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {data.byStatus.map((row) => (
-                <li
-                  key={row.status}
-                  className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-2 last:border-0 last:pb-0"
-                >
-                  <SalesStatusBadge status={row.status} size="sm" />
-                  <span className="text-body-sm text-text-primary tabular-nums">
-                    {row.count} · {formatMoney(row.value, currency)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </motion.section>
-
-        {/* By showroom */}
-        <motion.section
-          {...fadeUp(3)}
-          aria-label="By showroom"
-          className="surface-card flex flex-col gap-3 p-5"
-        >
-          <p className="text-label">Completed, by showroom</p>
-
-          {data.byShowroom === null ? (
-            <SectionFailed what="showroom breakdown" />
-          ) : data.byShowroom.length === 0 ? (
-            <p className="text-body-sm text-text-muted">No deal was completed in this period.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {data.byShowroom.map((row) => (
-                <li
-                  key={row.locationId}
-                  className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-2 last:border-0 last:pb-0"
-                >
-                  <span className="text-body-sm text-text-primary truncate">{row.locationName}</span>
-                  <span className="text-body-sm text-text-muted tabular-nums">
-                    {row.completed} · {formatMoney(row.value, currency)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </motion.section>
+          return (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => changeView(option.id)}
+              disabled={isSwitching}
+              className={cn(
+                "text-body-sm focus-visible:ring-primary relative inline-flex min-h-9 items-center rounded-md px-3.5 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60",
+                isSelected ? "text-[#0b1220]" : "text-text-muted hover:text-text-primary",
+              )}
+            >
+              {isSelected && (
+                <motion.span
+                  layoutId="report-view-pill"
+                  className="bg-primary absolute inset-0 rounded-md"
+                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <option.Icon className="size-4" aria-hidden="true" />
+                {option.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* =====================================================
-          SALES EXECUTIVES
-      ===================================================== */}
+      {view === "table" ? (
+        <>
+          <ReportDealTable deals={deals} currency={currency} rangeLabel={rangeLabel} />
 
-      <motion.section
-        {...fadeUp(4)}
-        aria-label="Sales executives"
-        className="surface-card flex flex-col gap-3 p-5"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-label">Sales executives</p>
-          <Link
-            href="/admin/sales"
-            className="text-caption text-primary-text hover:text-primary-hover focus-visible:ring-primary inline-flex items-center gap-1 rounded focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Open Sales
-            <ArrowUpRight className="size-3.5" aria-hidden="true" />
-          </Link>
-        </div>
+          {/* The same four breakdowns, with sortable numeric columns
+              and a link through to Sales filtered to that slice. */}
 
-        {data.byOwner === null ? (
-          <SectionFailed what="executive breakdown" />
-        ) : data.byOwner.length === 0 ? (
-          <p className="text-body-sm text-text-muted">
-            No deal is owned by anyone in this period yet.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-md border-collapse">
-              <caption className="sr-only">
-                Deals completed and still open for each sales executive
-              </caption>
-              <thead>
-                <tr className="border-border border-b">
-                  <th scope="col" className="text-label py-2 text-left">
-                    Executive
-                  </th>
-                  <th scope="col" className="text-label py-2 text-right">
-                    Completed
-                  </th>
-                  <th scope="col" className="text-label py-2 text-right">
-                    Open
-                  </th>
-                  <th scope="col" className="text-label py-2 text-right">
-                    Value
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.byOwner.map((row) => (
-                  <tr key={row.ownerId} className="border-border border-b last:border-0">
-                    <td className="text-body-sm text-text-primary py-2.5 pr-3">{row.ownerName}</td>
-                    <td className="text-body-sm text-text-primary py-2.5 text-right tabular-nums">
-                      {row.completed}
-                    </td>
-                    <td className="text-body-sm text-text-muted py-2.5 text-right tabular-nums">
-                      {row.open}
-                    </td>
-                    <td className="text-body-sm text-text-primary py-2.5 text-right tabular-nums">
-                      {formatMoney(row.value, currency)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <ReportBreakdownTable<StatusBreakdownRow>
+              title="Deals created, by status"
+              description={`Every deal created in ${rangeLabel.toLowerCase()}.`}
+              rows={data.byStatus}
+              getRowId={(row) => row.status}
+              initialSortId="count"
+              shareValue={(row) => row.count}
+              getRowHref={(row) => `/admin/sales?status=${encodeURIComponent(row.status)}`}
+              emptyMessage="No deals were created in this period."
+              failedLabel="status breakdown"
+              columns={[
+                {
+                  id: "status",
+                  label: "Status",
+                  value: (row) => row.status,
+                  render: (row) => <SalesStatusBadge status={row.status} size="sm" />,
+                },
+                { id: "count", label: "Deals", align: "right", value: (row) => row.count },
+                {
+                  id: "value",
+                  label: "Total due",
+                  align: "right",
+                  value: (row) => row.value,
+                  render: (row) => formatMoney(row.value, currency),
+                },
+              ]}
+            />
+
+            <ReportBreakdownTable<ShowroomPerformanceRow>
+              title="Completed, by showroom"
+              description={`Deals completed in ${rangeLabel.toLowerCase()}.`}
+              rows={data.byShowroom}
+              getRowId={(row) => row.locationId}
+              initialSortId="value"
+              shareValue={(row) => row.value}
+              getRowHref={(row) => `/admin/sales?showroom=${row.locationId}`}
+              emptyMessage="No deal was completed in this period."
+              failedLabel="showroom breakdown"
+              columns={[
+                { id: "locationName", label: "Showroom", value: (row) => row.locationName },
+                { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
+                {
+                  id: "value",
+                  label: "Value",
+                  align: "right",
+                  value: (row) => row.value,
+                  render: (row) => formatMoney(row.value, currency),
+                },
+              ]}
+            />
           </div>
-        )}
-      </motion.section>
 
-      {/* =====================================================
-          MONTHLY
-      ===================================================== */}
+          <ReportBreakdownTable<OwnerPerformanceRow>
+            title="Sales executives"
+            description="Completed in this period, and what each still holds open."
+            rows={data.byOwner}
+            getRowId={(row) => row.ownerId}
+            initialSortId="value"
+            shareValue={(row) => row.value}
+            getRowHref={(row) => `/admin/sales?owner=${row.ownerId}`}
+            emptyMessage="No deal is owned by anyone in this period yet."
+            failedLabel="executive breakdown"
+            columns={[
+              { id: "ownerName", label: "Executive", value: (row) => row.ownerName },
+              { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
+              { id: "open", label: "Open", align: "right", value: (row) => row.open },
+              {
+                id: "value",
+                label: "Value",
+                align: "right",
+                value: (row) => row.value,
+                render: (row) => formatMoney(row.value, currency),
+              },
+            ]}
+          />
 
-      <motion.section {...fadeUp(5)} aria-label="By month" className="surface-card flex flex-col gap-3 p-5">
-        <p className="text-label">Completions by month</p>
-
-        {data.monthly === null ? (
-          <SectionFailed what="monthly breakdown" />
-        ) : data.monthly.length === 0 ? (
-          <p className="text-body-sm text-text-muted">No deal was completed in this period.</p>
-        ) : (
-          <ul className="flex flex-col gap-2.5">
-            {data.monthly.map((point) => {
-              const peak = Math.max(...(data.monthly ?? []).map((item) => item.value), 1);
-              const width = Math.max(2, Math.round((point.value / peak) * 100));
-
-              return (
-                <li key={point.month} className="flex flex-col gap-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-body-sm text-text-primary">{point.month}</span>
-                    <span className="text-caption text-text-muted tabular-nums">
-                      {point.completed} {point.completed === 1 ? "deal" : "deals"} ·{" "}
-                      {formatMoney(point.value, currency)}
-                    </span>
-                  </div>
-
-                  <div
-                    role="presentation"
-                    className="bg-card-hover h-1.5 w-full overflow-hidden rounded-full"
-                  >
-                    <div className="bg-gradient-primary h-full rounded-full" style={{ width: `${width}%` }} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </motion.section>
+          <ReportBreakdownTable<MonthlyPoint>
+            title="Completions by month"
+            description="Counted in the month each deal completed."
+            rows={data.monthly}
+            getRowId={(row) => row.month}
+            initialSortId="month"
+            shareValue={(row) => row.value}
+            emptyMessage="No deal was completed in this period."
+            failedLabel="monthly breakdown"
+            columns={[
+              { id: "month", label: "Month", value: (row) => row.month },
+              { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
+              {
+                id: "value",
+                label: "Value",
+                align: "right",
+                value: (row) => row.value,
+                render: (row) => formatMoney(row.value, currency),
+              },
+            ]}
+          />
+        </>
+      ) : (
+        <ReportSummaryView data={data} currency={currency} />
+      )}
     </div>
   );
 }

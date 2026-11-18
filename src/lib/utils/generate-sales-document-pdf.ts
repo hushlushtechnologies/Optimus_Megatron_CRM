@@ -30,7 +30,14 @@ function loadLogo(): string | null {
 type Pdf = jsPDF & { lastAutoTable?: { finalY: number } };
 
 /** Lines of text in a column. Returns the y just below it. */
-function block(doc: jsPDF, x: number, y: number, width: number, heading: string | null, lines: (string | undefined)[]): number {
+function block(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  heading: string | null,
+  lines: (string | undefined)[],
+): number {
   let cursor = y;
   if (heading) {
     doc.setFont("helvetica", "bold");
@@ -129,7 +136,12 @@ export function generateSalesDocumentPdf(record: SalesDocumentRecord): Buffer {
     doc.setFontSize(8.5);
     const when = record.voided_at ? ` on ${formatDateTime(record.voided_at)}` : "";
     doc.text(
-      (doc.splitTextToSize(`This document was voided${when}: ${record.void_reason ?? ""}`, contentWidth - 4) as string[])[0],
+      (
+        doc.splitTextToSize(
+          `This document was voided${when}: ${record.void_reason ?? ""}`,
+          contentWidth - 4,
+        ) as string[]
+      )[0],
       MARGIN + 2,
       y + 4,
     );
@@ -138,7 +150,11 @@ export function generateSalesDocumentPdf(record: SalesDocumentRecord): Buffer {
 
   /* ---------- Customer and vehicle ---------- */
   const partyHeading =
-    record.doc_type === "Quotation" ? "Prepared for" : record.doc_type === "Receipt" ? "Received from" : "Customer";
+    record.doc_type === "Quotation"
+      ? "Prepared for"
+      : record.doc_type === "Receipt"
+        ? "Received from"
+        : "Customer";
 
   const customerEnd = block(doc, MARGIN, y, half, partyHeading, [
     snap.customer.name,
@@ -155,7 +171,9 @@ export function generateSalesDocumentPdf(record: SalesDocumentRecord): Buffer {
         `Stock ID: ${vehicle.stock_id}`,
         [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(" · ") || undefined,
         vehicle.vin ? `VIN: ${vehicle.vin}` : undefined,
-        vehicle.mileage_km !== undefined ? `Mileage: ${vehicle.mileage_km.toLocaleString("en")} km` : undefined,
+        vehicle.mileage_km !== undefined
+          ? `Mileage: ${vehicle.mileage_km.toLocaleString("en")} km`
+          : undefined,
         vehicle.color ? `Colour: ${vehicle.color}` : undefined,
       ])
     : y;
@@ -233,7 +251,9 @@ export function generateSalesDocumentPdf(record: SalesDocumentRecord): Buffer {
         ["Vehicle held from", res.starts_at ? formatDateTime(res.starts_at) : "—"],
         ["Vehicle held until", res.expires_at ? formatDateTime(res.expires_at) : "—"],
         ...(res.deposit_required !== undefined ? [["Deposit required", money(res.deposit_required)]] : []),
-        ...(res.deposit_verified !== undefined ? [["Deposit received (verified)", money(res.deposit_verified)]] : []),
+        ...(res.deposit_verified !== undefined
+          ? [["Deposit received (verified)", money(res.deposit_verified)]]
+          : []),
         ...(res.deposit_waived ? [["Deposit", "Waived"]] : []),
       ],
       headStyles: { fillColor: NAVY, textColor: 255, fontSize: 8.5 },
@@ -323,9 +343,7 @@ export function generateSalesDocumentPdf(record: SalesDocumentRecord): Buffer {
     doc.setFontSize(8);
     doc.setTextColor(120, 130, 150);
     doc.text(
-      snap.tax_applied
-        ? "Tax is included as shown."
-        : "Tax is not applied on this document.",
+      snap.tax_applied ? "Tax is included as shown." : "Tax is not applied on this document.",
       MARGIN,
       y,
     );

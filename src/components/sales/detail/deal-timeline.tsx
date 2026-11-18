@@ -12,7 +12,6 @@ import {
   Wallet,
   XCircle,
   FileText,
-  
   type LucideIcon,
 } from "lucide-react";
 import { useMotion } from "@/src/hooks/use-motion";
@@ -21,7 +20,7 @@ import type { DealActivityItem } from "@/src/lib/types/sales-detail";
 
 function iconFor(type: string): { Icon: LucideIcon; raw: string } {
   if (type === "created") return { Icon: Plus, raw: "#d4af37" };
-    if (
+  if (
     type === "status_cancelled" ||
     type === "payment_rejected" ||
     type === "payment_reversed" ||
@@ -35,8 +34,10 @@ function iconFor(type: string): { Icon: LucideIcon; raw: string } {
   if (type.startsWith("price_")) return { Icon: Tag, raw: "#f59e0b" };
   if (type.startsWith("payment_")) return { Icon: Wallet, raw: "#34d399" };
   if (type.startsWith("reservation_")) return { Icon: Timer, raw: "#f59e0b" };
-    if (type.startsWith("document_")) return { Icon: FileText, raw: type === "document_voided" ? "#f87171" : "#60a5fa" };
-      if (type.startsWith("delivery_")) return { Icon: Truck, raw: type === "delivery_completed" ? "#34d399" : "#60a5fa" };
+  if (type.startsWith("document_"))
+    return { Icon: FileText, raw: type === "document_voided" ? "#f87171" : "#60a5fa" };
+  if (type.startsWith("delivery_"))
+    return { Icon: Truck, raw: type === "delivery_completed" ? "#34d399" : "#60a5fa" };
   return { Icon: ArrowRightLeft, raw: "#94a3b8" };
 }
 

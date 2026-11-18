@@ -23,15 +23,21 @@ export function DealReadinessCard({ groups }: { groups: ReadinessGroup[] }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-body-sm text-text-primary font-semibold">
               {group.title}
-              {group.optional && <span className="text-caption text-text-subtle ml-2 font-normal">optional</span>}
+              {group.optional && (
+                <span className="text-caption text-text-subtle ml-2 font-normal">optional</span>
+              )}
             </h3>
             <span
               className={cn(
                 "text-caption rounded-full border px-2 py-0.5",
-                group.ready ? "border-success/40 bg-success/10 text-success" : "border-border text-text-muted",
+                group.ready
+                  ? "border-success/40 bg-success/10 text-success"
+                  : "border-border text-text-muted",
               )}
             >
-              {group.ready ? "Ready" : `${group.items.filter((item) => item.done).length} of ${group.items.length} done`}
+              {group.ready
+                ? "Ready"
+                : `${group.items.filter((item) => item.done).length} of ${group.items.length} done`}
             </span>
           </div>
 

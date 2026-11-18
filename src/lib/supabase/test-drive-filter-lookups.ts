@@ -49,7 +49,11 @@ export async function getTestDriveFilterLookups(
       supabase.from("models").select("id, name, brand_id").eq("is_active", true).order("name"),
       supabase.from("locations").select("id, name").eq("is_active", true).order("sort_order"),
       supabase.rpc("list_test_drive_hosts"),
-      supabase.from("test_drive_request_sources").select("id, name").eq("is_active", true).order("sort_order"),
+      supabase
+        .from("test_drive_request_sources")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("sort_order"),
       vehicleId
         ? supabase
             .from("cars")

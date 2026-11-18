@@ -145,12 +145,9 @@ export function generateSalesPdf(rows: SalesExportRow[], meta: SalesPdfMeta): Bu
     doc.setPage(page);
     doc.setFontSize(7);
     doc.setTextColor(120, 130, 150);
-    doc.text(
-      `Page ${page} of ${pageCount}`,
-      pageWidth - 10,
-      doc.internal.pageSize.getHeight() - 6,
-      { align: "right" },
-    );
+    doc.text(`Page ${page} of ${pageCount}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 6, {
+      align: "right",
+    });
   }
 
   return Buffer.from(doc.output("arraybuffer"));

@@ -41,6 +41,7 @@ export async function fetchVehicleDealContext(
     reservationExpiresAt: row.reservation_expires_at,
     customerOpenDealNumber: row.customer_open_deal_number,
     leadDealNumber: row.lead_deal_number,
-    listedPrice: row.listed_price === null || row.listed_price === undefined ? null : Number(row.listed_price),
+    listedPrice:
+      row.listed_price === null || row.listed_price === undefined ? null : Number(row.listed_price),
   };
 }

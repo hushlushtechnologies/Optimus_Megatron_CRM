@@ -30,10 +30,7 @@ export async function saveDealPricingAction(input: unknown): Promise<SavePricing
   const proposed = toFils(v.proposedPrice);
   const ZERO_FILS = BigInt(0);
 
-const discount =
-  v.discountAmount === ""
-    ? ZERO_FILS
-    : toFils(v.discountAmount);
+  const discount = v.discountAmount === "" ? ZERO_FILS : toFils(v.discountAmount);
   if (proposed === null || discount === null) return { error: "Please check the amounts and try again." };
 
   if (v.approveNow && !start.permissions.approveDiscount) {

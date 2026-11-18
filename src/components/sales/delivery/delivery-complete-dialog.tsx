@@ -21,7 +21,13 @@ interface DeliveryCompleteDialogProps {
 }
 
 // The parent mounts this only while it is open, so the time starts at "now" each opening.
-export function DeliveryCompleteDialog({ deal, delivery, items, onClose, onDone }: DeliveryCompleteDialogProps) {
+export function DeliveryCompleteDialog({
+  deal,
+  delivery,
+  items,
+  onClose,
+  onDone,
+}: DeliveryCompleteDialogProps) {
   const [date, setDate] = useState(() => getDubaiToday());
   const [time, setTime] = useState(() => formatTime(new Date().toISOString()));
   const [notes, setNotes] = useState("");
@@ -99,7 +105,13 @@ export function DeliveryCompleteDialog({ deal, delivery, items, onClose, onDone 
             value={date}
             onChange={(event) => setDate(event.target.value)}
           />
-          <Input label="Time" type="time" required value={time} onChange={(event) => setTime(event.target.value)} />
+          <Input
+            label="Time"
+            type="time"
+            required
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+          />
         </div>
         <p className="text-caption text-text-subtle -mt-2">Dubai time. It can&apos;t be in the future.</p>
 

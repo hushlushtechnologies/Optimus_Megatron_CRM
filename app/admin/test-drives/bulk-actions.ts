@@ -16,11 +16,7 @@ import { isEligibleTestDriveHost } from "@/src/lib/supabase/test-drive-permissio
 import { recordTestDriveAudit } from "@/src/lib/supabase/test-drive-audit";
 import { mapTestDriveDbError } from "@/src/lib/utils/test-drive-errors";
 import { BULK_ELIGIBLE_STATUSES, MAX_BULK_SELECTION } from "@/src/lib/utils/test-drive-bulk";
-import type {
-  BulkActionKind,
-  BulkActionResponse,
-  BulkRowOutcome,
-} from "@/src/lib/types/test-drive-bulk";
+import type { BulkActionKind, BulkActionResponse, BulkRowOutcome } from "@/src/lib/types/test-drive-bulk";
 
 const idsSchema = z
   .array(z.string().uuid())

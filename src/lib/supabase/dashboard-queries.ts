@@ -243,12 +243,14 @@ async function getCompletedDealInsights(
   /* ---- Fastest selling: listed to sold, shortest first ---- */
 
   const cars = new Map(
-    ((carsResult.data ?? []) as unknown as {
-      id: string;
-      display_title: string;
-      created_at: string;
-      location: { name: string } | { name: string }[] | null;
-    }[]).map((car) => [car.id, car]),
+    (
+      (carsResult.data ?? []) as unknown as {
+        id: string;
+        display_title: string;
+        created_at: string;
+        location: { name: string } | { name: string }[] | null;
+      }[]
+    ).map((car) => [car.id, car]),
   );
 
   const fastestSelling = deals
@@ -277,13 +279,15 @@ async function getCompletedDealInsights(
 
   const byOwner = new Map<string, { name: string; location: string; deals: number; revenue: number }>();
 
-  ((monthResult.data ?? []) as unknown as {
-    id: string;
-    owner_id: string | null;
-    owner_name: string | null;
-    location_name: string | null;
-    total_due: Numeric;
-  }[]).forEach((row) => {
+  (
+    (monthResult.data ?? []) as unknown as {
+      id: string;
+      owner_id: string | null;
+      owner_name: string | null;
+      location_name: string | null;
+      total_due: Numeric;
+    }[]
+  ).forEach((row) => {
     if (!row.owner_id) return;
 
     const current = byOwner.get(row.owner_id) ?? {
@@ -298,9 +302,7 @@ async function getCompletedDealInsights(
     byOwner.set(row.owner_id, current);
   });
 
-  const best = Array.from(byOwner.values()).sort(
-    (a, b) => b.revenue - a.revenue || b.deals - a.deals,
-  )[0];
+  const best = Array.from(byOwner.values()).sort((a, b) => b.revenue - a.revenue || b.deals - a.deals)[0];
 
   return {
     fastestSelling,
@@ -394,12 +396,14 @@ async function getUpcomingTestDrives(
     return [];
   }
 
-  return ((data ?? []) as unknown as {
-    id: string;
-    customer_name: string | null;
-    vehicle_title: string | null;
-    scheduled_start: string;
-  }[]).map((row) => ({
+  return (
+    (data ?? []) as unknown as {
+      id: string;
+      customer_name: string | null;
+      vehicle_title: string | null;
+      scheduled_start: string;
+    }[]
+  ).map((row) => ({
     id: row.id,
     customer: row.customer_name ?? "Unknown customer",
     car: row.vehicle_title ?? "Vehicle removed",
@@ -448,10 +452,7 @@ async function getAlerts(supabase: Awaited<ReturnType<typeof createClient>>): Pr
   const now = new Date();
   const in48Hours = new Date(now.getTime() + 48 * 3_600_000);
 
-  const { data: openStages } = await supabase
-    .from("lead_stages")
-    .select("id")
-    .eq("stage_type", "open");
+  const { data: openStages } = await supabase.from("lead_stages").select("id").eq("stage_type", "open");
 
   const openStageIds = (openStages ?? []).map((stage) => stage.id as string);
 
@@ -530,21 +531,17 @@ async function getAlerts(supabase: Awaited<ReturnType<typeof createClient>>): Pr
   // Only conditions that are actually true become alerts.
   return candidates
     .filter((candidate) => candidate.count > 0)
-    .map(
-      (candidate): DashboardAlert => ({
-        id: candidate.id,
-        message: candidate.message(candidate.count),
-      }),
-    );
+    .map((candidate): DashboardAlert => ({
+      id: candidate.id,
+      message: candidate.message(candidate.count),
+    }));
 }
 
 /* =========================================================
    CONVERSION
 ========================================================= */
 
-async function getConversion(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-): Promise<ConversionCounts> {
+async function getConversion(supabase: Awaited<ReturnType<typeof createClient>>): Promise<ConversionCounts> {
   const windowStart = daysAgo(CONVERSION_WINDOW_DAYS).toISOString();
 
   const [leads, testDrives, reservations, sold] = await Promise.all([

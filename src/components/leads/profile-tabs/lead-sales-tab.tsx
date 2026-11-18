@@ -78,8 +78,7 @@ export function LeadSalesTab({
     <div className="flex flex-col gap-4 pt-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-body-sm text-text-muted">
-          Deals created from, or linked to, this lead. The lead&apos;s own history is never changed by a
-          deal.
+          Deals created from, or linked to, this lead. The lead&apos;s own history is never changed by a deal.
         </p>
 
         <div className="flex flex-wrap items-center gap-2">

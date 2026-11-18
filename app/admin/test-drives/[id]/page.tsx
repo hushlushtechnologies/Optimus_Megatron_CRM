@@ -20,7 +20,7 @@ export default async function TestDriveDetailPage({ params }: TestDriveDetailPag
   // Anything that isn't a real ID can't exist, so don't even ask the database.
   if (!isUuid(id)) notFound();
 
-    const [result, permissions, feedback, followUps, deal, salesPermissions] = await Promise.all([
+  const [result, permissions, feedback, followUps, deal, salesPermissions] = await Promise.all([
     getTestDriveDetail(id),
     currentUserTestDrivePermissions(),
     getTestDriveFeedback(id),

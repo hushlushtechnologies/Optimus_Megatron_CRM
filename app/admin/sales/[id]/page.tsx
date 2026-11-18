@@ -26,7 +26,10 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
       <div>
         <p className="text-body-sm text-text-primary font-medium">{title}</p>
         <div className="text-body-sm text-text-muted mt-1">{children}</div>
-        <Link href="/admin/sales" className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block">
+        <Link
+          href="/admin/sales"
+          className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
+        >
           Back to Sales
         </Link>
       </div>
@@ -42,11 +45,15 @@ export default async function SalesDealPage({ params }: SalesDealPageProps) {
 
   const permissions = await currentUserSalesPermissions();
   if (!permissions.view) {
-    return <Notice title="You don't have permission to view deals.">Ask an administrator if you need access.</Notice>;
+    return (
+      <Notice title="You don't have permission to view deals.">
+        Ask an administrator if you need access.
+      </Notice>
+    );
   }
 
   const supabase = await createClient();
-    const [result, pricingExtras, assignments, userResult, paymentRules] = await Promise.all([
+  const [result, pricingExtras, assignments, userResult, paymentRules] = await Promise.all([
     getSalesDealDetail(id),
     getDealPricingExtras(id),
     getDealAssignmentHistory(id),
@@ -62,12 +69,11 @@ export default async function SalesDealPage({ params }: SalesDealPageProps) {
         Nothing has been lost. Refresh the page to try again, and let someone know if it keeps happening.
       </Notice>
     );
-    
   }
 
-    const documents = await getSalesDocuments({ dealId: id, reservationId: result.data.deal.reservation_id });
+  const documents = await getSalesDocuments({ dealId: id, reservationId: result.data.deal.reservation_id });
 
-                 const [delivery, deliveryLookups, testDrives, sourceTestDriveNumber, notes] = await Promise.all([
+  const [delivery, deliveryLookups, testDrives, sourceTestDriveNumber, notes] = await Promise.all([
     getDealDelivery(id),
     permissions.complete ? getDeliveryLookups() : Promise.resolve(null),
     getTestDrivesForPanel({
@@ -85,14 +91,14 @@ export default async function SalesDealPage({ params }: SalesDealPageProps) {
       pricingExtras={pricingExtras}
       assignments={assignments}
 
-            delivery={delivery}
+      delivery={delivery}
       deliveryLookups={deliveryLookups}
       testDrives={testDrives}
       sourceTestDriveNumber={sourceTestDriveNumber}
-       notes={notes}
+      notes={notes}
       currentUserId={userResult.data.user?.id ?? null}
-            separateVerifier={paymentRules.separateVerifier}
-            documents={documents}
+      separateVerifier={paymentRules.separateVerifier}
+      documents={documents}
     />
   );
 }

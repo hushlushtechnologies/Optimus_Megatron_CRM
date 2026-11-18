@@ -42,10 +42,14 @@ export default async function ReservationPage({ params }: ReservationPageProps) 
   const permissions = user ? await getMySalesPermissions(supabase) : null;
 
   if (!user || !permissions?.reservationsView) {
-    return <Notice title="You don't have permission to view reservations.">Ask an administrator if you need access.</Notice>;
+    return (
+      <Notice title="You don't have permission to view reservations.">
+        Ask an administrator if you need access.
+      </Notice>
+    );
   }
 
-    const [result, payments, rules] = await Promise.all([
+  const [result, payments, rules] = await Promise.all([
     getReservationDetail(id),
     getReservationPayments(id),
     getPaymentRules(),
@@ -60,9 +64,9 @@ export default async function ReservationPage({ params }: ReservationPageProps) 
     );
   }
 
-    const documents = await getSalesDocuments({ dealId: null, reservationId: id });
+  const documents = await getSalesDocuments({ dealId: null, reservationId: id });
 
-    return (
+  return (
     <ReservationDetailClient
       data={result.data}
       permissions={permissions}

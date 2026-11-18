@@ -14,10 +14,8 @@ import { RecentActivity } from "@/src/components/dashboard/recent-activity";
 import { UpcomingTestDrives } from "@/src/components/dashboard/upcoming-test-drives";
 import { LeadSummary } from "@/src/components/dashboard/lead-summary";
 
-
-
 export default async function AdminDashboardPage() {
-    const [profile, data] = await Promise.all([getCurrentProfile(), getDashboardData()]);
+  const [profile, data] = await Promise.all([getCurrentProfile(), getDashboardData()]);
 
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] || "Admin";
 

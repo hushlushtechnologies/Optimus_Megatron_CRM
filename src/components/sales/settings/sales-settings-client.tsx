@@ -169,7 +169,8 @@ export function SalesSettingsClient({
         <div>
           <h1 className="text-h1">Sales settings</h1>
           <p className="text-body-sm text-text-muted">
-            The rules for discounts, fees, reservations and payments. Changes apply straight away and are recorded.
+            The rules for discounts, fees, reservations and payments. Changes apply straight away and are
+            recorded.
           </p>
         </div>
       </motion.div>
@@ -247,7 +248,10 @@ export function SalesSettingsClient({
             ]}
             value={values.depositMode}
             onChange={(event) => {
-              const mode = event.target.value === "fixed" || event.target.value === "percent" ? event.target.value : "none";
+              const mode =
+                event.target.value === "fixed" || event.target.value === "percent"
+                  ? event.target.value
+                  : "none";
               patch({ depositMode: mode, depositValue: "" });
             }}
           />
@@ -270,7 +274,11 @@ export function SalesSettingsClient({
           )}
         </Card>
 
-        <Card index={4} icon={<ShieldCheck className="size-5" aria-hidden="true" />} title="Deals and payments">
+        <Card
+          index={4}
+          icon={<ShieldCheck className="size-5" aria-hidden="true" />}
+          title="Deals and payments"
+        >
           <PercentField
             label="Verified deposit needed to confirm a deal"
             value={values.minDeposit}
@@ -286,8 +294,8 @@ export function SalesSettingsClient({
           />
         </Card>
 
-                <CompanyProfileCard company={company} />
-                        <DeliveryChecklistCard templates={templates} />
+        <CompanyProfileCard company={company} />
+        <DeliveryChecklistCard templates={templates} />
 
         <Card index={5} icon={<Info className="size-5" aria-hidden="true" />} title="Tax">
           <p className="text-body-sm text-text-muted">

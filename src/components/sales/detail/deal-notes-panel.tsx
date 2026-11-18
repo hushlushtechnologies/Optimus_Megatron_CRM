@@ -156,11 +156,7 @@ export function DealNotesPanel({ dealId, data }: DealNotesPanelProps) {
           />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Switch
-              label="Internal only"
-              checked={isInternal}
-              onCheckedChange={setIsInternal}
-            />
+            <Switch label="Internal only" checked={isInternal} onCheckedChange={setIsInternal} />
 
             <Button
               onClick={() => void handleAdd()}

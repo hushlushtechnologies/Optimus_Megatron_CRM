@@ -9,10 +9,7 @@ import { SortControl } from "@/src/components/shared/sort-control";
 import { FilterBar } from "@/src/components/shared/filter-bar";
 import { TestDriveFilterDrawer } from "@/src/components/test-drives/test-drive-filter-drawer";
 import { TestDriveExportMenu } from "@/src/components/test-drives/test-drive-export-menu";
-import {
-  DEFAULT_TEST_DRIVE_SORT,
-  parseTestDriveListParams,
-} from "@/src/lib/utils/test-drive-list-params";
+import { DEFAULT_TEST_DRIVE_SORT, parseTestDriveListParams } from "@/src/lib/utils/test-drive-list-params";
 import {
   EMPTY_TEST_DRIVE_FILTERS,
   UNASSIGNED_STAFF,
@@ -64,7 +61,9 @@ function buildChips(filters: TestDriveListFilters, lookups: TestDriveFilterLooku
     chips.push({
       key: "staff",
       label: `Staff: ${
-        filters.staff === UNASSIGNED_STAFF ? "Unassigned" : (nameOf(lookups.staff, filters.staff) ?? "Selected")
+        filters.staff === UNASSIGNED_STAFF
+          ? "Unassigned"
+          : (nameOf(lookups.staff, filters.staff) ?? "Selected")
       }`,
     });
   }
@@ -221,7 +220,12 @@ export function TestDriveToolbar({ resultCount, lookups, lookupsFailed, canExpor
 
   return (
     <>
-      <div className={cn("flex min-w-0 flex-col gap-3 transition-opacity duration-200", isPending && "opacity-75")}>
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-3 transition-opacity duration-200",
+          isPending && "opacity-75",
+        )}
+      >
         <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
           <div className="min-w-0 flex-1 lg:max-w-[430px] xl:max-w-[500px]">
             <Input

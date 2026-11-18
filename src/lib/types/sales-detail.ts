@@ -50,7 +50,7 @@ export interface DealPayment {
   verified_at: string | null;
   reversed_by_name: string | null;
   reversed_at: string | null;
-    recorded_by: string | null;
+  recorded_by: string | null;
 }
 
 export interface DealPriceChange {
@@ -64,7 +64,7 @@ export interface DealPriceChange {
   approved_by_name: string | null;
   changed_by_name: string;
   changed_at: string;
-    note: string | null;
+  note: string | null;
 }
 
 export interface DealStatusChange {

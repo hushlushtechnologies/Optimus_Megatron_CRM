@@ -54,10 +54,7 @@ export interface SalesExcelMeta {
  * whoever receives it can total and filter it in Excel. Totals are summed from
  * the same rows that appear below them, so the sheet is self-consistent.
  */
-export async function generateSalesExcel(
-  rows: SalesExportRow[],
-  meta: SalesExcelMeta,
-): Promise<Buffer> {
+export async function generateSalesExcel(rows: SalesExportRow[], meta: SalesExcelMeta): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Optimus Megatron Cars";
   workbook.created = new Date();
@@ -132,8 +129,7 @@ export async function generateSalesExcel(
   /* ---- Totals ---- */
 
   if (rows.length > 0) {
-    const sum = (key: keyof SalesExportRow) =>
-      rows.reduce((total, row) => total + Number(row[key] ?? 0), 0);
+    const sum = (key: keyof SalesExportRow) => rows.reduce((total, row) => total + Number(row[key] ?? 0), 0);
 
     const totalsRow = sheet.addRow([]);
     totalsRow.getCell(1).value = "Total";

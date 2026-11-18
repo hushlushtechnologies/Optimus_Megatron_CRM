@@ -42,7 +42,9 @@ export function DealOwnerDialog({ deal, onClose, onDone }: DealOwnerDialogProps)
     getOwnerCandidatesAction(deal.id)
       .then((result) => {
         if (cancelled) return;
-        setState(result.status === "ok" ? { status: "ok", candidates: result.candidates } : { status: "failed" });
+        setState(
+          result.status === "ok" ? { status: "ok", candidates: result.candidates } : { status: "failed" },
+        );
       })
       .catch(() => {
         if (!cancelled) setState({ status: "failed" });
@@ -131,7 +133,8 @@ export function DealOwnerDialog({ deal, onClose, onDone }: DealOwnerDialogProps)
             className="text-body-sm text-text-primary flex items-start gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2.5"
           >
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-red-400" aria-hidden="true" />
-            The list of people couldn&apos;t be loaded, so changing the owner is paused. Close this and try again.
+            The list of people couldn&apos;t be loaded, so changing the owner is paused. Close this and try
+            again.
           </p>
         )}
 
@@ -139,7 +142,8 @@ export function DealOwnerDialog({ deal, onClose, onDone }: DealOwnerDialogProps)
           <fieldset className="flex flex-col gap-2">
             <legend className="text-label mb-1">Who should own this deal?</legend>
             {state.candidates.map((candidate) => {
-              const isLightest = !candidate.isCurrent && lightest !== null && candidate.openDeals === lightest;
+              const isLightest =
+                !candidate.isCurrent && lightest !== null && candidate.openDeals === lightest;
               return (
                 <label
                   key={candidate.id}
@@ -186,7 +190,11 @@ export function DealOwnerDialog({ deal, onClose, onDone }: DealOwnerDialogProps)
         <Textarea
           label={hasOwner ? "Why is it being handed over?" : "Note (optional)"}
           required={hasOwner}
-          placeholder={hasOwner ? "For example: covering while they are on leave." : "Anything the new owner should know."}
+          placeholder={
+            hasOwner
+              ? "For example: covering while they are on leave."
+              : "Anything the new owner should know."
+          }
           rows={3}
           maxLength={300}
           showCharacterCount
@@ -200,8 +208,8 @@ export function DealOwnerDialog({ deal, onClose, onDone }: DealOwnerDialogProps)
         {hasOwner && (
           <p className="text-caption text-text-subtle flex items-start gap-2">
             <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-            The handover is recorded with your name and the reason. Someone who can only see their own deals stops seeing
-            this one unless they created it.
+            The handover is recorded with your name and the reason. Someone who can only see their own deals
+            stops seeing this one unless they created it.
           </p>
         )}
 

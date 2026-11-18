@@ -40,13 +40,12 @@ interface TestDriveDetailClientProps {
   /** The drive's feedback, or the fact that it couldn't be loaded. */
   feedback: TestDriveFeedbackLoad;
   /** The follow-ups created from this drive, or the fact that they couldn't be loaded. */
-    /** The follow-ups created from this drive, or the fact that they couldn't be loaded. */
+  /** The follow-ups created from this drive, or the fact that they couldn't be loaded. */
   followUps: TestDriveFollowUpLoad;
   /** The deal started from this drive, if any. */
   deal: TestDriveDealResult;
   salesPermissions: SalesPermissions;
 }
-
 
 export function TestDriveDetailClient({
   data,
@@ -54,7 +53,7 @@ export function TestDriveDetailClient({
   feedback,
   followUps,
   deal,
-  salesPermissions
+  salesPermissions,
 }: TestDriveDetailClientProps) {
   const { detail } = data;
   const actions = useTestDriveActions();
@@ -213,7 +212,7 @@ export function TestDriveDetailClient({
             onCheckIn={() => actions.request("check_in", detail)}
           />
 
-                    <TestDriveSalesCard
+          <TestDriveSalesCard
             testDriveId={detail.id}
             status={detail.status}
             isArchived={!!detail.archived_at}

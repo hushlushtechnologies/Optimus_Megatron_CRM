@@ -1,9 +1,14 @@
-import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
+import Link from "next/link";
 
-import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
-import { getSalesReport, parseReportRange } from "@/src/lib/supabase/sales-report-queries";
 import { SalesReportClient } from "@/src/components/report/sales-report-client";
+import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
+import {
+  getSalesReport,
+  getSalesReportDeals,
+  parseReportRange,
+} from "@/src/lib/supabase/sales-report-queries";
+import { parseReportView } from "@/src/lib/types/sales-reports";
 
 export const metadata = {
   title: "Sales reports · Optimus Megatron Cars",
@@ -44,7 +49,11 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   }
 
   const params = await searchParams;
-  const data = await getSalesReport(parseReportRange(params.range));
+  const range = parseReportRange(params.range);
+  const view = parseReportView(params.view);
 
-  return <SalesReportClient data={data} canExport={permissions.export} />;
+  // Both views are fetched so switching between them is instant.
+  const [data, deals] = await Promise.all([getSalesReport(range), getSalesReportDeals(range)]);
+
+  return <SalesReportClient data={data} deals={deals} view={view} canExport={permissions.export} />;
 }

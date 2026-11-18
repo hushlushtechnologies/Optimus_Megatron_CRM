@@ -11,12 +11,7 @@ import {
   getAvailableActions,
   type TestDriveActionKey,
 } from "@/src/lib/utils/test-drive-actions";
-import {
-  formatDay,
-  formatTimeRange,
-  getDubaiToday,
-  toDubaiIsoDate,
-} from "@/src/lib/utils/test-drive-format";
+import { formatDay, formatTimeRange, getDubaiToday, toDubaiIsoDate } from "@/src/lib/utils/test-drive-format";
 import type { TestDrivePermissions } from "@/src/lib/utils/test-drive-permissions";
 import type { TestDriveListRow } from "@/src/lib/types/test-drive";
 import { cn } from "@/src/lib/utils/cn";
@@ -83,7 +78,10 @@ export function TestDriveCardList({
           });
 
           return (
-            <li key={row.id} className={cn("surface-card flex flex-col gap-3 p-4", selected && "ring-primary/50 ring-1")}>
+            <li
+              key={row.id}
+              className={cn("surface-card flex flex-col gap-3 p-4", selected && "ring-primary/50 ring-1")}
+            >
               <div className="flex items-start gap-3">
                 <label className="-m-2 flex size-11 shrink-0 items-center justify-center">
                   <input
@@ -160,7 +158,9 @@ export function TestDriveCardList({
                             className={cn("size-4", destructive ? "text-red-500" : "text-text-muted")}
                             aria-hidden="true"
                           />
-                          <span className={destructive ? "text-red-500" : "text-text-primary"}>{meta.label}</span>
+                          <span className={destructive ? "text-red-500" : "text-text-primary"}>
+                            {meta.label}
+                          </span>
                         </button>
                       );
                     })}

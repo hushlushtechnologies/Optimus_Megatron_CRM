@@ -74,7 +74,10 @@ export function CustomerSalesPanel({
 
       <Link href={`/admin/customers/${customer.id}/sales`}>Sales</Link>
 
-      <motion.header {...fadeUp(0)} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <motion.header
+        {...fadeUp(0)}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div className="flex items-center gap-3">
           <CustomerAvatar fullName={customer.full_name} photoUrl={customer.photo_url} size="md" />
           <div className="min-w-0">
@@ -85,7 +88,11 @@ export function CustomerSalesPanel({
         <div className="flex flex-wrap gap-2">
           {canCreateDeal && (
             <Link href={`/admin/sales/new?customerId=${customer.id}`}>
-              <Button size="sm" variant="gradient" leftIcon={<Handshake className="size-4" aria-hidden="true" />}>
+              <Button
+                size="sm"
+                variant="gradient"
+                leftIcon={<Handshake className="size-4" aria-hidden="true" />}
+              >
                 New deal
               </Button>
             </Link>
@@ -112,8 +119,18 @@ export function CustomerSalesPanel({
                 value={String(summary.openDeals)}
                 hint={`${summary.completedDeals} completed`}
               />
-              <Tile index={1} label="Total purchased" value={money(summary.purchasedTotal)} hint="Completed deals" />
-              <Tile index={2} label="Still to collect" value={money(summary.balanceOpen)} hint="Confirmed deals" />
+              <Tile
+                index={1}
+                label="Total purchased"
+                value={money(summary.purchasedTotal)}
+                hint="Completed deals"
+              />
+              <Tile
+                index={2}
+                label="Still to collect"
+                value={money(summary.balanceOpen)}
+                hint="Confirmed deals"
+              />
             </>
           )}
           {showReservations && (
@@ -128,7 +145,8 @@ export function CustomerSalesPanel({
       )}
 
       <p className="text-caption text-text-subtle -mt-3">
-        Totals and lists cover what your role can see. Someone who only sees their own deals will see only those.
+        Totals and lists cover what your role can see. Someone who only sees their own deals will see only
+        those.
       </p>
 
       {showDeals && (
@@ -143,9 +161,15 @@ export function CustomerSalesPanel({
           ) : (
             <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
               {deals.map((deal) => (
-                <li key={deal.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={deal.id}
+                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0">
-                    <Link href={`/admin/sales/${deal.id}`} className="text-text-primary hover:text-primary-text font-medium">
+                    <Link
+                      href={`/admin/sales/${deal.id}`}
+                      className="text-text-primary hover:text-primary-text font-medium"
+                    >
                       {deal.deal_number}
                     </Link>
                     <p className="text-caption text-text-subtle truncate">
@@ -169,7 +193,11 @@ export function CustomerSalesPanel({
       )}
 
       {showReservations && (
-        <motion.section {...fadeUp(2)} aria-label="Reservations" className="surface-card flex flex-col gap-4 p-5">
+        <motion.section
+          {...fadeUp(2)}
+          aria-label="Reservations"
+          className="surface-card flex flex-col gap-4 p-5"
+        >
           <p className="text-label">Reservations</p>
           {reservations === null ? (
             <LoadFailed what="reservations" />
@@ -196,7 +224,10 @@ export function CustomerSalesPanel({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    <SalesExpiryChip expiresAt={reservation.expires_at} reservationStatus={reservation.status} />
+                    <SalesExpiryChip
+                      expiresAt={reservation.expires_at}
+                      reservationStatus={reservation.status}
+                    />
                     <ReservationStatusBadge status={effectiveReservationStatus(reservation)} size="sm" />
                   </div>
                 </li>
@@ -207,7 +238,11 @@ export function CustomerSalesPanel({
       )}
 
       {(showDeals || showReservations) && (
-        <motion.section {...fadeUp(3)} aria-label="Recent payments" className="surface-card flex flex-col gap-4 p-5">
+        <motion.section
+          {...fadeUp(3)}
+          aria-label="Recent payments"
+          className="surface-card flex flex-col gap-4 p-5"
+        >
           <p className="text-label">Recent payments</p>
           {payments === null ? (
             <LoadFailed what="payments" />
@@ -218,7 +253,10 @@ export function CustomerSalesPanel({
           ) : (
             <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
               {payments.map((payment) => (
-                <li key={payment.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={payment.id}
+                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0">
                     <p className="text-body-sm text-text-primary font-medium">
                       {payment.kind}
@@ -227,7 +265,10 @@ export function CustomerSalesPanel({
                     <p className="text-caption text-text-subtle">
                       Paid {formatDay(payment.paid_on)} ·{" "}
                       {payment.deal_id && payment.deal_number ? (
-                        <Link href={`/admin/sales/${payment.deal_id}`} className="text-primary-text hover:text-primary-hover">
+                        <Link
+                          href={`/admin/sales/${payment.deal_id}`}
+                          className="text-primary-text hover:text-primary-hover"
+                        >
                           {payment.deal_number}
                         </Link>
                       ) : payment.reservation_id && payment.reservation_number ? (

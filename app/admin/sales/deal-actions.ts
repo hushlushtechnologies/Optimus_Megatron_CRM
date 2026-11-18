@@ -7,7 +7,12 @@ import { mapSalesDbError } from "@/src/lib/utils/sales-errors";
 import type { SalesDealStatus } from "@/src/lib/types/sales";
 import type { CancellationReason, TransitionResult } from "@/src/lib/types/sales-actions";
 
-const PERMISSION_FOR = { Negotiation: "edit", Reserved: "edit", Confirmed: "confirm", Cancelled: "cancel" } as const;
+const PERMISSION_FOR = {
+  Negotiation: "edit",
+  Reserved: "edit",
+  Confirmed: "confirm",
+  Cancelled: "cancel",
+} as const;
 
 interface TransitionRow {
   out_status: SalesDealStatus;

@@ -42,14 +42,24 @@ export function DeliveryStepper({ status }: { status: Exclude<DeliveryStatus, "C
               >
                 {done ? <Check className="size-4" strokeWidth={2.5} aria-hidden="true" /> : index + 1}
               </motion.span>
-              <span className={cn("text-caption w-20 text-center leading-tight", active || done ? "text-text-primary font-semibold" : "text-text-subtle")}>
+              <span
+                className={cn(
+                  "text-caption w-20 text-center leading-tight",
+                  active || done ? "text-text-primary font-semibold" : "text-text-subtle",
+                )}
+              >
                 {step.label}
-                <span className="sr-only">{done ? " (done)" : active ? " (current step)" : " (not reached)"}</span>
+                <span className="sr-only">
+                  {done ? " (done)" : active ? " (current step)" : " (not reached)"}
+                </span>
               </span>
             </div>
 
             {index < STEPS.length - 1 && (
-              <span aria-hidden="true" className="bg-border relative mx-1 mt-4 h-0.5 flex-1 overflow-hidden rounded-full">
+              <span
+                aria-hidden="true"
+                className="bg-border relative mx-1 mt-4 h-0.5 flex-1 overflow-hidden rounded-full"
+              >
                 <motion.span
                   initial={reduce ? false : { width: 0 }}
                   animate={{ width: index < current || status === "Delivered" ? "100%" : "0%" }}

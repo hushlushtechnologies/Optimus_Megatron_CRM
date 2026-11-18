@@ -264,7 +264,7 @@ export function TestDrivesPageClient({
 
       {/* The search and filters belong to the table. The calendar keeps its own. */}
       {view === "table" && (
-                       <TestDriveToolbar
+        <TestDriveToolbar
           resultCount={tableData?.totalCount ?? 0}
           lookups={filterLookups}
           lookupsFailed={filterLookupsFailed}
@@ -290,9 +290,9 @@ export function TestDrivesPageClient({
               onPageSizeChange={(size) => updateParams({ pageSize: String(size), page: "1" })}
               hasActiveQuery={hasActiveQuery}
               onClearQuery={clearSearchAndFilters}
-                            
+
               staff={filterLookups.staff}
-                            archivedView={listQuery.archived}
+              archivedView={listQuery.archived}
             />
           ) : tableLoadFailed ? (
             <LoadFailed what="test drives" />

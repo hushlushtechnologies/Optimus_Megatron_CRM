@@ -98,7 +98,8 @@ export function DocumentsPanel({
         <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
           {documents.map((doc, index) => {
             const voided = doc.status === "Voided";
-            const expired = doc.doc_type === "Quotation" && !voided && !!doc.valid_until && doc.valid_until < today;
+            const expired =
+              doc.doc_type === "Quotation" && !voided && !!doc.valid_until && doc.valid_until < today;
             return (
               <motion.li key={doc.id} {...fadeUp(index)} className="flex flex-col gap-3 px-4 py-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -144,7 +145,9 @@ export function DocumentsPanel({
                     <span
                       className={cn(
                         "text-caption rounded-full border px-2 py-0.5",
-                        voided ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-success/40 bg-success/10 text-success",
+                        voided
+                          ? "border-red-500/40 bg-red-500/10 text-red-400"
+                          : "border-success/40 bg-success/10 text-success",
                       )}
                     >
                       {voided ? "Voided" : "Issued"}
@@ -154,7 +157,12 @@ export function DocumentsPanel({
 
                 <div className="flex flex-wrap gap-2">
                   <a href={documentPdfPath(doc.id)} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="h-11 sm:h-9" leftIcon={<Download className="size-4" aria-hidden="true" />}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-11 sm:h-9"
+                      leftIcon={<Download className="size-4" aria-hidden="true" />}
+                    >
                       Download PDF
                       <span className="sr-only"> (opens in a new tab)</span>
                     </Button>

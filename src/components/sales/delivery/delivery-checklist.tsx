@@ -29,12 +29,18 @@ export function DeliveryChecklist({ items, editable, canTick, canWaive }: Delive
   const [waiving, setWaiving] = useState<DeliveryItem | null>(null);
 
   const progress = checklistProgress(items);
-  const percent = progress.requiredTotal === 0 ? 100 : Math.round((progress.requiredReady / progress.requiredTotal) * 100);
+  const percent =
+    progress.requiredTotal === 0 ? 100 : Math.round((progress.requiredReady / progress.requiredTotal) * 100);
 
   const run = async (item: DeliveryItem, action: "done" | "undo" | "unwaive") => {
     setBusyId(item.id);
     try {
-      const result = await setDeliveryItemAction({ itemId: item.id, action, expectedState: item.state, note: "" });
+      const result = await setDeliveryItemAction({
+        itemId: item.id,
+        action,
+        expectedState: item.state,
+        note: "",
+      });
       if (result.error) {
         toast.error(result.error);
         return;
@@ -82,7 +88,11 @@ export function DeliveryChecklist({ items, editable, canTick, canWaive }: Delive
           {items.map((item, index) => {
             const Icon = item.state === "waived" ? MinusCircle : item.is_ready ? CheckCircle2 : Circle;
             const iconTone =
-              item.state === "waived" ? "text-amber-400" : item.is_ready ? "text-success" : "text-text-subtle";
+              item.state === "waived"
+                ? "text-amber-400"
+                : item.is_ready
+                  ? "text-success"
+                  : "text-text-subtle";
 
             return (
               <motion.li
@@ -93,7 +103,9 @@ export function DeliveryChecklist({ items, editable, canTick, canWaive }: Delive
                 <div className="flex items-start gap-3">
                   <Icon className={cn("mt-0.5 size-5 shrink-0", iconTone)} aria-hidden="true" />
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-body-sm", item.is_ready ? "text-text-primary" : "text-text-muted")}>
+                    <p
+                      className={cn("text-body-sm", item.is_ready ? "text-text-primary" : "text-text-muted")}
+                    >
                       {item.label}
                       <span className="sr-only">
                         {item.state === "waived" ? " (waived)" : item.is_ready ? " (ready)" : " (not ready)"}
@@ -106,7 +118,8 @@ export function DeliveryChecklist({ items, editable, canTick, canWaive }: Delive
                     {item.state !== "pending" && item.actioned_at && (
                       <p className="text-caption text-text-subtle">
                         {item.state === "waived" ? "Waived" : "Ticked"}
-                        {item.actioned_by_name ? ` by ${item.actioned_by_name}` : ""} on {formatDateTimeFull(item.actioned_at)}
+                        {item.actioned_by_name ? ` by ${item.actioned_by_name}` : ""} on{" "}
+                        {formatDateTimeFull(item.actioned_at)}
                       </p>
                     )}
                     {item.state === "waived" && item.note && (
@@ -140,7 +153,12 @@ export function DeliveryChecklist({ items, editable, canTick, canWaive }: Delive
                       </Button>
                     )}
                     {item.state === "pending" && !item.rule_met && canWaive && (
-                      <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={() => setWaiving(item)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-11 sm:h-9"
+                        onClick={() => setWaiving(item)}
+                      >
                         Waive
                       </Button>
                     )}

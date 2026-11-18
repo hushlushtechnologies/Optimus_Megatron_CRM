@@ -16,7 +16,7 @@ export const createReservationSchema = z
       .max(365, "That is too long.")
       .nullable(),
     notes: z.string().max(2000, "Keep the notes under 2,000 characters."),
-        waiveReason: z.string().max(500, "Keep the reason under 500 characters."),
+    waiveReason: z.string().max(500, "Keep the reason under 500 characters."),
   })
   .superRefine((value, ctx) => {
     if (value.mode === "confirm" && value.days === null) {
@@ -37,7 +37,11 @@ export const transitionReservationSchema = z
   })
   .superRefine((value, ctx) => {
     if (["reject", "cancel", "release"].includes(value.action) && value.reason.trim().length < 3) {
-      ctx.addIssue({ code: "custom", path: ["reason"], message: "Please give a reason (at least 3 characters)." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: "Please give a reason (at least 3 characters).",
+      });
     }
     if (["confirm", "extend"].includes(value.action) && value.days === null) {
       ctx.addIssue({ code: "custom", path: ["days"], message: "Enter the number of days." });

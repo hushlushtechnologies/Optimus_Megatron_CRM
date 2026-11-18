@@ -45,7 +45,6 @@ interface LeadDetailPageClientProps {
   salesPermissions: SalesPermissions;
 }
 
-
 export function LeadDetailPageClient({
   initialLead,
   stages,
@@ -57,7 +56,7 @@ export function LeadDetailPageClient({
   testDrives,
   testDrivePermissions,
   sales,
-  salesPermissions
+  salesPermissions,
 }: LeadDetailPageClientProps) {
   const router = useRouter();
   const [lead, setLead] = useState(initialLead);
@@ -87,7 +86,7 @@ export function LeadDetailPageClient({
   const leadIsOpen = lead.stage.stage_type === "open";
 
   // Only Create Test Drive is live. It opens the booking form for this lead's customer and vehicle.
-    /*
+  /*
    * Test Drive and Sales are both live now. Every other action in the Next
    * Steps card stays locked until its module exists.
    *
@@ -163,7 +162,7 @@ export function LeadDetailPageClient({
         <TabPanel id="vehicle">
           <VehicleTab lead={lead} />
         </TabPanel>
-                <TabPanel id="sales">
+        <TabPanel id="sales">
           <LeadSalesTab
             leadId={lead.id}
             customerId={lead.customer.id}

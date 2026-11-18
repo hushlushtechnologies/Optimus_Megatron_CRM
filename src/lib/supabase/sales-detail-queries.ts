@@ -40,7 +40,10 @@ interface ReservationRow {
   closed_reason: string | null;
 }
 
-type PaymentRow = Omit<DealPayment, "recorded_by_name" | "verified_by_name" | "reversed_by_name" | "amount"> & {
+type PaymentRow = Omit<
+  DealPayment,
+  "recorded_by_name" | "verified_by_name" | "reversed_by_name" | "amount"
+> & {
   amount: number | string;
   recorded_by: string | null;
   verified_by: string | null;
@@ -92,7 +95,11 @@ export async function getSalesDealDetail(id: string): Promise<SalesDealDetailRes
   const supabase = await createClient();
 
   const [viewResult, baseResult, settingsResult] = await Promise.all([
-    supabase.from("sales_deal_list").select(`${SALES_LIST_COLUMNS}, customer_phone`).eq("id", id).maybeSingle(),
+    supabase
+      .from("sales_deal_list")
+      .select(`${SALES_LIST_COLUMNS}, customer_phone`)
+      .eq("id", id)
+      .maybeSingle(),
     supabase
       .from("sales_deals")
       .select(
@@ -126,54 +133,73 @@ export async function getSalesDealDetail(id: string): Promise<SalesDealDetailRes
     ? activityQuery.or(`deal_id.eq.${id},reservation_id.eq.${reservationId}`)
     : activityQuery.eq("deal_id", id);
 
-  const [reservationResult, paymentsResult, priceResult, statusResult, activityResult, assignmentResult, contextResult] =
-    await Promise.all([
-      reservationId
-        ? supabase
-            .from("vehicle_reservations")
-            .select("id, reservation_number, status, source, starts_at, expires_at, confirmed_at, confirmed_by, closed_reason")
-            .eq("id", reservationId)
-            .maybeSingle()
-        : Promise.resolve(null),
-      supabase
-        .from("sales_payments")
-        .select(
-          "id, kind, direction, amount, currency, method, reference, paid_on, status, status_reason, recorded_by, recorded_at, verified_by, verified_at, reversed_by, reversed_at",
-        )
-        .eq("deal_id", id)
-        .order("recorded_at", { ascending: false })
-        .limit(200),
-      supabase
-        .from("sales_deal_price_history")
-        .select(
-                   "id, listed_price, proposed_price, discount_amount, fees_amount, tax_amount, agreed_price, approved_by, changed_by, changed_at, note",
-        )
-        .eq("deal_id", id)
-        .order("changed_at", { ascending: false })
-        .limit(50),
-      supabase
-        .from("sales_deal_status_history")
-        .select("id, old_status, new_status, reason, changed_by, changed_at")
-        .eq("deal_id", id)
-        .order("changed_at", { ascending: false })
-        .limit(100),
-      activityQuery,
-      supabase
-        .from("sales_deal_assignments")
-        .select("changed_by, changed_at")
-        .eq("deal_id", id)
-        .order("changed_at", { ascending: false })
-        .limit(1),
-      isFinished
-        ? Promise.resolve(null)
-        : supabase.rpc("get_vehicle_deal_context", { p_car_id: row.car_id, p_customer_id: null, p_lead_id: null }),
-    ]);
+  const [
+    reservationResult,
+    paymentsResult,
+    priceResult,
+    statusResult,
+    activityResult,
+    assignmentResult,
+    contextResult,
+  ] = await Promise.all([
+    reservationId
+      ? supabase
+          .from("vehicle_reservations")
+          .select(
+            "id, reservation_number, status, source, starts_at, expires_at, confirmed_at, confirmed_by, closed_reason",
+          )
+          .eq("id", reservationId)
+          .maybeSingle()
+      : Promise.resolve(null),
+    supabase
+      .from("sales_payments")
+      .select(
+        "id, kind, direction, amount, currency, method, reference, paid_on, status, status_reason, recorded_by, recorded_at, verified_by, verified_at, reversed_by, reversed_at",
+      )
+      .eq("deal_id", id)
+      .order("recorded_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("sales_deal_price_history")
+      .select(
+        "id, listed_price, proposed_price, discount_amount, fees_amount, tax_amount, agreed_price, approved_by, changed_by, changed_at, note",
+      )
+      .eq("deal_id", id)
+      .order("changed_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("sales_deal_status_history")
+      .select("id, old_status, new_status, reason, changed_by, changed_at")
+      .eq("deal_id", id)
+      .order("changed_at", { ascending: false })
+      .limit(100),
+    activityQuery,
+    supabase
+      .from("sales_deal_assignments")
+      .select("changed_by, changed_at")
+      .eq("deal_id", id)
+      .order("changed_at", { ascending: false })
+      .limit(1),
+    isFinished
+      ? Promise.resolve(null)
+      : supabase.rpc("get_vehicle_deal_context", {
+          p_car_id: row.car_id,
+          p_customer_id: null,
+          p_lead_id: null,
+        }),
+  ]);
 
-  [reservationResult, paymentsResult, priceResult, statusResult, activityResult, assignmentResult, contextResult].forEach(
-    (result) => {
-      if (result?.error) console.error("getSalesDealDetail list error:", result.error);
-    },
-  );
+  [
+    reservationResult,
+    paymentsResult,
+    priceResult,
+    statusResult,
+    activityResult,
+    assignmentResult,
+    contextResult,
+  ].forEach((result) => {
+    if (result?.error) console.error("getSalesDealDetail list error:", result.error);
+  });
 
   const reservationRow = reservationResult?.error
     ? null
@@ -249,7 +275,8 @@ export async function getSalesDealDetail(id: string): Promise<SalesDealDetailRes
 
   const contextRaw = contextResult?.error
     ? null
-    : ((Array.isArray(contextResult?.data) ? contextResult?.data[0] : contextResult?.data) as ContextRow | undefined);
+    : ((Array.isArray(contextResult?.data) ? contextResult?.data[0] : contextResult?.data) as
+        ContextRow | undefined);
 
   const vehicleContext: VehicleDealContext | null = contextRaw
     ? {
@@ -282,7 +309,7 @@ export async function getSalesDealDetail(id: string): Promise<SalesDealDetailRes
             status: p.status,
             status_reason: p.status_reason,
             recorded_by_name: personName(p.recorded_by),
-                        recorded_by: p.recorded_by,
+            recorded_by: p.recorded_by,
             recorded_at: p.recorded_at,
             verified_by_name: p.verified_by ? personName(p.verified_by) : null,
             verified_at: p.verified_at,
@@ -325,7 +352,10 @@ export async function getSalesDealDetail(id: string): Promise<SalesDealDetailRes
           }))
         : null,
       assignedBy: assignment
-        ? { name: assignment.changed_by ? personName(assignment.changed_by) : null, at: assignment.changed_at }
+        ? {
+            name: assignment.changed_by ? personName(assignment.changed_by) : null,
+            at: assignment.changed_at,
+          }
         : null,
       vehicleContext,
       settings: {

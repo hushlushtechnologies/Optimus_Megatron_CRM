@@ -40,7 +40,7 @@ export interface ReservationListRow {
   lead_number: string | null;
   deal_id: string | null;
   deal_number: string | null;
-    /** Verified deposit paid on this reservation, less refunds. */
+  /** Verified deposit paid on this reservation, less refunds. */
   deposit_verified: number;
   deposit_waived: boolean;
 }

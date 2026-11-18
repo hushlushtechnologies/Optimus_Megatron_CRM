@@ -2,10 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
-import {
-  assertCanDeleteCustomers,
-  assertCanManageCustomers,
-} from "@/src/lib/supabase/customer-permissions";
+import { assertCanDeleteCustomers, assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 
 /*
 |--------------------------------------------------------------------------
@@ -136,18 +133,12 @@ export async function deleteCustomer(customerId: string): Promise<CustomerAdminR
   const supabase = await createClient();
 
   const [deals, reservations, testDrives] = await Promise.all([
-    supabase
-      .from("sales_deals")
-      .select("id", { count: "exact", head: true })
-      .eq("customer_id", customerId),
+    supabase.from("sales_deals").select("id", { count: "exact", head: true }).eq("customer_id", customerId),
     supabase
       .from("vehicle_reservations")
       .select("id", { count: "exact", head: true })
       .eq("customer_id", customerId),
-    supabase
-      .from("test_drives")
-      .select("id", { count: "exact", head: true })
-      .eq("customer_id", customerId),
+    supabase.from("test_drives").select("id", { count: "exact", head: true }).eq("customer_id", customerId),
   ]);
 
   const blocking = [
@@ -157,9 +148,7 @@ export async function deleteCustomer(customerId: string): Promise<CustomerAdminR
   ].filter((entry) => entry.count > 0);
 
   if (blocking.length > 0) {
-    const parts = blocking.map(
-      (entry) => `${entry.count} ${entry.label}${entry.count === 1 ? "" : "s"}`,
-    );
+    const parts = blocking.map((entry) => `${entry.count} ${entry.label}${entry.count === 1 ? "" : "s"}`);
 
     return {
       error: `This customer has ${parts.join(", ")} on record and can't be deleted. Archive them instead to keep the history.`,

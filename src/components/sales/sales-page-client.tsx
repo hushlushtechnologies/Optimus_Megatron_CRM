@@ -98,7 +98,10 @@ export function SalesPageClient({
   const [isPending, startTransition] = useTransition();
   const s = summary ?? ZERO_SUMMARY;
 
-  const query = useMemo(() => parseSalesListParams(Object.fromEntries(searchParams.entries())), [searchParams]);
+  const query = useMemo(
+    () => parseSalesListParams(Object.fromEntries(searchParams.entries())),
+    [searchParams],
+  );
   const hasActiveQuery = query.search !== "" || countActiveSalesFilters(query.filters) > 0;
 
   const go = (mutate: (params: URLSearchParams) => void) => {
@@ -128,7 +131,8 @@ export function SalesPageClient({
       params.set("page", "1");
     });
 
-  const resultCount = view === "board" ? (boardData?.reduce((sum, c) => sum + c.total, 0) ?? 0) : (tableData?.totalCount ?? 0);
+  const resultCount =
+    view === "board" ? (boardData?.reduce((sum, c) => sum + c.total, 0) ?? 0) : (tableData?.totalCount ?? 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -139,14 +143,14 @@ export function SalesPageClient({
             Track every deal from first offer to delivery across Optimus showrooms.
           </p>
         </div>
-                  {(permissions.paymentsVerify || permissions.paymentsReverse) && (
-            <Link href="/admin/sales/payments">
-              <Button variant="outline" size="sm">
-                Payments
-              </Button>
-            </Link>
-          )}
-               <div className="flex flex-wrap items-center gap-2">
+        {(permissions.paymentsVerify || permissions.paymentsReverse) && (
+          <Link href="/admin/sales/payments">
+            <Button variant="outline" size="sm">
+              Payments
+            </Button>
+          </Link>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           {permissions.settings && (
             <Link href="/admin/sales/settings">
               <Button variant="outline" size="sm">
@@ -170,15 +174,25 @@ export function SalesPageClient({
           className="text-body-sm text-text-primary flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />
-          The summary numbers couldn&apos;t be loaded, so the cards below show zeros for now. Refresh the page to try
-          again.
+          The summary numbers couldn&apos;t be loaded, so the cards below show zeros for now. Refresh the page
+          to try again.
         </div>
       )}
 
       <section aria-label="Sales summary" className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="Open deals" value={s.openCount} icon={<FileText />} caption="Draft and negotiation" />
+        <MetricCard
+          label="Open deals"
+          value={s.openCount}
+          icon={<FileText />}
+          caption="Draft and negotiation"
+        />
         <MetricCard label="Reserved" value={s.reservedCount} icon={<Clock />} caption="Vehicle on hold" />
-        <MetricCard label="Confirmed" value={s.confirmedCount} icon={<CheckCircle2 />} caption="Awaiting delivery" />
+        <MetricCard
+          label="Confirmed"
+          value={s.confirmedCount}
+          icon={<CheckCircle2 />}
+          caption="Awaiting delivery"
+        />
         <MetricCard
           label="Completed"
           value={s.completedMonthCount}
@@ -203,9 +217,17 @@ export function SalesPageClient({
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <SalesToolbar resultCount={resultCount} lookups={filterLookups} lookupsFailed={filterLookupsFailed} />
+            <SalesToolbar
+              resultCount={resultCount}
+              lookups={filterLookups}
+              lookupsFailed={filterLookupsFailed}
+            />
           </div>
-          <div role="group" aria-label="Switch view" className="border-border flex shrink-0 items-center rounded-md border p-0.5">
+          <div
+            role="group"
+            aria-label="Switch view"
+            className="border-border flex shrink-0 items-center rounded-md border p-0.5"
+          >
             {VIEWS.map(({ key, label, hint, Icon }) => (
               <Tooltip key={key} content={hint}>
                 <IconButton
@@ -223,7 +245,10 @@ export function SalesPageClient({
           </div>
         </div>
 
-        <div className={isPending ? "opacity-60 transition-opacity" : "transition-opacity"} aria-busy={isPending}>
+        <div
+          className={isPending ? "opacity-60 transition-opacity" : "transition-opacity"}
+          aria-busy={isPending}
+        >
           {loadFailed ? (
             <LoadFailed what={view === "board" ? "pipeline" : "deals"} />
           ) : view === "board" ? (

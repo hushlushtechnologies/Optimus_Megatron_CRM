@@ -26,17 +26,12 @@ export function DealApproveDialog({ deal, settings, onClose, onDone }: DealAppro
   const currency = deal.currency;
   const proposed = toFils(deal.proposed_price);
   const ZERO_FILS = BigInt(0);
-const BASIS_POINTS_SCALE = BigInt(10_000);
+  const BASIS_POINTS_SCALE = BigInt(10_000);
 
-const discount =
-  toFils(deal.discount_amount) ?? ZERO_FILS;
+  const discount = toFils(deal.discount_amount) ?? ZERO_FILS;
 
-const bps =
-  proposed !== null && proposed > ZERO_FILS
-    ? Number(
-        (discount * BASIS_POINTS_SCALE) / proposed
-      )
-    : null;
+  const bps =
+    proposed !== null && proposed > ZERO_FILS ? Number((discount * BASIS_POINTS_SCALE) / proposed) : null;
   const limitBps = Math.max(0, Math.round(settings.autoApprovePercent * 100));
 
   const submit = async () => {
@@ -110,8 +105,8 @@ const bps =
         </dl>
 
         <p className="text-body-sm text-text-muted">
-          Your approval is recorded with your name and the time. If the price or the discount is changed afterwards, the
-          approval is withdrawn and needs to be given again.
+          Your approval is recorded with your name and the time. If the price or the discount is changed
+          afterwards, the approval is withdrawn and needs to be given again.
         </p>
 
         <Textarea

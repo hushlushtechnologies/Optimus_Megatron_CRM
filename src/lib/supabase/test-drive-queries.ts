@@ -62,7 +62,13 @@ export interface TestDriveListQueryOptions {
  * bulk actions can each add their own.
  */
 export function buildTestDriveListQuery(supabase: SupabaseServerClient, options: TestDriveListQueryOptions) {
-  const { columns, search = "", filters = EMPTY_TEST_DRIVE_FILTERS, archived = false, count = false } = options;
+  const {
+    columns,
+    search = "",
+    filters = EMPTY_TEST_DRIVE_FILTERS,
+    archived = false,
+    count = false,
+  } = options;
 
   let query = supabase.from("test_drive_list").select(columns, count ? { count: "exact" } : undefined);
 

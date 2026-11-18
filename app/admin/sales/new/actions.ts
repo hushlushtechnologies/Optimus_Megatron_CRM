@@ -10,7 +10,6 @@ import {
   getVehicleById,
   searchCustomers,
   searchVehicles,
-   
   getTestDriveById,
 } from "@/src/lib/supabase/test-drive-form-queries";
 import { createDealSchema } from "@/src/lib/validation/sales-deal";
@@ -32,7 +31,9 @@ import type {
 
 // --- Searches for the form (read-only) ---
 
-export async function searchDealCustomersAction(query: string): Promise<SearchResult<TestDriveCustomerOption>> {
+export async function searchDealCustomersAction(
+  query: string,
+): Promise<SearchResult<TestDriveCustomerOption>> {
   if (typeof query !== "string") return { results: [], failed: true };
   const permission = await requireSalesPermission("create");
   if (!permission.allowed) return { results: [], failed: true };
@@ -46,7 +47,9 @@ export async function searchDealVehiclesAction(query: string): Promise<SearchRes
   return searchVehicles(query);
 }
 
-export async function getDealCustomerLeadsAction(customerId: string): Promise<SearchResult<TestDriveLeadOption>> {
+export async function getDealCustomerLeadsAction(
+  customerId: string,
+): Promise<SearchResult<TestDriveLeadOption>> {
   const permission = await requireSalesPermission("create");
   if (!permission.allowed) return { results: [], failed: true };
   if (!z.string().uuid().safeParse(customerId).success) return { results: [], failed: true };
@@ -94,7 +97,8 @@ async function fetchContext(
     reservationExpiresAt: row.reservation_expires_at,
     customerOpenDealNumber: row.customer_open_deal_number,
     leadDealNumber: row.lead_deal_number,
-    listedPrice: row.listed_price === null || row.listed_price === undefined ? null : Number(row.listed_price),
+    listedPrice:
+      row.listed_price === null || row.listed_price === undefined ? null : Number(row.listed_price),
   };
 }
 
@@ -111,7 +115,12 @@ export async function getVehicleDealContextAction(input: unknown): Promise<Vehic
   const parsed = contextInputSchema.safeParse(input);
   if (!parsed.success) return { status: "error" };
 
-  const context = await fetchContext(start.supabase, parsed.data.carId, parsed.data.customerId, parsed.data.leadId);
+  const context = await fetchContext(
+    start.supabase,
+    parsed.data.carId,
+    parsed.data.customerId,
+    parsed.data.leadId,
+  );
   return context ? { status: "ok", context } : { status: "error" };
 }
 
@@ -175,11 +184,13 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
     } | null;
 
     if (!leadRow || leadRow.archived_at) return { error: "That lead could not be found." };
-    if (leadRow.customer_id !== v.customerId) return { error: "The selected lead belongs to a different customer." };
-    if (leadRow.stage?.stage_type !== "open") return { error: "That lead is already closed. Choose an open lead." };
+    if (leadRow.customer_id !== v.customerId)
+      return { error: "The selected lead belongs to a different customer." };
+    if (leadRow.stage?.stage_type !== "open")
+      return { error: "That lead is already closed. Choose an open lead." };
   }
 
-    // 3b. A test drive this deal came from must be this customer's, and for this vehicle.
+  // 3b. A test drive this deal came from must be this customer's, and for this vehicle.
   //     The link records provenance, so a mismatched one is worse than none.
   if (v.testDriveId) {
     const drive = await getTestDriveById(v.testDriveId);
@@ -192,8 +203,6 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
       return { error: "That test drive was for a different vehicle. Choose the matching vehicle." };
     }
   }
-
-
 
   // 4. The vehicle must be fit to start a deal on. The database refuses to reserve or confirm
   //    a vehicle someone else holds. This stops pointless drafts being created.
@@ -208,7 +217,7 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
       customer_id: v.customerId,
       car_id: v.carId,
       location_id: v.locationId,
-            lead_id: v.leadId,
+      lead_id: v.leadId,
       source_test_drive_id: v.testDriveId,
       owner_id: v.ownerId,
       proposed_price: decimalOrNull(v.proposedPrice),
@@ -220,7 +229,11 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
 
   if (insertError || !created) {
     console.error("createDealAction insert error:", insertError);
-    return { error: insertError ? mapSalesDbError(insertError) : "Your changes could not be saved. Please try again." };
+    return {
+      error: insertError
+        ? mapSalesDbError(insertError)
+        : "Your changes could not be saved. Please try again.",
+    };
   }
 
   revalidatePath("/admin/sales");

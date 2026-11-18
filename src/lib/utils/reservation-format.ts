@@ -8,41 +8,30 @@ import type { ReservationSettings } from "@/src/lib/types/reservations";
  * The deposit your settings require to hold a vehicle, in whole fils. null when no deposit is required
  * or it can't be worked out. A percentage is taken of the listed price and rounded up.
  */
-export function requiredReservationDeposit(settings: ReservationSettings, listedPrice: number | null): bigint | null {
+export function requiredReservationDeposit(
+  settings: ReservationSettings,
+  listedPrice: number | null,
+): bigint | null {
   if (settings.depositMode === "none") return null;
   const ZERO_FILS = BigInt(0);
-const BASIS_POINTS_SCALE = BigInt(10_000);
-const BASIS_POINTS_ROUND_UP_OFFSET = BigInt(9_999);
+  const BASIS_POINTS_SCALE = BigInt(10_000);
+  const BASIS_POINTS_ROUND_UP_OFFSET = BigInt(9_999);
 
-if (settings.depositMode === "fixed") {
-  const fixed = toFils(settings.depositValue);
+  if (settings.depositMode === "fixed") {
+    const fixed = toFils(settings.depositValue);
 
-  return fixed !== null && fixed > ZERO_FILS
-    ? fixed
-    : null;
-}
+    return fixed !== null && fixed > ZERO_FILS ? fixed : null;
+  }
 
-const price = toFils(listedPrice);
+  const price = toFils(listedPrice);
 
-const basisPoints = BigInt(
-  Math.max(
-    0,
-    Math.round(settings.depositValue * 100)
-  )
-);
+  const basisPoints = BigInt(Math.max(0, Math.round(settings.depositValue * 100)));
 
-if (
-  price === null ||
-  price <= ZERO_FILS ||
-  basisPoints === ZERO_FILS
-) {
-  return null;
-}
+  if (price === null || price <= ZERO_FILS || basisPoints === ZERO_FILS) {
+    return null;
+  }
 
-return (
-  price * basisPoints +
-  BASIS_POINTS_ROUND_UP_OFFSET
-) / BASIS_POINTS_SCALE;
+  return (price * basisPoints + BASIS_POINTS_ROUND_UP_OFFSET) / BASIS_POINTS_SCALE;
 }
 
 /**
@@ -75,7 +64,9 @@ export function describeReservationContext(
   const heldBy: string[] = [];
   if (context.holderStatus === "Reserved") heldBy.push(`deal ${context.holderDealNumber}`);
   if (context.reservationNumber && context.reservationExpiresAt) {
-    heldBy.push(`reservation ${context.reservationNumber} until ${formatDateTimeFull(context.reservationExpiresAt)}`);
+    heldBy.push(
+      `reservation ${context.reservationNumber} until ${formatDateTimeFull(context.reservationExpiresAt)}`,
+    );
   }
 
   if (heldBy.length > 0) {

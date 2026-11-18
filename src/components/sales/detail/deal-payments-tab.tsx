@@ -27,7 +27,13 @@ function Tile({ label, value, hint, index }: { label: string; value: string; hin
   );
 }
 
-export function DealPaymentsTab({ deal, payments, permissions, currentUserId, separateVerifier }: DealPaymentsTabProps) {
+export function DealPaymentsTab({
+  deal,
+  payments,
+  permissions,
+  currentUserId,
+  separateVerifier,
+}: DealPaymentsTabProps) {
   const currency = deal.currency;
   const fmt = (value: number | null) => (value === null ? "—" : formatFils(toFils(value), currency));
 
@@ -35,14 +41,24 @@ export function DealPaymentsTab({ deal, payments, permissions, currentUserId, se
     <div className="flex flex-col gap-6">
       <section aria-label="Payment totals" className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Tile index={0} label="Total due" value={fmt(deal.total_due)} hint="Agreed price, fees and tax" />
-        <Tile index={1} label="Verified paid" value={fmt(deal.verified_paid ?? 0)} hint="Counts toward the balance" />
+        <Tile
+          index={1}
+          label="Verified paid"
+          value={fmt(deal.verified_paid ?? 0)}
+          hint="Counts toward the balance"
+        />
         <Tile
           index={2}
           label="Awaiting verification"
           value={fmt(deal.awaiting_verification ?? 0)}
           hint="Recorded, not yet confirmed"
         />
-        <Tile index={3} label="Balance due" value={fmt(deal.balance_due)} hint="Total due minus verified paid" />
+        <Tile
+          index={3}
+          label="Balance due"
+          value={fmt(deal.balance_due)}
+          hint="Total due minus verified paid"
+        />
       </section>
 
       <PaymentsPanel

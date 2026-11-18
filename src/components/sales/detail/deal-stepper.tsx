@@ -74,7 +74,10 @@ export function DealStepper({ status, stoppedAt, visited }: DealStepperProps) {
                 initial={reduce ? false : { scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={transition(0.3, index * 0.07)}
-                className={cn("flex size-8 items-center justify-center rounded-full border text-xs font-semibold", CIRCLE[state])}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full border text-xs font-semibold",
+                  CIRCLE[state],
+                )}
               >
                 {state === "done" ? (
                   <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
@@ -99,12 +102,18 @@ export function DealStepper({ status, stoppedAt, visited }: DealStepperProps) {
             </div>
 
             {index < STEPS.length - 1 && (
-              <span aria-hidden="true" className="bg-border relative mx-1 mt-4 h-0.5 flex-1 overflow-hidden rounded-full">
+              <span
+                aria-hidden="true"
+                className="bg-border relative mx-1 mt-4 h-0.5 flex-1 overflow-hidden rounded-full"
+              >
                 <motion.span
                   initial={reduce ? false : { width: 0 }}
                   animate={{ width: filled ? "100%" : "0%" }}
                   transition={transition(0.45, 0.15 + index * 0.1)}
-                  className={cn("absolute inset-y-0 left-0 rounded-full", cancelled ? "bg-text-subtle/50" : "bg-primary")}
+                  className={cn(
+                    "absolute inset-y-0 left-0 rounded-full",
+                    cancelled ? "bg-text-subtle/50" : "bg-primary",
+                  )}
                 />
               </span>
             )}

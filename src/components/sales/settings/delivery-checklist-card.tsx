@@ -73,7 +73,12 @@ function TemplateDialog({
       }
     >
       <div className="flex flex-col gap-4">
-        <Input label="What needs to be done?" value={label} maxLength={80} onChange={(event) => setLabel(event.target.value)} />
+        <Input
+          label="What needs to be done?"
+          value={label}
+          maxLength={80}
+          onChange={(event) => setLabel(event.target.value)}
+        />
 
         {template?.rule && (
           <p className="text-body-sm text-text-muted">
@@ -104,7 +109,9 @@ function TemplateDialog({
             className="accent-primary mt-1 size-4"
           />
           <span>
-            <span className="text-body-sm text-text-primary block font-medium">Include on new deliveries</span>
+            <span className="text-body-sm text-text-primary block font-medium">
+              Include on new deliveries
+            </span>
             <span className="text-caption text-text-subtle block">
               Deliveries already prepared keep the checks they started with.
             </span>
@@ -152,7 +159,11 @@ export function DeliveryChecklistCard({ templates }: { templates: DeliveryTempla
   };
 
   return (
-    <motion.section {...fadeUp(4)} aria-label="Delivery checklist" className="surface-card flex flex-col gap-4 p-5">
+    <motion.section
+      {...fadeUp(4)}
+      aria-label="Delivery checklist"
+      className="surface-card flex flex-col gap-4 p-5"
+    >
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <span className="text-primary">
@@ -171,8 +182,8 @@ export function DeliveryChecklistCard({ templates }: { templates: DeliveryTempla
       </header>
 
       <p className="text-body-sm text-text-muted">
-        The checks to finish before a vehicle is handed over. Each delivery copies these when it is prepared, so changes
-        here apply to new deliveries.
+        The checks to finish before a vehicle is handed over. Each delivery copies these when it is prepared,
+        so changes here apply to new deliveries.
       </p>
 
       {templates === null ? (
@@ -184,14 +195,23 @@ export function DeliveryChecklistCard({ templates }: { templates: DeliveryTempla
         </p>
       ) : templates.length === 0 ? (
         <p className="border-border text-body-sm text-text-muted rounded-md border border-dashed px-4 py-6 text-center">
-          There are no checks yet, so a vehicle can be handed over straight away. Add some if you want a checklist.
+          There are no checks yet, so a vehicle can be handed over straight away. Add some if you want a
+          checklist.
         </p>
       ) : (
         <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
           {templates.map((template) => (
-            <li key={template.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <li
+              key={template.id}
+              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
-                <p className={cn("text-body-sm font-medium", template.is_active ? "text-text-primary" : "text-text-subtle")}>
+                <p
+                  className={cn(
+                    "text-body-sm font-medium",
+                    template.is_active ? "text-text-primary" : "text-text-subtle",
+                  )}
+                >
                   {template.label}
                   {!template.is_active && <span className="text-caption ml-2 font-normal">Off</span>}
                 </p>
@@ -204,7 +224,12 @@ export function DeliveryChecklistCard({ templates }: { templates: DeliveryTempla
                 <Button size="sm" variant="outline" onClick={() => setEditing(template)}>
                   Edit
                 </Button>
-                <Button size="sm" variant="ghost" isLoading={busyId === template.id} onClick={() => void toggle(template)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  isLoading={busyId === template.id}
+                  onClick={() => void toggle(template)}
+                >
                   {template.is_active ? "Switch off" : "Switch on"}
                 </Button>
               </div>

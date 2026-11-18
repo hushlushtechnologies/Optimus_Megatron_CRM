@@ -15,13 +15,41 @@ import { UNASSIGNED_RESERVATION_OWNER } from "@/src/lib/utils/reservation-params
 import { cleanSearchTerm, phoneDigitsForSearch } from "@/src/lib/utils/test-drive-list-filters";
 
 export const RESERVATION_COLUMNS = [
-  "id", "reservation_number", "status", "source", "is_live",
-  "requested_at", "requested_by", "requested_by_name", "confirmed_at", "starts_at", "expires_at",
-  "closed_at", "closed_reason", "notes", "updated_at",
-  "customer_id", "customer_name", "customer_number", "customer_phone", "customer_photo_url",
-  "car_id", "vehicle_title", "stock_id", "brand_name", "listed_price",
-  "location_id", "location_name", "owner_id", "owner_name",
-    "lead_id", "lead_number", "deal_id", "deal_number", "deposit_verified", "deposit_waived",
+  "id",
+  "reservation_number",
+  "status",
+  "source",
+  "is_live",
+  "requested_at",
+  "requested_by",
+  "requested_by_name",
+  "confirmed_at",
+  "starts_at",
+  "expires_at",
+  "closed_at",
+  "closed_reason",
+  "notes",
+  "updated_at",
+  "customer_id",
+  "customer_name",
+  "customer_number",
+  "customer_phone",
+  "customer_photo_url",
+  "car_id",
+  "vehicle_title",
+  "stock_id",
+  "brand_name",
+  "listed_price",
+  "location_id",
+  "location_name",
+  "owner_id",
+  "owner_name",
+  "lead_id",
+  "lead_number",
+  "deal_id",
+  "deal_number",
+  "deposit_verified",
+  "deposit_waived",
 ].join(", ");
 
 export const RESERVATION_SORT_MAP: Record<ReservationSort, { column: string; ascending: boolean }> = {
@@ -67,7 +95,9 @@ interface ListQueryOptions {
 export function buildReservationListQuery(supabase: SalesSupabaseClient, options: ListQueryOptions) {
   const { columns, search = "", tab, showroom = null, owner = null, source = null, count = false } = options;
 
-  let query = supabase.from("vehicle_reservation_list").select(columns, count ? { count: "exact" } : undefined);
+  let query = supabase
+    .from("vehicle_reservation_list")
+    .select(columns, count ? { count: "exact" } : undefined);
 
   if (tab === "requests") query = query.eq("status", "Requested");
   else if (tab === "active") query = query.eq("status", "Confirmed");
@@ -178,7 +208,10 @@ export async function getReservationLookups(): Promise<ReservationLookupsResult>
       failed: !!(showrooms.error || owners.error || settings.error || !settingsRow),
       lookups: {
         showrooms: showrooms.data ?? [],
-        owners: ownerRows.map((owner) => ({ id: owner.id, name: owner.full_name?.trim() || "Unnamed staff" })),
+        owners: ownerRows.map((owner) => ({
+          id: owner.id,
+          name: owner.full_name?.trim() || "Unnamed staff",
+        })),
         settings: settingsRow ? toReservationSettings(settingsRow) : null,
       },
     };
@@ -213,7 +246,10 @@ export async function getReservationDetail(id: string): Promise<ReservationDetai
   ]);
 
   if (viewResult.error || baseResult.error || settingsResult.error || !settingsResult.data) {
-    console.error("getReservationDetail error:", viewResult.error ?? baseResult.error ?? settingsResult.error);
+    console.error(
+      "getReservationDetail error:",
+      viewResult.error ?? baseResult.error ?? settingsResult.error,
+    );
     return { status: "error" };
   }
   if (!viewResult.data || !baseResult.data) return { status: "not_found" };

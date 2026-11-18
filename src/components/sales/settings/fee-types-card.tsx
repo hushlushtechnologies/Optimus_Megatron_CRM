@@ -167,7 +167,12 @@ export function FeeTypesCard({ feeTypes, feesEnabled, currency }: FeeTypesCardPr
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-label">Fee types</p>
-        <Button size="sm" variant="secondary" leftIcon={<Plus className="size-4" aria-hidden="true" />} onClick={() => setEditing("new")}>
+        <Button
+          size="sm"
+          variant="secondary"
+          leftIcon={<Plus className="size-4" aria-hidden="true" />}
+          onClick={() => setEditing("new")}
+        >
           Add a fee
         </Button>
       </div>
@@ -185,9 +190,17 @@ export function FeeTypesCard({ feeTypes, feesEnabled, currency }: FeeTypesCardPr
       ) : (
         <ul className="divide-border border-border divide-y overflow-hidden rounded-md border">
           {feeTypes.map((fee) => (
-            <li key={fee.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <li
+              key={fee.id}
+              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
-                <p className={cn("text-body-sm font-medium", fee.is_active ? "text-text-primary" : "text-text-subtle")}>
+                <p
+                  className={cn(
+                    "text-body-sm font-medium",
+                    fee.is_active ? "text-text-primary" : "text-text-subtle",
+                  )}
+                >
                   {fee.name}
                   {!fee.is_active && <span className="text-caption ml-2 font-normal">Off</span>}
                 </p>
@@ -197,7 +210,12 @@ export function FeeTypesCard({ feeTypes, feesEnabled, currency }: FeeTypesCardPr
                 <Button size="sm" variant="outline" onClick={() => setEditing(fee)}>
                   Edit
                 </Button>
-                <Button size="sm" variant="ghost" isLoading={busyId === fee.id} onClick={() => void toggle(fee)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  isLoading={busyId === fee.id}
+                  onClick={() => void toggle(fee)}
+                >
                   {fee.is_active ? "Switch off" : "Switch on"}
                 </Button>
               </div>

@@ -162,12 +162,17 @@ export function DealPricingDialog({
         <div className="border-border bg-card-hover/40 flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2.5">
           <div>
             <p className="text-caption text-text-subtle">Price when the deal started</p>
-                        <p className="text-body text-text-primary font-medium tabular-nums">
+            <p className="text-body text-text-primary font-medium tabular-nums">
               {listed !== null ? formatFils(toFils(listed), currency) : "Not set on the vehicle"}
             </p>
           </div>
           {listed !== null && (
-            <Button type="button" size="sm" variant="secondary" onClick={() => setProposed(decimalText(listed))}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setProposed(decimalText(listed))}
+            >
               Use this price
             </Button>
           )}
@@ -212,7 +217,9 @@ export function DealPricingDialog({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-body-sm text-text-primary block font-medium">{fee.name}</span>
-                    <span className="text-caption text-text-subtle block">{describeFeeRule(fee, currency)}</span>
+                    <span className="text-caption text-text-subtle block">
+                      {describeFeeRule(fee, currency)}
+                    </span>
                   </span>
                   <span className="text-body-sm text-text-primary tabular-nums">
                     {amount !== null ? formatFils(amount, currency) : "—"}
@@ -222,8 +229,8 @@ export function DealPricingDialog({
             })}
             {retiredFees.length > 0 && (
               <Alert tone="warning">
-                {retiredFees.map((fee) => fee.name).join(", ")} {retiredFees.length === 1 ? "has" : "have"} been switched
-                off and will be removed from this deal when you save.
+                {retiredFees.map((fee) => fee.name).join(", ")} {retiredFees.length === 1 ? "has" : "have"}{" "}
+                been switched off and will be removed from this deal when you save.
               </Alert>
             )}
           </fieldset>
@@ -231,10 +238,14 @@ export function DealPricingDialog({
 
         <dl className="border-border divide-border divide-y overflow-hidden rounded-md border">
           {[
-            ["Proposed price", preview.proposedFils !== null ? formatFils(preview.proposedFils, currency) : "—"],
-            ["Discount", preview.discountFils > BigInt(0)
-  ? `− ${formatFils(preview.discountFils, currency)}`
-  : "None"],
+            [
+              "Proposed price",
+              preview.proposedFils !== null ? formatFils(preview.proposedFils, currency) : "—",
+            ],
+            [
+              "Discount",
+              preview.discountFils > BigInt(0) ? `− ${formatFils(preview.discountFils, currency)}` : "None",
+            ],
             ["Net price", preview.netFils !== null ? formatFils(preview.netFils, currency) : "—"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-center justify-between gap-3 px-3 py-2">
@@ -245,7 +256,9 @@ export function DealPricingDialog({
           {preview.feeLines.map((line) => (
             <div key={line.id} className="flex items-center justify-between gap-3 px-3 py-2">
               <dt className="text-caption text-text-subtle">{line.name}</dt>
-              <dd className="text-body-sm text-text-primary tabular-nums">{formatFils(line.amountFils, currency)}</dd>
+              <dd className="text-body-sm text-text-primary tabular-nums">
+                {formatFils(line.amountFils, currency)}
+              </dd>
             </div>
           ))}
           <div className="bg-primary/5 flex items-center justify-between gap-3 px-3 py-3">
@@ -296,4 +309,3 @@ export function DealPricingDialog({
     </Modal>
   );
 }
-

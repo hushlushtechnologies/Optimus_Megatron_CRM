@@ -39,9 +39,18 @@ interface ReservationsTableProps {
 }
 
 const EMPTY_COPY: Record<ReservationTab, { title: string; description: string }> = {
-  requests: { title: "No requests waiting", description: "New reservation requests from staff or the website appear here for review." },
-  active: { title: "No active holds", description: "A confirmed reservation holds a vehicle for a customer until it expires. They appear here." },
-  history: { title: "Nothing in the history yet", description: "Converted, cancelled, released, expired and rejected reservations appear here." },
+  requests: {
+    title: "No requests waiting",
+    description: "New reservation requests from staff or the website appear here for review.",
+  },
+  active: {
+    title: "No active holds",
+    description: "A confirmed reservation holds a vehicle for a customer until it expires. They appear here.",
+  },
+  history: {
+    title: "Nothing in the history yet",
+    description: "Converted, cancelled, released, expired and rejected reservations appear here.",
+  },
   all: { title: "No reservations yet", description: "Reservations you create will appear here." },
 };
 
@@ -58,14 +67,18 @@ function HoldCell({ row }: { row: ReservationListRow }) {
       </div>
     );
   }
-  if (row.closed_reason) return <span className="text-text-muted line-clamp-2 text-xs">{row.closed_reason}</span>;
+  if (row.closed_reason)
+    return <span className="text-text-muted line-clamp-2 text-xs">{row.closed_reason}</span>;
   return <span className="text-text-subtle">—</span>;
 }
 
 function DealCell({ row }: { row: ReservationListRow }) {
   if (!row.deal_id) return <span className="text-text-subtle">—</span>;
   return (
-    <Link href={`/admin/sales/${row.deal_id}`} className="text-text-primary hover:text-primary-text font-medium whitespace-nowrap">
+    <Link
+      href={`/admin/sales/${row.deal_id}`}
+      className="text-text-primary hover:text-primary-text font-medium whitespace-nowrap"
+    >
       {row.deal_number ?? "Open deal"}
     </Link>
   );
@@ -86,7 +99,10 @@ function ReservationCard({
     <motion.li {...fadeUp(index)} className="surface-card flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <Link href={`/admin/reservations/${row.id}`} className="text-text-primary block truncate font-medium">
+          <Link
+            href={`/admin/reservations/${row.id}`}
+            className="text-text-primary block truncate font-medium"
+          >
             {row.reservation_number}
           </Link>
           <p className="text-caption text-text-subtle">Requested {formatDay(row.requested_at)}</p>
@@ -172,7 +188,11 @@ export function ReservationsTable({
       size: 230,
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
-          <CustomerAvatar fullName={row.original.customer_name} photoUrl={row.original.customer_photo_url} size="sm" />
+          <CustomerAvatar
+            fullName={row.original.customer_name}
+            photoUrl={row.original.customer_photo_url}
+            size="sm"
+          />
           <div className="min-w-0">
             <Link
               href={`/admin/customers/${row.original.customer_id}`}
@@ -209,7 +229,9 @@ export function ReservationsTable({
       header: "Status",
       enableSorting: false,
       size: 140,
-      cell: ({ row }) => <ReservationStatusBadge status={effectiveReservationStatus(row.original)} size="sm" />,
+      cell: ({ row }) => (
+        <ReservationStatusBadge status={effectiveReservationStatus(row.original)} size="sm" />
+      ),
     }),
     columnHelper.display({
       id: "hold",
@@ -260,7 +282,9 @@ export function ReservationsTable({
         <SearchX className="text-text-subtle size-8" aria-hidden="true" />
         <div>
           <p className="text-body text-text-primary font-medium">No reservations match your search</p>
-          <p className="text-body-sm text-text-muted mt-1">Try different words, or remove some of the filters.</p>
+          <p className="text-body-sm text-text-muted mt-1">
+            Try different words, or remove some of the filters.
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={onClearQuery}>
           Clear search and filters

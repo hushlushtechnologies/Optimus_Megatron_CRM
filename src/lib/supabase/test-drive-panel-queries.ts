@@ -49,7 +49,7 @@ export async function getTestDrivesForPanel(filter: {
     )
     .is("archived_at", null);
 
-    if (filter.leadId) {
+  if (filter.leadId) {
     query = query.eq("lead_id", filter.leadId);
   } else {
     query = query.eq("customer_id", filter.customerId as string);

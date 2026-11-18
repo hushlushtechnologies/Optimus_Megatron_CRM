@@ -255,7 +255,7 @@ export function TestDriveToolbar({ resultCount, lookups, lookupsFailed }: TestDr
               )}
             </Button>
 
-                        <SortControl options={SORT_OPTIONS} value={sort} onChange={updateSort} />
+            <SortControl options={SORT_OPTIONS} value={sort} onChange={updateSort} />
 
             {/*
               The archived view. The handler existed but was never rendered, so

@@ -52,11 +52,7 @@ export function generateTestDrivePdf(rows: TestDriveExportRow[], meta: TestDrive
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(180, 83, 9);
-    doc.text(
-      "Not every matching test drive is in this file. Narrow the filters to export the rest.",
-      10,
-      30,
-    );
+    doc.text("Not every matching test drive is in this file. Narrow the filters to export the rest.", 10, 30);
     doc.setFont("helvetica", "normal");
     startY = 34;
   }

@@ -40,7 +40,7 @@ export async function getDealAssignmentHistory(dealId: string): Promise<Assignme
   if (profilesError) console.error("getDealAssignmentHistory names error:", profilesError);
 
   const name = (id: string | null): string | null =>
-    id ? (profiles?.find((profile) => profile.id === id)?.full_name?.trim() || "Unnamed staff") : null;
+    id ? profiles?.find((profile) => profile.id === id)?.full_name?.trim() || "Unnamed staff" : null;
 
   return rows.map((row) => ({
     id: row.id,

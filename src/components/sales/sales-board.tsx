@@ -2,20 +2,13 @@
 
 import { SalesDealCard } from "@/src/components/sales/sales-deal-card";
 
-import {
-  SalesStatusBadge,
-  SALES_STATUS_META,
-} from "@/src/components/sales/sales-status-badge";
+import { SalesStatusBadge, SALES_STATUS_META } from "@/src/components/sales/sales-status-badge";
 
 import { Button } from "@/src/components/ui/button";
 
-import type {
-  SalesDealStatus,
-} from "@/src/lib/types/sales";
+import type { SalesDealStatus } from "@/src/lib/types/sales";
 
-import type {
-  SalesBoardColumn,
-} from "@/src/lib/types/sales-list";
+import type { SalesBoardColumn } from "@/src/lib/types/sales-list";
 
 /* =========================================================
    TYPES
@@ -24,9 +17,7 @@ import type {
 interface SalesBoardProps {
   columns: SalesBoardColumn[];
 
-  onViewAll: (
-    status: SalesDealStatus
-  ) => void;
+  onViewAll: (status: SalesDealStatus) => void;
 }
 
 /**
@@ -34,16 +25,10 @@ interface SalesBoardProps {
  * Moving a deal between columns arrives
  * with the status workflow.
  */
-export function SalesBoard({
-  columns,
-  onViewAll,
-}: SalesBoardProps) {
+export function SalesBoard({ columns, onViewAll }: SalesBoardProps) {
   if (columns.length === 0) {
     return (
-      <p
-        role="status"
-        className="surface-card text-body-sm text-text-muted p-6 text-center"
-      >
+      <p role="status" className="surface-card text-body-sm text-text-muted p-6 text-center">
         The board shows open deals. Use the table or grid to see completed or cancelled deals.
       </p>
     );
@@ -61,12 +46,9 @@ export function SalesBoard({
       className="scrollbar-hidden -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2"
     >
       {columns.map((column) => {
-        const visibleCount =
-          column.rows.length;
+        const visibleCount = column.rows.length;
 
-        const hasMore =
-          column.total >
-          visibleCount;
+        const hasMore = column.total > visibleCount;
 
         return (
           <section
@@ -75,21 +57,13 @@ export function SalesBoard({
             className="bg-card/40 border-border flex w-[290px] shrink-0 snap-start flex-col gap-3 rounded-xl border p-3"
           >
             <header className="flex items-center justify-between gap-2">
-              <SalesStatusBadge
-                status={column.status}
-              />
+              <SalesStatusBadge status={column.status} />
 
-              <span className="text-body-sm text-text-muted tabular-nums">
-                {column.total}
-              </span>
+              <span className="text-body-sm text-text-muted tabular-nums">{column.total}</span>
             </header>
 
             <p className="text-caption text-text-subtle -mt-1">
-              {
-                SALES_STATUS_META[
-                  column.status
-                ].description
-              }
+              {SALES_STATUS_META[column.status].description}
             </p>
 
             {visibleCount === 0 ? (
@@ -98,35 +72,15 @@ export function SalesBoard({
               </p>
             ) : (
               <ul className="flex flex-col gap-2.5">
-                {column.rows.map(
-                  (
-                    row,
-                    index
-                  ) => (
-                    <SalesDealCard
-                      key={row.id}
-                      row={row}
-                      compact
-                      index={index}
-                    />
-                  )
-                )}
+                {column.rows.map((row, index) => (
+                  <SalesDealCard key={row.id} row={row} compact index={index} />
+                ))}
               </ul>
             )}
 
             {hasMore && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  onViewAll(
-                    column.status
-                  )
-                }
-              >
-                Showing{" "}
-                {visibleCount} of{" "}
-                {column.total}. View all
+              <Button variant="ghost" size="sm" onClick={() => onViewAll(column.status)}>
+                Showing {visibleCount} of {column.total}. View all
               </Button>
             )}
           </section>

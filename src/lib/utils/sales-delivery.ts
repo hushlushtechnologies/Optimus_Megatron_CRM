@@ -24,8 +24,12 @@ export function checklistProgress(items: readonly DeliveryItem[]): ChecklistProg
   };
 }
 
-export function deliveryPlace(delivery: Pick<DeliveryRecord, "delivery_mode" | "location_name" | "address">): string | null {
-  if (delivery.delivery_mode === "showroom") return delivery.location_name ? `At ${delivery.location_name} showroom` : null;
-  if (delivery.delivery_mode === "address") return delivery.address ? `Delivered to ${delivery.address}` : null;
+export function deliveryPlace(
+  delivery: Pick<DeliveryRecord, "delivery_mode" | "location_name" | "address">,
+): string | null {
+  if (delivery.delivery_mode === "showroom")
+    return delivery.location_name ? `At ${delivery.location_name} showroom` : null;
+  if (delivery.delivery_mode === "address")
+    return delivery.address ? `Delivered to ${delivery.address}` : null;
   return null;
 }

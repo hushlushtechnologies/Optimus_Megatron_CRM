@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { toFils } from "@/src/lib/utils/sales-money";
+import { z } from "zod";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -18,7 +18,11 @@ export const recordPaymentSchema = z
   })
   .superRefine((value, ctx) => {
     if ((value.dealId === null) === (value.reservationId === null)) {
-      ctx.addIssue({ code: "custom", path: ["dealId"], message: "A payment belongs to a deal or a reservation." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["dealId"],
+        message: "A payment belongs to a deal or a reservation.",
+      });
     }
 
     const fils = toFils(value.amount);
@@ -35,9 +39,26 @@ export const recordPaymentSchema = z
     }
 
     if (value.kind === "Refund" && value.notes.trim().length < 3) {
-      ctx.addIssue({ code: "custom", path: ["notes"], message: "Please say why the money is being refunded." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["notes"],
+        message: "Please say why the money is being refunded.",
+      });
     }
   });
+
+/**
+ * A bulk verification.
+ *
+ * Capped at 100 so one request can't lock a large slice of the payments table,
+ * which is also comfortably more than a page of the queue holds.
+ */
+export const verifyPaymentsSchema = z.object({
+  ids: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one payment to verify.")
+    .max(100, "Verify at most 100 payments at a time."),
+});
 
 export const setPaymentStatusSchema = z
   .object({
@@ -47,6 +68,10 @@ export const setPaymentStatusSchema = z
   })
   .superRefine((value, ctx) => {
     if (value.action !== "verify" && value.reason.trim().length < 3) {
-      ctx.addIssue({ code: "custom", path: ["reason"], message: "Please give a reason (at least 3 characters)." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: "Please give a reason (at least 3 characters).",
+      });
     }
   });

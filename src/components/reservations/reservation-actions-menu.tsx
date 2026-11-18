@@ -35,9 +35,15 @@ interface ReservationActionsMenuProps {
   onAction: (kind: ReservationActionKind, row: ReservationListRow) => void;
 }
 
-export function ReservationActionsMenu({ row, permissions, currentUserId, onAction }: ReservationActionsMenuProps) {
+export function ReservationActionsMenu({
+  row,
+  permissions,
+  currentUserId,
+  onAction,
+}: ReservationActionsMenuProps) {
   const actions = availableReservationActions(row, permissions, currentUserId);
-  const itemClass = "text-body-sm text-text-primary hover:bg-card-hover flex items-center gap-2.5 px-4 py-3 sm:py-2";
+  const itemClass =
+    "text-body-sm text-text-primary hover:bg-card-hover flex items-center gap-2.5 px-4 py-3 sm:py-2";
 
   return (
     <Dropdown>
@@ -71,7 +77,10 @@ export function ReservationActionsMenu({ row, permissions, currentUserId, onActi
               onClick={() => onAction(kind, row)}
               className="text-body-sm hover:bg-card-hover flex w-full items-center gap-2.5 px-4 py-3 text-left sm:py-2"
             >
-              <Icon className={cn("size-4", meta.destructive ? "text-red-500" : "text-text-muted")} aria-hidden="true" />
+              <Icon
+                className={cn("size-4", meta.destructive ? "text-red-500" : "text-text-muted")}
+                aria-hidden="true"
+              />
               <span className={meta.destructive ? "text-red-500" : "text-text-primary"}>{meta.label}</span>
             </button>
           );

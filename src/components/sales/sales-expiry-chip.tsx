@@ -27,7 +27,10 @@ export function SalesExpiryChip({
 
   return (
     <span
-      className={cn("text-caption inline-flex items-center gap-1 rounded-full border px-2 py-0.5 tabular-nums", TONE[tone])}
+      className={cn(
+        "text-caption inline-flex items-center gap-1 rounded-full border px-2 py-0.5 tabular-nums",
+        TONE[tone],
+      )}
     >
       <Timer className="size-3" aria-hidden="true" />
       <span className="sr-only">Reservation: </span>

@@ -2,15 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import {
-  Banknote,
-  CircleDot,
-  FileText,
-  History,
-  Tag,
-  TriangleAlert,
-  UserRound,
-} from "lucide-react";
+import { Banknote, CircleDot, FileText, History, Tag, TriangleAlert, UserRound } from "lucide-react";
 
 import { useMotion } from "@/src/hooks/use-motion";
 import { cn } from "@/src/lib/utils/cn";
@@ -98,18 +90,14 @@ export function DealAuditTab(props: DealAuditTabProps) {
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />
           <span>
-            This history is incomplete: {unavailable.join(", ")} couldn&apos;t be loaded. Refresh the page
-            to try again.
+            This history is incomplete: {unavailable.join(", ")} couldn&apos;t be loaded. Refresh the page to
+            try again.
           </span>
         </p>
       )}
 
       {/* Filter */}
-      <div
-        role="group"
-        aria-label="Filter history"
-        className="flex flex-wrap gap-1.5"
-      >
+      <div role="group" aria-label="Filter history" className="flex flex-wrap gap-1.5">
         {FILTERS.map((option) => {
           const isSelected = filter === option;
           const count = option === "all" ? entries.length : (counts.get(option) ?? 0);
@@ -138,9 +126,7 @@ export function DealAuditTab(props: DealAuditTabProps) {
 
       {visible.length === 0 ? (
         <p className="border-border text-body-sm text-text-muted rounded-md border border-dashed px-4 py-10 text-center">
-          {entries.length === 0
-            ? "Nothing has been recorded on this deal yet."
-            : "No entries of that kind."}
+          {entries.length === 0 ? "Nothing has been recorded on this deal yet." : "No entries of that kind."}
         </p>
       ) : (
         <ol className="flex flex-col">
@@ -152,10 +138,7 @@ export function DealAuditTab(props: DealAuditTabProps) {
               <motion.li key={entry.id} {...fadeUp(index)} className="relative flex gap-3 pb-4 last:pb-0">
                 {/* Spine */}
                 {!isLast && (
-                  <span
-                    aria-hidden="true"
-                    className="bg-border absolute top-8 bottom-0 left-[15px] w-px"
-                  />
+                  <span aria-hidden="true" className="bg-border absolute top-8 bottom-0 left-[15px] w-px" />
                 )}
 
                 <span
@@ -175,8 +158,7 @@ export function DealAuditTab(props: DealAuditTabProps) {
                   )}
 
                   <p className="text-caption text-text-subtle mt-1">
-                    {entry.actor} ·{" "}
-                    <time dateTime={entry.at}>{formatDateTimeFull(entry.at)}</time>
+                    {entry.actor} · <time dateTime={entry.at}>{formatDateTimeFull(entry.at)}</time>
                   </p>
                 </div>
               </motion.li>

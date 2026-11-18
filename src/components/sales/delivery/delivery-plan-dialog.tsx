@@ -99,8 +99,20 @@ export function DeliveryPlanDialog({ dealId, delivery, lookups, onClose, onDone 
     >
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-          <Input label="Date" type="date" required value={date} onChange={(event) => setDate(event.target.value)} />
-          <Input label="Time" type="time" required value={time} onChange={(event) => setTime(event.target.value)} />
+          <Input
+            label="Date"
+            type="date"
+            required
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+          />
+          <Input
+            label="Time"
+            type="time"
+            required
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+          />
         </div>
         <p className="text-caption text-text-subtle -mt-2">Dates and times are Dubai time.</p>
 

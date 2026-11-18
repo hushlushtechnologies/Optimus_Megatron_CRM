@@ -63,7 +63,8 @@ export async function generateTestDriveExcel(
 
   if (meta.truncated) {
     sheet.mergeCells("B3:J3");
-    sheet.getCell("B3").value = "Not every matching test drive is in this file. Narrow the filters to export the rest.";
+    sheet.getCell("B3").value =
+      "Not every matching test drive is in this file. Narrow the filters to export the rest.";
     sheet.getCell("B3").font = { size: 9, bold: true, color: { argb: "FFB45309" } };
   }
 

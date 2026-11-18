@@ -32,7 +32,8 @@ export function ReceiptButton({ paymentId }: { paymentId: string }) {
       toast.success(`Receipt ${result.documentNumber}${result.created ? " created" : " is ready"}`, {
         action: {
           label: "Open PDF",
-          onClick: () => window.open(documentPdfPath(result.documentId as string), "_blank", "noopener,noreferrer"),
+          onClick: () =>
+            window.open(documentPdfPath(result.documentId as string), "_blank", "noopener,noreferrer"),
         },
         duration: 8000,
       });

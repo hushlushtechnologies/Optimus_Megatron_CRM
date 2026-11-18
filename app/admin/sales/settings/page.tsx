@@ -13,7 +13,10 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
       <div>
         <p className="text-body-sm text-text-primary font-medium">{title}</p>
         <div className="text-body-sm text-text-muted mt-1">{children}</div>
-        <Link href="/admin/sales" className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block">
+        <Link
+          href="/admin/sales"
+          className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
+        >
           Back to Sales
         </Link>
       </div>
@@ -25,11 +28,13 @@ export default async function SalesSettingsPage() {
   const permissions = await currentUserSalesPermissions();
   if (!permissions.settings) {
     return (
-      <Notice title="You don't have permission to change sales settings.">Ask an administrator if you need access.</Notice>
+      <Notice title="You don't have permission to change sales settings.">
+        Ask an administrator if you need access.
+      </Notice>
     );
   }
 
-      const [result, company, templates] = await Promise.all([
+  const [result, company, templates] = await Promise.all([
     getSalesSettingsPageData(),
     getCompanyProfile(),
     getDeliveryTemplates(),
@@ -42,5 +47,5 @@ export default async function SalesSettingsPage() {
     );
   }
 
-      return <SalesSettingsClient data={result.data} company={company} templates={templates} />;
+  return <SalesSettingsClient data={result.data} company={company} templates={templates} />;
 }

@@ -2,18 +2,47 @@ import { createClient } from "@/src/lib/supabase/server";
 import type { SalesSupabaseClient } from "@/src/lib/supabase/sales-permissions";
 import type { SalesDealStatus } from "@/src/lib/types/sales";
 import type { SalesBoardColumn, SalesListRow, SalesSort, SalesSummary } from "@/src/lib/types/sales-list";
-import { EMPTY_SALES_FILTERS, UNASSIGNED_OWNER, type SalesListFilters } from "@/src/lib/utils/sales-list-filters";
+import {
+  EMPTY_SALES_FILTERS,
+  UNASSIGNED_OWNER,
+  type SalesListFilters,
+} from "@/src/lib/utils/sales-list-filters";
 import { cleanSearchTerm, phoneDigitsForSearch } from "@/src/lib/utils/test-drive-list-filters";
 
 export const SALES_LIST_COLUMNS = [
-  "id", "deal_number", "status", "created_at", "updated_at",
-  "customer_id", "customer_name", "customer_number", "customer_photo_url",
-  "car_id", "vehicle_title", "stock_id", "brand_name", "model_name",
-  "location_id", "location_name", "owner_id", "owner_name",
-  "lead_id", "lead_number", "reservation_id", "reservation_number",
-  "reservation_expires_at", "reservation_status",
-  "currency", "listed_price", "proposed_price", "discount_amount", "agreed_price",
-  "total_due", "verified_paid", "awaiting_verification", "balance_due",
+  "id",
+  "deal_number",
+  "status",
+  "created_at",
+  "updated_at",
+  "customer_id",
+  "customer_name",
+  "customer_number",
+  "customer_photo_url",
+  "car_id",
+  "vehicle_title",
+  "stock_id",
+  "brand_name",
+  "model_name",
+  "location_id",
+  "location_name",
+  "owner_id",
+  "owner_name",
+  "lead_id",
+  "lead_number",
+  "reservation_id",
+  "reservation_number",
+  "reservation_expires_at",
+  "reservation_status",
+  "currency",
+  "listed_price",
+  "proposed_price",
+  "discount_amount",
+  "agreed_price",
+  "total_due",
+  "verified_paid",
+  "awaiting_verification",
+  "balance_due",
 ].join(", ");
 
 export const SALES_SORT_MAP: Record<SalesSort, { column: string; ascending: boolean }> = {
@@ -122,7 +151,9 @@ export async function getSalesBoard(
 ): Promise<SalesBoardColumn[] | null> {
   const supabase = await createClient();
   const statuses =
-    filters.status.length > 0 ? BOARD_STATUSES.filter((status) => filters.status.includes(status)) : BOARD_STATUSES;
+    filters.status.length > 0
+      ? BOARD_STATUSES.filter((status) => filters.status.includes(status))
+      : BOARD_STATUSES;
 
   const columns = await Promise.all(
     statuses.map(async (status) => {

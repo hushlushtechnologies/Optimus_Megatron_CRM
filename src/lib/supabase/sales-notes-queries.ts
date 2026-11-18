@@ -58,8 +58,7 @@ export async function getDealNotes(dealId: string): Promise<DealNotesData> {
     ...note,
     author_name: note.created_by ? (names.get(note.created_by) ?? "Unknown") : "Unknown",
     // Your own note, or anyone's if you may assign deals. The database enforces the same rule.
-    can_modify:
-      permissions.edit && (note.created_by === currentUserId || permissions.assign),
+    can_modify: permissions.edit && (note.created_by === currentUserId || permissions.assign),
   }));
 
   return { notes: items, canAdd: permissions.edit };

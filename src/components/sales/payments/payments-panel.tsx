@@ -31,7 +31,10 @@ interface PaymentsPanelProps {
 }
 
 type Open =
-  { type: "record" } | { type: "refund" } | { type: "status"; payment: PaymentLike; action: PaymentStatusAction } | null;
+  | { type: "record" }
+  | { type: "refund" }
+  | { type: "status"; payment: PaymentLike; action: PaymentStatusAction }
+  | null;
 
 export function PaymentsPanel({
   dealId,
@@ -141,7 +144,12 @@ export function PaymentsPanel({
       )}
 
       {open?.type === "status" && (
-        <PaymentStatusDialog payment={open.payment} action={open.action} onClose={() => setOpen(null)} onDone={done} />
+        <PaymentStatusDialog
+          payment={open.payment}
+          action={open.action}
+          onClose={() => setOpen(null)}
+          onDone={done}
+        />
       )}
     </section>
   );

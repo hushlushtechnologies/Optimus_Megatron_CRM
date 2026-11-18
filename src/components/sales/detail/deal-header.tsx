@@ -61,7 +61,9 @@ export function DealHeader({ deal, stoppedAt, visited, actions }: DealHeaderProp
 
           <div className="grid shrink-0 grid-cols-2 gap-x-8 gap-y-3 lg:text-right">
             <div>
-              <p className="text-caption text-text-subtle">{deal.agreed_price !== null ? "Agreed price" : "Proposed price"}</p>
+              <p className="text-caption text-text-subtle">
+                {deal.agreed_price !== null ? "Agreed price" : "Proposed price"}
+              </p>
               <motion.p
                 key={String(price)}
                 {...fadeUp(1)}
@@ -82,7 +84,11 @@ export function DealHeader({ deal, stoppedAt, visited, actions }: DealHeaderProp
 
         <div className="flex flex-wrap gap-2">
           <Link href={`/admin/customers/${deal.customer_id}`}>
-            <Button variant="secondary" size="sm" leftIcon={<UserRound className="size-4" aria-hidden="true" />}>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<UserRound className="size-4" aria-hidden="true" />}
+            >
               Customer
             </Button>
           </Link>
@@ -93,7 +99,11 @@ export function DealHeader({ deal, stoppedAt, visited, actions }: DealHeaderProp
           </Link>
           {deal.lead_id && (
             <Link href={`/admin/leads/${deal.lead_id}`}>
-              <Button variant="secondary" size="sm" leftIcon={<Target className="size-4" aria-hidden="true" />}>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Target className="size-4" aria-hidden="true" />}
+              >
                 Lead {deal.lead_number}
               </Button>
             </Link>

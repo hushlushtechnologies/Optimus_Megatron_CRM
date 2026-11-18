@@ -51,7 +51,7 @@ export function RevenueChart({ data: revenueTrend }: { data: RevenuePoint[] }) {
       highestMonth: highestItem.month,
       change,
     };
-    }, [revenueTrend]);
+  }, [revenueTrend]);
 
   const isPositive = metrics.change >= 0;
 

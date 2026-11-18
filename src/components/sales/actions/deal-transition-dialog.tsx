@@ -1,19 +1,11 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import {
-  CheckCircle2,
-  Circle,
-  TriangleAlert,
-} from "lucide-react";
+import { CheckCircle2, Circle, TriangleAlert } from "lucide-react";
 
 import { Modal } from "@/src/components/ui/modal";
 import { Button } from "@/src/components/ui/button";
@@ -23,33 +15,19 @@ import { Skeleton } from "@/src/components/ui/skeleton";
 
 import { SalesStatusBadge } from "@/src/components/sales/sales-status-badge";
 
-import {
-  getCancellationReasonsAction,
-  transitionDealAction,
-} from "@/app/admin/sales/deal-actions";
+import { getCancellationReasonsAction, transitionDealAction } from "@/app/admin/sales/deal-actions";
 
 import { useMotion } from "@/src/hooks/use-motion";
 
 import { READINESS_TITLES } from "@/src/lib/utils/sales-readiness";
 
-import {
-  formatFils,
-  toFils,
-} from "@/src/lib/utils/sales-money";
+import { formatFils, toFils } from "@/src/lib/utils/sales-money";
 
-import type {
-  CancellationReason,
-  DealTransitionKind,
-} from "@/src/lib/types/sales-actions";
+import type { CancellationReason, DealTransitionKind } from "@/src/lib/types/sales-actions";
 
-import type {
-  ReadinessGroup,
-  SalesDealDetail,
-} from "@/src/lib/types/sales-detail";
+import type { ReadinessGroup, SalesDealDetail } from "@/src/lib/types/sales-detail";
 
-import type {
-  SalesDealStatus,
-} from "@/src/lib/types/sales";
+import type { SalesDealStatus } from "@/src/lib/types/sales";
 
 import { cn } from "@/src/lib/utils/cn";
 
@@ -57,35 +35,28 @@ import { cn } from "@/src/lib/utils/cn";
    BIGINT CONSTANTS
 ========================================================= */
 
-const ZERO_FILS =
-  BigInt(0);
+const ZERO_FILS = BigInt(0);
 
 /* =========================================================
    TYPES
 ========================================================= */
 
 interface DealTransitionDialogProps {
-  kind:
-    DealTransitionKind;
+  kind: DealTransitionKind;
 
-  deal:
-    SalesDealDetail;
+  deal: SalesDealDetail;
 
-  readiness:
-    ReadinessGroup[];
+  readiness: ReadinessGroup[];
 
   /**
    * Set when another deal or
    * reservation holds the vehicle.
    */
-  holdConflict:
-    string | null;
+  holdConflict: string | null;
 
-  onClose:
-    () => void;
+  onClose: () => void;
 
-  onDone:
-    () => void;
+  onDone: () => void;
 }
 
 /* =========================================================
@@ -95,91 +66,63 @@ interface DealTransitionDialogProps {
 const CONFIG: Record<
   DealTransitionKind,
   {
-    title:
-      string;
+    title: string;
 
-    to:
-      | "Negotiation"
-      | "Reserved"
-      | "Confirmed"
-      | "Cancelled";
+    to: "Negotiation" | "Reserved" | "Confirmed" | "Cancelled";
 
-    confirm:
-      string;
+    confirm: string;
 
-    success:
-      string;
+    success: string;
 
-    target:
-      SalesDealStatus;
+    target: SalesDealStatus;
   }
 > = {
   negotiation: {
-    title:
-      "Start negotiation",
+    title: "Start negotiation",
 
-    to:
-      "Negotiation",
+    to: "Negotiation",
 
-    confirm:
-      "Start negotiation",
+    confirm: "Start negotiation",
 
-    success:
-      "Negotiation started",
+    success: "Negotiation started",
 
-    target:
-      "Negotiation",
+    target: "Negotiation",
   },
 
   reserve: {
-    title:
-      "Reserve vehicle",
+    title: "Reserve vehicle",
 
-    to:
-      "Reserved",
+    to: "Reserved",
 
-    confirm:
-      "Reserve vehicle",
+    confirm: "Reserve vehicle",
 
-    success:
-      "Vehicle reserved",
+    success: "Vehicle reserved",
 
-    target:
-      "Reserved",
+    target: "Reserved",
   },
 
   confirm: {
-    title:
-      "Confirm deal",
+    title: "Confirm deal",
 
-    to:
-      "Confirmed",
+    to: "Confirmed",
 
-    confirm:
-      "Confirm deal",
+    confirm: "Confirm deal",
 
-    success:
-      "Deal confirmed",
+    success: "Deal confirmed",
 
-    target:
-      "Confirmed",
+    target: "Confirmed",
   },
 
   cancel: {
-    title:
-      "Cancel deal",
+    title: "Cancel deal",
 
-    to:
-      "Cancelled",
+    to: "Cancelled",
 
-    confirm:
-      "Cancel deal",
+    confirm: "Cancel deal",
 
-    success:
-      "Deal cancelled",
+    success: "Deal cancelled",
 
-    target:
-      "Cancelled",
+    target: "Cancelled",
   },
 };
 
@@ -189,111 +132,66 @@ const CONFIG: Record<
 
 type ReasonState =
   | {
-      status:
-        "loading";
+      status: "loading";
     }
   | {
-      status:
-        "ok";
+      status: "ok";
 
-      reasons:
-        CancellationReason[];
+      reasons: CancellationReason[];
     }
   | {
-      status:
-        "failed";
+      status: "failed";
     };
 
 /* =========================================================
    CHECKLIST
 ========================================================= */
 
-function Checklist({
-  group,
-}: {
-  group:
-    ReadinessGroup | undefined;
-}) {
-  const {
-    fadeUp,
-  } =
-    useMotion();
+function Checklist({ group }: { group: ReadinessGroup | undefined }) {
+  const { fadeUp } = useMotion();
 
   if (!group) {
     return null;
   }
 
   return (
-    <ul
-      className="flex flex-col gap-2"
-      aria-label={
-        group.title
-      }
-    >
-      {group.items.map(
-        (
-          item,
-          index
-        ) => {
-          const Icon =
-            item.done
-              ? CheckCircle2
-              : Circle;
+    <ul className="flex flex-col gap-2" aria-label={group.title}>
+      {group.items.map((item, index) => {
+        const Icon = item.done ? CheckCircle2 : Circle;
 
-          return (
-            <motion.li
-              key={
-                item.key
-              }
-              {...fadeUp(
-                index
+        return (
+          <motion.li
+            key={item.key}
+            {...fadeUp(index)}
+            className="border-border bg-card-hover/30 flex items-start gap-3 rounded-md border px-3 py-2.5"
+          >
+            <Icon
+              className={cn(
+                "mt-0.5 size-4 shrink-0",
+
+                item.done ? "text-success" : "text-text-subtle",
               )}
-              className="border-border bg-card-hover/30 flex items-start gap-3 rounded-md border px-3 py-2.5"
-            >
-              <Icon
+              aria-hidden="true"
+            />
+
+            <div className="min-w-0">
+              <p
                 className={cn(
-                  "mt-0.5 size-4 shrink-0",
+                  "text-body-sm",
 
-                  item.done
-                    ? "text-success"
-                    : "text-text-subtle"
+                  item.done ? "text-text-primary" : "text-text-muted",
                 )}
-                aria-hidden="true"
-              />
+              >
+                {item.label}
 
-              <div className="min-w-0">
-                <p
-                  className={cn(
-                    "text-body-sm",
+                <span className="sr-only">{item.done ? " (done)" : " (still needed)"}</span>
+              </p>
 
-                    item.done
-                      ? "text-text-primary"
-                      : "text-text-muted"
-                  )}
-                >
-                  {
-                    item.label
-                  }
-
-                  <span className="sr-only">
-                    {item.done
-                      ? " (done)"
-                      : " (still needed)"}
-                  </span>
-                </p>
-
-                {item.detail && (
-                  <p className="text-caption text-text-subtle">
-                    {
-                      item.detail
-                    }
-                  </p>
-                )}
-              </div>
-            </motion.li>
-          );
-        }
-      )}
+              {item.detail && <p className="text-caption text-text-subtle">{item.detail}</p>}
+            </div>
+          </motion.li>
+        );
+      })}
     </ul>
   );
 }
@@ -306,44 +204,29 @@ function Alert({
   tone,
   children,
 }: {
-  tone:
-    "error" | "warning";
+  tone: "error" | "warning";
 
-  children:
-    ReactNode;
+  children: ReactNode;
 }) {
   return (
     <p
-      role={
-        tone ===
-        "error"
-          ? "alert"
-          : "status"
-      }
+      role={tone === "error" ? "alert" : "status"}
       className={cn(
         "text-body-sm text-text-primary flex items-start gap-2 rounded-md border px-3 py-2.5",
 
-        tone ===
-          "error"
-          ? "border-red-500/40 bg-red-500/10"
-          : "border-amber-500/30 bg-amber-500/10"
+        tone === "error" ? "border-red-500/40 bg-red-500/10" : "border-amber-500/30 bg-amber-500/10",
       )}
     >
       <TriangleAlert
         className={cn(
           "mt-0.5 size-4 shrink-0",
 
-          tone ===
-            "error"
-            ? "text-red-400"
-            : "text-amber-400"
+          tone === "error" ? "text-red-400" : "text-amber-400",
         )}
         aria-hidden="true"
       />
 
-      <span>
-        {children}
-      </span>
+      <span>{children}</span>
     </p>
   );
 }
@@ -365,112 +248,67 @@ export function DealTransitionDialog({
   onClose,
   onDone,
 }: DealTransitionDialogProps) {
-  const cfg =
-    CONFIG[kind];
+  const cfg = CONFIG[kind];
 
-  const currency =
-    deal.currency;
+  const currency = deal.currency;
 
   /* =======================================================
      STATE
   ======================================================= */
 
-  const [
-    reasonId,
-    setReasonId,
-  ] =
-    useState("");
+  const [reasonId, setReasonId] = useState("");
 
-  const [
-    detail,
-    setDetail,
-  ] =
-    useState("");
+  const [detail, setDetail] = useState("");
 
-  const [
-    refundNote,
-    setRefundNote,
-  ] =
-    useState("");
+  const [refundNote, setRefundNote] = useState("");
 
-  const [
-    reasonState,
-    setReasonState,
-  ] =
-    useState<ReasonState>({
-      status:
-        "loading",
-    });
+  const [reasonState, setReasonState] = useState<ReasonState>({
+    status: "loading",
+  });
 
-  const [
-    error,
-    setError,
-  ] =
-    useState<
-      string | null
-    >(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [
-    saving,
-    setSaving,
-  ] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
 
   /* =======================================================
      LOAD CANCELLATION REASONS
   ======================================================= */
 
   useEffect(() => {
-    if (
-      kind !==
-      "cancel"
-    ) {
+    if (kind !== "cancel") {
       return;
     }
 
-    let cancelled =
-      false;
+    let cancelled = false;
 
     getCancellationReasonsAction()
-      .then(
-        (
-          reasons
-        ) => {
-          if (
-            cancelled
-          ) {
-            return;
-          }
-
-          setReasonState(
-            reasons
-              ? {
-                  status:
-                    "ok",
-
-                  reasons,
-                }
-              : {
-                  status:
-                    "failed",
-                }
-          );
+      .then((reasons) => {
+        if (cancelled) {
+          return;
         }
-      )
+
+        setReasonState(
+          reasons
+            ? {
+                status: "ok",
+
+                reasons,
+              }
+            : {
+                status: "failed",
+              },
+        );
+      })
       .catch(() => {
-        if (
-          !cancelled
-        ) {
+        if (!cancelled) {
           setReasonState({
-            status:
-              "failed",
+            status: "failed",
           });
         }
       });
 
     return () => {
-      cancelled =
-        true;
+      cancelled = true;
     };
   }, [kind]);
 
@@ -478,251 +316,127 @@ export function DealTransitionDialog({
      VERIFIED PAYMENT
   ======================================================= */
 
-  const verifiedPaid =
-    toFils(
-      deal.verified_paid
-    ) ?? ZERO_FILS;
+  const verifiedPaid = toFils(deal.verified_paid) ?? ZERO_FILS;
 
-  const hasMoney =
-    verifiedPaid >
-    ZERO_FILS;
+  const hasMoney = verifiedPaid > ZERO_FILS;
 
   /* =======================================================
      REQUIRED READINESS GROUP
   ======================================================= */
 
   const GROUP_TITLE = {
-    negotiation:
-      READINESS_TITLES.negotiation,
+    negotiation: READINESS_TITLES.negotiation,
 
-    reserve:
-      READINESS_TITLES.reserve,
+    reserve: READINESS_TITLES.reserve,
 
-    confirm:
-      READINESS_TITLES.confirm,
+    confirm: READINESS_TITLES.confirm,
 
-    cancel:
-      READINESS_TITLES.confirm,
+    cancel: READINESS_TITLES.confirm,
   } as const;
 
-  const group =
-    readiness.find(
-      (item) =>
-        item.title ===
-        GROUP_TITLE[kind]
-    );
+  const group = readiness.find((item) => item.title === GROUP_TITLE[kind]);
 
   /* =======================================================
      CANCELLATION REASON
   ======================================================= */
 
   const chosenReason =
-    reasonState.status ===
-    "ok"
-      ? reasonState.reasons.find(
-          (reason) =>
-            reason.id ===
-            reasonId
-        )
-      : undefined;
+    reasonState.status === "ok" ? reasonState.reasons.find((reason) => reason.id === reasonId) : undefined;
 
   /* =======================================================
      SUBMISSION READINESS
   ======================================================= */
 
-  let canSubmit =
-    false;
+  let canSubmit = false;
 
-  if (
-    kind ===
-    "negotiation"
-  ) {
-    canSubmit =
-      Boolean(
-        group?.ready
-      );
+  if (kind === "negotiation") {
+    canSubmit = Boolean(group?.ready);
   }
 
-  if (
-    kind ===
-    "reserve"
-  ) {
-    canSubmit =
-      Boolean(
-        group?.ready
-      ) &&
-      !holdConflict;
+  if (kind === "reserve") {
+    canSubmit = Boolean(group?.ready) && !holdConflict;
   }
 
-  if (
-    kind ===
-    "confirm"
-  ) {
-    canSubmit =
-      Boolean(
-        group?.ready
-      ) &&
-      !holdConflict;
+  if (kind === "confirm") {
+    canSubmit = Boolean(group?.ready) && !holdConflict;
   }
 
-  if (
-    kind ===
-    "cancel"
-  ) {
+  if (kind === "cancel") {
     canSubmit =
-      reasonState.status ===
-        "ok" &&
-      Boolean(
-        chosenReason
-      ) &&
-      (
-        !chosenReason?.requires_detail ||
-        detail.trim()
-          .length >=
-          3
-      ) &&
-      (
-        !hasMoney ||
-        refundNote
-          .trim()
-          .length >=
-          3
-      );
+      reasonState.status === "ok" &&
+      Boolean(chosenReason) &&
+      (!chosenReason?.requires_detail || detail.trim().length >= 3) &&
+      (!hasMoney || refundNote.trim().length >= 3);
   }
 
   /* =======================================================
      SUBMIT
   ======================================================= */
 
-  const submit =
-    async () => {
-      setError(
-        null
-      );
+  const submit = async () => {
+    setError(null);
 
-      setSaving(
-        true
-      );
+    setSaving(true);
 
-      try {
-        const result =
-          await transitionDealAction({
-            id:
-              deal.id,
+    try {
+      const result = await transitionDealAction({
+        id: deal.id,
 
-            to:
-              cfg.to,
+        to: cfg.to,
 
-            /**
-             * Sent back exactly as it was read,
-             * so the database can tell if the
-             * deal changed meanwhile.
-             */
-            expectedUpdatedAt:
-              deal.updated_at,
+        /**
+         * Sent back exactly as it was read,
+         * so the database can tell if the
+         * deal changed meanwhile.
+         */
+        expectedUpdatedAt: deal.updated_at,
 
-            reasonId:
-              kind ===
-              "cancel"
-                ? reasonId ||
-                  null
-                : null,
+        reasonId: kind === "cancel" ? reasonId || null : null,
 
-            reason:
-              kind ===
-              "cancel"
-                ? detail.trim()
-                : "",
+        reason: kind === "cancel" ? detail.trim() : "",
 
-            refundNote:
-              kind ===
-              "cancel"
-                ? refundNote.trim()
-                : "",
-          });
+        refundNote: kind === "cancel" ? refundNote.trim() : "",
+      });
 
-        if (
-          result.error
-        ) {
-          setError(
-            result.error
-          );
+      if (result.error) {
+        setError(result.error);
 
-          toast.error(
-            result.error
-          );
+        toast.error(result.error);
 
-          return;
-        }
-
-        toast.success(
-          cfg.success
-        );
-
-        onDone();
-      } catch {
-        const message =
-          "Something went wrong. Refresh the page to see the deal's current state.";
-
-        setError(
-          message
-        );
-
-        toast.error(
-          message
-        );
-      } finally {
-        setSaving(
-          false
-        );
+        return;
       }
-    };
+
+      toast.success(cfg.success);
+
+      onDone();
+    } catch {
+      const message = "Something went wrong. Refresh the page to see the deal's current state.";
+
+      setError(message);
+
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   /* =======================================================
      CONFIRMATION FIGURES
   ======================================================= */
 
-  const proposed =
-    toFils(
-      deal.proposed_price
-    );
+  const proposed = toFils(deal.proposed_price);
 
-  const discount =
-    toFils(
-      deal.discount_amount
-    ) ?? ZERO_FILS;
+  const discount = toFils(deal.discount_amount) ?? ZERO_FILS;
 
-  const fees =
-    toFils(
-      deal.fees_amount
-    ) ?? ZERO_FILS;
+  const fees = toFils(deal.fees_amount) ?? ZERO_FILS;
 
-  const tax =
-    toFils(
-      deal.tax_amount
-    ) ?? ZERO_FILS;
+  const tax = toFils(deal.tax_amount) ?? ZERO_FILS;
 
   const net =
-    toFils(
-      deal.agreed_price
-    ) ??
-    (
-      proposed !== null &&
-      proposed >
-        ZERO_FILS &&
-      discount <=
-        proposed
-        ? proposed -
-          discount
-        : null
-    );
+    toFils(deal.agreed_price) ??
+    (proposed !== null && proposed > ZERO_FILS && discount <= proposed ? proposed - discount : null);
 
-  const total =
-    net !== null
-      ? net +
-        fees +
-        tax
-      : null;
+  const total = net !== null ? net + fees + tax : null;
 
   /* =======================================================
      RENDER
@@ -732,53 +446,25 @@ export function DealTransitionDialog({
     <Modal
       isOpen
       onClose={() => {
-        if (
-          !saving
-        ) {
+        if (!saving) {
           onClose();
         }
       }}
       size="md"
-      title={
-        cfg.title
-      }
+      title={cfg.title}
       footer={
         <>
-          <Button
-            variant="outline"
-            onClick={
-              onClose
-            }
-            disabled={
-              saving
-            }
-          >
-            {kind ===
-            "cancel"
-              ? "Keep deal"
-              : "Go back"}
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            {kind === "cancel" ? "Keep deal" : "Go back"}
           </Button>
 
           <Button
-            variant={
-              kind ===
-              "cancel"
-                ? "destructiveSolid"
-                : "primary"
-            }
-            onClick={
-              submit
-            }
-            isLoading={
-              saving
-            }
-            disabled={
-              !canSubmit
-            }
+            variant={kind === "cancel" ? "destructiveSolid" : "primary"}
+            onClick={submit}
+            isLoading={saving}
+            disabled={!canSubmit}
           >
-            {
-              cfg.confirm
-            }
+            {cfg.confirm}
           </Button>
         </>
       }
@@ -790,50 +476,28 @@ export function DealTransitionDialog({
 
         <div className="border-border bg-card-hover/40 flex flex-col gap-1 rounded-md border p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-caption text-text-subtle">
-              {
-                deal.deal_number
-              }
-            </p>
+            <p className="text-caption text-text-subtle">{deal.deal_number}</p>
 
-            <SalesStatusBadge
-              status={
-                deal.status
-              }
-              size="sm"
-            />
+            <SalesStatusBadge status={deal.status} size="sm" />
           </div>
 
-          <p className="text-text-primary font-medium">
-            {
-              deal.customer_name
-            }
-          </p>
+          <p className="text-text-primary font-medium">{deal.customer_name}</p>
 
-          <p className="text-body-sm text-text-muted">
-            {
-              deal.vehicle_title
-            }
-          </p>
+          <p className="text-body-sm text-text-muted">{deal.vehicle_title}</p>
         </div>
 
         {/* =================================================
             NEGOTIATION
         ================================================= */}
 
-        {kind ===
-          "negotiation" && (
+        {kind === "negotiation" && (
           <>
             <p className="text-body-sm text-text-muted">
-              Negotiation is where price and terms get agreed.
-              It doesn&apos;t hold the vehicle for this customer.
+              Negotiation is where price and terms get agreed. It doesn&apos;t hold the vehicle for this
+              customer.
             </p>
 
-            <Checklist
-              group={
-                group
-              }
-            />
+            <Checklist group={group} />
           </>
         )}
 
@@ -841,119 +505,43 @@ export function DealTransitionDialog({
             CONFIRM
         ================================================= */}
 
-        {kind ===
-          "confirm" && (
+        {kind === "confirm" && (
           <>
             <p className="text-body-sm text-text-muted">
-              Confirming agrees the sale. The price below is
-              fixed and the vehicle is held for this customer,
-              so no other deal can confirm it. A confirmed sale
-              is not yet a delivered vehicle, and it is not
+              Confirming agrees the sale. The price below is fixed and the vehicle is held for this customer,
+              so no other deal can confirm it. A confirmed sale is not yet a delivered vehicle, and it is not
               necessarily fully paid.
             </p>
 
             <dl className="border-border divide-border divide-y rounded-md border">
               {[
-                [
-                  "Proposed price",
-                  proposed !==
-                  null
-                    ? formatFils(
-                        proposed,
-                        currency
-                      )
-                    : "—",
-                ],
+                ["Proposed price", proposed !== null ? formatFils(proposed, currency) : "—"],
 
-                [
-                  "Discount",
-                  discount >
-                  ZERO_FILS
-                    ? `− ${formatFils(
-                        discount,
-                        currency
-                      )}`
-                    : "None",
-                ],
+                ["Discount", discount > ZERO_FILS ? `− ${formatFils(discount, currency)}` : "None"],
 
-                [
-                  "Agreed price",
-                  net !== null
-                    ? formatFils(
-                        net,
-                        currency
-                      )
-                    : "—",
-                ],
+                ["Agreed price", net !== null ? formatFils(net, currency) : "—"],
 
-                [
-                  "Fees and tax",
-                  fees +
-                    tax >
-                  ZERO_FILS
-                    ? formatFils(
-                        fees +
-                          tax,
-                        currency
-                      )
-                    : "None",
-                ],
-              ].map(
-                ([
-                  label,
-                  value,
-                ]) => (
-                  <div
-                    key={
-                      label
-                    }
-                    className="flex items-center justify-between gap-3 px-3 py-2"
-                  >
-                    <dt className="text-caption text-text-subtle">
-                      {
-                        label
-                      }
-                    </dt>
+                ["Fees and tax", fees + tax > ZERO_FILS ? formatFils(fees + tax, currency) : "None"],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 px-3 py-2">
+                  <dt className="text-caption text-text-subtle">{label}</dt>
 
-                    <dd className="text-body-sm text-text-primary tabular-nums">
-                      {
-                        value
-                      }
-                    </dd>
-                  </div>
-                )
-              )}
+                  <dd className="text-body-sm text-text-primary tabular-nums">{value}</dd>
+                </div>
+              ))}
 
               <div className="bg-primary/5 flex items-center justify-between gap-3 px-3 py-2.5">
-                <dt className="text-body-sm text-text-primary font-medium">
-                  Total due
-                </dt>
+                <dt className="text-body-sm text-text-primary font-medium">Total due</dt>
 
                 <dd className="text-text-primary font-semibold tabular-nums">
-                  {total !==
-                  null
-                    ? formatFils(
-                        total,
-                        currency
-                      )
-                    : "—"}
+                  {total !== null ? formatFils(total, currency) : "—"}
                 </dd>
               </div>
             </dl>
 
-            <Checklist
-              group={
-                group
-              }
-            />
+            <Checklist group={group} />
 
-            {holdConflict && (
-              <Alert tone="warning">
-                {
-                  holdConflict
-                }
-              </Alert>
-            )}
+            {holdConflict && <Alert tone="warning">{holdConflict}</Alert>}
           </>
         )}
 
@@ -961,29 +549,17 @@ export function DealTransitionDialog({
             RESERVE
         ================================================= */}
 
-        {kind ===
-          "reserve" && (
+        {kind === "reserve" && (
           <>
             <p className="text-body-sm text-text-muted">
-              Reserving ties this deal to its confirmed reservation,
-              so the vehicle stays held for this customer while the
-              deal moves forward. If the reservation is released or
-              runs out, the deal goes back to negotiation.
+              Reserving ties this deal to its confirmed reservation, so the vehicle stays held for this
+              customer while the deal moves forward. If the reservation is released or runs out, the deal goes
+              back to negotiation.
             </p>
 
-            <Checklist
-              group={
-                group
-              }
-            />
+            <Checklist group={group} />
 
-            {holdConflict && (
-              <Alert tone="warning">
-                {
-                  holdConflict
-                }
-              </Alert>
-            )}
+            {holdConflict && <Alert tone="warning">{holdConflict}</Alert>}
           </>
         )}
 
@@ -991,106 +567,60 @@ export function DealTransitionDialog({
             CANCEL
         ================================================= */}
 
-        {kind ===
-          "cancel" && (
+        {kind === "cancel" && (
           <>
             <p className="text-body-sm text-text-muted">
-              {deal.status ===
-              "Confirmed"
+              {deal.status === "Confirmed"
                 ? "The vehicle will be released for other deals. "
-                : deal.status ===
-                    "Reserved"
+                : deal.status === "Reserved"
                   ? "The reservation will be released. "
                   : "Nothing is held, so no vehicle is released. "}
-
-              A cancelled deal can&apos;t be reopened. Start a new
-              deal if the customer comes back.
+              A cancelled deal can&apos;t be reopened. Start a new deal if the customer comes back.
             </p>
 
-            {reasonState.status ===
-              "loading" && (
-              <div
-                className="flex flex-col gap-2"
-                aria-busy="true"
-                aria-label="Loading reasons"
-              >
+            {reasonState.status === "loading" && (
+              <div className="flex flex-col gap-2" aria-busy="true" aria-label="Loading reasons">
                 <Skeleton className="h-10 w-full" />
 
                 <Skeleton className="h-20 w-full" />
               </div>
             )}
 
-            {reasonState.status ===
-              "failed" && (
+            {reasonState.status === "failed" && (
               <Alert tone="error">
-                The cancellation reasons couldn&apos;t be loaded,
-                so cancelling is paused. Close this and try again.
+                The cancellation reasons couldn&apos;t be loaded, so cancelling is paused. Close this and try
+                again.
               </Alert>
             )}
 
-            {reasonState.status ===
-              "ok" && (
+            {reasonState.status === "ok" && (
               <>
                 <Select
                   label="Reason"
                   required
                   placeholder="Choose a reason"
-                  options={
-                    reasonState.reasons.map(
-                      (
-                        reason
-                      ) => ({
-                        value:
-                          reason.id,
+                  options={reasonState.reasons.map((reason) => ({
+                    value: reason.id,
 
-                        label:
-                          reason.name,
-                      })
-                    )
-                  }
-                  value={
-                    reasonId
-                  }
-                  onChange={(
-                    event
-                  ) => {
-                    setReasonId(
-                      event.target
-                        .value
-                    );
+                    label: reason.name,
+                  }))}
+                  value={reasonId}
+                  onChange={(event) => {
+                    setReasonId(event.target.value);
 
-                    setError(
-                      null
-                    );
+                    setError(null);
                   }}
                 />
 
                 <Textarea
-                  label={
-                    chosenReason?.requires_detail
-                      ? "Details"
-                      : "Details (optional)"
-                  }
-                  required={
-                    chosenReason?.requires_detail
-                  }
+                  label={chosenReason?.requires_detail ? "Details" : "Details (optional)"}
+                  required={chosenReason?.requires_detail}
                   placeholder="Tell the team what happened."
                   rows={3}
-                  maxLength={
-                    500
-                  }
+                  maxLength={500}
                   showCharacterCount
-                  value={
-                    detail
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setDetail(
-                      event.target
-                        .value
-                    )
-                  }
+                  value={detail}
+                  onChange={(event) => setDetail(event.target.value)}
                 />
               </>
             )}
@@ -1098,12 +628,8 @@ export function DealTransitionDialog({
             {hasMoney && (
               <>
                 <Alert tone="warning">
-                  {formatFils(
-                    verifiedPaid,
-                    currency
-                  )}{" "}
-                  has been paid on this deal. Payments stay on
-                  record. Explain what will happen to the money.
+                  {formatFils(verifiedPaid, currency)} has been paid on this deal. Payments stay on record.
+                  Explain what will happen to the money.
                 </Alert>
 
                 <Textarea
@@ -1111,21 +637,10 @@ export function DealTransitionDialog({
                   required
                   placeholder="For example: deposit to be refunded by bank transfer."
                   rows={2}
-                  maxLength={
-                    500
-                  }
+                  maxLength={500}
                   showCharacterCount
-                  value={
-                    refundNote
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setRefundNote(
-                      event.target
-                        .value
-                    )
-                  }
+                  value={refundNote}
+                  onChange={(event) => setRefundNote(event.target.value)}
                 />
               </>
             )}
@@ -1136,13 +651,7 @@ export function DealTransitionDialog({
             ERROR
         ================================================= */}
 
-        {error && (
-          <Alert tone="error">
-            {
-              error
-            }
-          </Alert>
-        )}
+        {error && <Alert tone="error">{error}</Alert>}
       </div>
     </Modal>
   );

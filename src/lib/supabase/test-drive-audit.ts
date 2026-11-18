@@ -1,7 +1,6 @@
 import type { SupabaseServerClient } from "@/src/lib/supabase/test-drive-action-helpers";
 
-export type TestDriveAuditKind =
-  "export" | "bulk_cancel" | "bulk_assign" | "bulk_archive" | "bulk_restore";
+export type TestDriveAuditKind = "export" | "bulk_cancel" | "bulk_assign" | "bulk_archive" | "bulk_restore";
 
 interface AuditInput {
   /** Kept so callers don't change. The database records the signed-in person itself. */

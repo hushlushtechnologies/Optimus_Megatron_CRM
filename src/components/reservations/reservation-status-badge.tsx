@@ -2,7 +2,10 @@ import { Ban, BadgeCheck, Clock, ShieldCheck, Timer, XCircle, type LucideIcon } 
 import { cn } from "@/src/lib/utils/cn";
 import type { ReservationStatus } from "@/src/lib/types/sales";
 
-export const RESERVATION_STATUS_META: Record<ReservationStatus, { icon: LucideIcon; raw: string; description: string }> = {
+export const RESERVATION_STATUS_META: Record<
+  ReservationStatus,
+  { icon: LucideIcon; raw: string; description: string }
+> = {
   Requested: { icon: Clock, raw: "#f59e0b", description: "Waiting for review. The vehicle is not held" },
   Confirmed: { icon: ShieldCheck, raw: "#34d399", description: "The vehicle is held for the customer" },
   Converted: { icon: BadgeCheck, raw: "#d4af37", description: "Became a confirmed deal" },
@@ -13,7 +16,10 @@ export const RESERVATION_STATUS_META: Record<ReservationStatus, { icon: LucideIc
 };
 
 /** A confirmed hold past its expiry looks and reads as expired, even before the tidy-up job runs. */
-export function effectiveReservationStatus(row: { status: ReservationStatus; is_live: boolean }): ReservationStatus {
+export function effectiveReservationStatus(row: {
+  status: ReservationStatus;
+  is_live: boolean;
+}): ReservationStatus {
   return row.status === "Confirmed" && !row.is_live ? "Expired" : row.status;
 }
 

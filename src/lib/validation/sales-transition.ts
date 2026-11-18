@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const transitionDealSchema = z.object({
   id: z.string().uuid(),
-    to: z.enum(["Negotiation", "Reserved", "Confirmed", "Cancelled"]),
+  to: z.enum(["Negotiation", "Reserved", "Confirmed", "Cancelled"]),
   /** The deal's version when the person opened the dialog. Sent back exactly as it was read. */
   expectedUpdatedAt: z.string().min(10).max(40),
   reasonId: z.string().uuid().nullable(),

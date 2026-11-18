@@ -56,7 +56,9 @@ export function SalesTable({
         <SearchX className="text-text-subtle size-8" aria-hidden="true" />
         <div>
           <p className="text-body text-text-primary font-medium">No deals match your search</p>
-          <p className="text-body-sm text-text-muted mt-1">Try different words, or remove some of the filters.</p>
+          <p className="text-body-sm text-text-muted mt-1">
+            Try different words, or remove some of the filters.
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={onClearQuery}>
           Clear filters
@@ -94,7 +96,9 @@ export function SalesTable({
             <TableCustomizer
               columns={CUSTOMIZABLE_SALES_COLUMNS}
               visibility={columnVisibility}
-              onVisibilityChange={(id, visible) => setColumnVisibility({ ...columnVisibility, [id]: visible })}
+              onVisibilityChange={(id, visible) =>
+                setColumnVisibility({ ...columnVisibility, [id]: visible })
+              }
               onReset={reset}
             />
           </div>

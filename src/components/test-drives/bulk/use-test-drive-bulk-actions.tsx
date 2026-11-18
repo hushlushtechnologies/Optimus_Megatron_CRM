@@ -119,7 +119,7 @@ function BulkFormDialog({
     setError(null);
     setIsRunning(true);
     try {
-            const response =
+      const response =
         kind === "cancel"
           ? await bulkCancelTestDrivesAction({ ids, reason })
           : kind === "assign"
@@ -140,7 +140,7 @@ function BulkFormDialog({
     }
   };
 
-    const confirmLabel =
+  const confirmLabel =
     kind === "cancel"
       ? "Cancel test drives"
       : kind === "assign"
@@ -175,8 +175,8 @@ function BulkFormDialog({
     >
       <div className="flex flex-col gap-4">
         <p className="text-body-sm text-text-muted">
-          {eligible.length} of {rows.length} selected {rows.length === 1 ? "test drive" : "test drives"}{" "}
-          can be {PAST_TENSE[kind]}.
+          {eligible.length} of {rows.length} selected {rows.length === 1 ? "test drive" : "test drives"} can
+          be {PAST_TENSE[kind]}.
           {eligible.length < rows.length &&
             " The others will be skipped, and you'll see why when it finishes."}{" "}
           Each one is checked again just before it changes.
@@ -231,7 +231,7 @@ function BulkFormDialog({
           </div>
         )}
 
-                {kind === "archive" && (
+        {kind === "archive" && (
           <p className="text-caption text-text-subtle">
             Archived test drives leave this list. You can find and restore them in the Archived view. Only
             finished test drives (completed, cancelled, rejected or no show) can be archived.
@@ -285,7 +285,9 @@ function BulkResultDialog({ result, onClose }: { result: BulkResult; onClose: ()
         </p>
 
         {done > 0 && (
-          <p className="text-body-sm text-text-muted">{result.succeeded.map((row) => row.number).join(", ")}</p>
+          <p className="text-body-sm text-text-muted">
+            {result.succeeded.map((row) => row.number).join(", ")}
+          </p>
         )}
 
         {skipped > 0 && (

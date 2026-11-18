@@ -24,10 +24,18 @@ export const planDeliverySchema = z
   })
   .superRefine((value, ctx) => {
     if (value.mode === "showroom" && !value.locationId) {
-      ctx.addIssue({ code: "custom", path: ["locationId"], message: "Choose the showroom for the handover." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["locationId"],
+        message: "Choose the showroom for the handover.",
+      });
     }
     if (value.mode === "address" && value.address.trim().length < 5) {
-      ctx.addIssue({ code: "custom", path: ["address"], message: "Enter the address the vehicle will be delivered to." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["address"],
+        message: "Enter the address the vehicle will be delivered to.",
+      });
     }
   });
 
@@ -40,7 +48,11 @@ export const setDeliveryItemSchema = z
   })
   .superRefine((value, ctx) => {
     if (value.action === "waive" && value.note.trim().length < 3) {
-      ctx.addIssue({ code: "custom", path: ["note"], message: "Please give a reason (at least 3 characters)." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["note"],
+        message: "Please give a reason (at least 3 characters).",
+      });
     }
   });
 

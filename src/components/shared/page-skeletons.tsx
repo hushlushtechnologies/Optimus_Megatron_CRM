@@ -25,11 +25,7 @@ interface ListPageSkeletonProps {
 }
 
 /** List pages: header, optional metric row, toolbar, table. */
-export function ListPageSkeleton({
-  metricLabels,
-  hasPrimaryAction = true,
-  label,
-}: ListPageSkeletonProps) {
+export function ListPageSkeleton({ metricLabels, hasPrimaryAction = true, label }: ListPageSkeletonProps) {
   return (
     <div className="flex flex-col gap-6" aria-busy="true" aria-label={`Loading ${label}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -110,11 +106,7 @@ export function DetailPageSkeleton({ tabs = 6, aside = "right", label }: DetailP
       </div>
 
       {/* Body */}
-      <div
-        className={
-          aside === "right" ? "grid grid-cols-1 gap-4 lg:grid-cols-3" : "grid grid-cols-1 gap-4"
-        }
-      >
+      <div className={aside === "right" ? "grid grid-cols-1 gap-4 lg:grid-cols-3" : "grid grid-cols-1 gap-4"}>
         <div className={aside === "right" ? "flex flex-col gap-4 lg:col-span-2" : "flex flex-col gap-4"}>
           <Skeleton className="h-44 w-full" />
           <Skeleton className="h-64 w-full" />

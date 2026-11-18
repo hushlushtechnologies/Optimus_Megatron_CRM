@@ -32,11 +32,15 @@ export interface ReservationListParams {
   source: ReservationSource | null;
 }
 
-export function parseReservationParams(params: Record<string, string | string[] | undefined>): ReservationListParams {
+export function parseReservationParams(
+  params: Record<string, string | string[] | undefined>,
+): ReservationListParams {
   const page = Math.max(1, Math.floor(Number(readParam(params, "page"))) || 1);
 
   const requestedSize = Math.floor(Number(readParam(params, "pageSize")));
-  const pageSize = RESERVATION_PAGE_SIZES.includes(requestedSize) ? requestedSize : DEFAULT_RESERVATION_PAGE_SIZE;
+  const pageSize = RESERVATION_PAGE_SIZES.includes(requestedSize)
+    ? requestedSize
+    : DEFAULT_RESERVATION_PAGE_SIZE;
 
   const tabRaw = readParam(params, "tab");
   const sortRaw = readParam(params, "sort");

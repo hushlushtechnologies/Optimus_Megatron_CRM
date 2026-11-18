@@ -17,7 +17,8 @@ const ALLOWED = /^\d{0,3}(\.\d{0,2})?$/;
 export function PercentField({ label, value, onChange, error, helper }: PercentFieldProps) {
   const baseId = useId();
   const describedBy =
-    [helper ? `${baseId}-helper` : null, error ? `${baseId}-error` : null].filter(Boolean).join(" ") || undefined;
+    [helper ? `${baseId}-helper` : null, error ? `${baseId}-error` : null].filter(Boolean).join(" ") ||
+    undefined;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -43,7 +44,10 @@ export function PercentField({ label, value, onChange, error, helper }: PercentF
             error ? "border-red-500" : "border-border",
           )}
         />
-        <span aria-hidden="true" className="text-text-subtle pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
+        <span
+          aria-hidden="true"
+          className="text-text-subtle pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm"
+        >
           %
         </span>
       </div>

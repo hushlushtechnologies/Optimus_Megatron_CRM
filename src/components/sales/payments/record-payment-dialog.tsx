@@ -154,7 +154,12 @@ export function RecordPaymentDialog({
           />
           {quick !== null && quick > BigInt(0) && (
             <div>
-              <Button type="button" size="sm" variant="secondary" onClick={() => setAmount(filsToDecimalString(quick))}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setAmount(filsToDecimalString(quick))}
+              >
                 {quickLabel}: {formatFils(quick, currency)}
               </Button>
             </div>

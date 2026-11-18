@@ -17,7 +17,7 @@ export function TableScrollControls({ scrollRef, contentKey }: TableScrollContro
     thumbWidth: 100,
   });
 
-    const trackRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
 
   /*

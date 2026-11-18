@@ -22,7 +22,8 @@ export async function getSalesDocuments(params: {
 }): Promise<SalesDocumentItem[] | null> {
   const targets: string[] = [];
   if (params.dealId && UUID_RE.test(params.dealId)) targets.push(`deal_id.eq.${params.dealId}`);
-  if (params.reservationId && UUID_RE.test(params.reservationId)) targets.push(`reservation_id.eq.${params.reservationId}`);
+  if (params.reservationId && UUID_RE.test(params.reservationId))
+    targets.push(`reservation_id.eq.${params.reservationId}`);
   if (targets.length === 0) return [];
 
   const supabase = await createClient();
@@ -38,9 +39,9 @@ export async function getSalesDocuments(params: {
     return null;
   }
 
-  return ((data ?? []) as unknown as (Omit<SalesDocumentItem, "total"> & { total: number | string | null })[]).map(
-    (row) => ({ ...row, total: row.total === null ? null : Number(row.total) }),
-  );
+  return (
+    (data ?? []) as unknown as (Omit<SalesDocumentItem, "total"> & { total: number | string | null })[]
+  ).map((row) => ({ ...row, total: row.total === null ? null : Number(row.total) }));
 }
 
 interface DocumentRow {

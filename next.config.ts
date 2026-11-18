@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
     "/admin/customers/export": ["./public/logo.png", "./public/logo/main-logo.svg"],
     "/admin/test-drives/export": ["./public/logo.png", "./public/logo/main-logo.svg"],
     "/admin/sales/export": ["./public/logo.png", "./public/logo/main-logo.svg"],
+    "/admin/sales/payments/export": ["./public/logo.png", "./public/logo/main-logo.svg"],
     "/admin/sales/documents/[id]/pdf": ["./public/logo.png", "./public/logo/main-logo.svg"],
   },
 };

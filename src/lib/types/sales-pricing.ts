@@ -1,6 +1,5 @@
 export type FeeMode = "fixed" | "percent";
 
-
 export interface FeeType {
   id: string;
   name: string;
@@ -50,11 +49,10 @@ export interface FullSalesSettings {
 
 export interface SettingsHistoryItem {
   id: string;
-      entity: "settings" | "fee" | "company" | "checklist";
+  entity: "settings" | "fee" | "company" | "checklist";
   changed_at: string;
   changed_by_name: string;
   changes: string[];
-  
 }
 
 export interface SettingsActionResult {

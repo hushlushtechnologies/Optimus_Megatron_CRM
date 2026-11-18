@@ -37,12 +37,17 @@ export default async function NewReservationPage({ searchParams }: NewReservatio
 
   if (!user || !permissions?.reservationsRequest) {
     return (
-      <Notice title="You don't have permission to request reservations.">Ask an administrator if you need access.</Notice>
+      <Notice title="You don't have permission to request reservations.">
+        Ask an administrator if you need access.
+      </Notice>
     );
   }
 
   const params = await searchParams;
-  const [lookupsResult, prefill] = await Promise.all([getReservationLookups(), getTestDriveFormPrefill(params)]);
+  const [lookupsResult, prefill] = await Promise.all([
+    getReservationLookups(),
+    getTestDriveFormPrefill(params),
+  ]);
   const { lookups } = lookupsResult;
 
   if (!lookups.settings || lookups.showrooms.length === 0) {

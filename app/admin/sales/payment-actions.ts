@@ -1,12 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { getPaymentRules } from "@/src/lib/supabase/sales-payment-queries";
 import { beginSalesAction } from "@/src/lib/supabase/sales-permissions";
-import { recordPaymentSchema, setPaymentStatusSchema } from "@/src/lib/validation/sales-payments";
+import type { BulkPaymentActionResult, PaymentActionResult } from "@/src/lib/types/sales-payments";
 import { mapSalesDbError } from "@/src/lib/utils/sales-errors";
 import { filsToDecimalString, toFils } from "@/src/lib/utils/sales-money";
 import { getDubaiToday } from "@/src/lib/utils/test-drive-format";
-import type { PaymentActionResult } from "@/src/lib/types/sales-payments";
+import {
+  recordPaymentSchema,
+  setPaymentStatusSchema,
+  verifyPaymentsSchema,
+} from "@/src/lib/validation/sales-payments";
+import { revalidatePath } from "next/cache";
 
 function refresh(dealId: string | null, reservationId: string | null) {
   revalidatePath("/admin/sales");
@@ -84,9 +89,74 @@ export async function setPaymentStatusAction(input: unknown): Promise<PaymentAct
 
   const row = (data ?? [])[0] as { deal_id: string | null; reservation_id: string | null } | undefined;
   if (!row) {
-    return { error: "This payment was just updated by someone else. Refresh the page to see its current state." };
+    return {
+      error: "This payment was just updated by someone else. Refresh the page to see its current state.",
+    };
   }
 
   refresh(row.deal_id, row.reservation_id);
   return { error: null };
+}
+
+/**
+ * Verifies several payments in one request.
+ *
+ * Deliberately the same guards as verifying one at a time, applied in the
+ * database rather than in a loop: only payments still sitting at Recorded are
+ * touched, and when the showroom requires a separate verifier, anything this
+ * person recorded themselves is left alone. The caller is told how many were
+ * passed over so the screen can say so.
+ */
+export async function verifyPaymentsAction(input: unknown): Promise<BulkPaymentActionResult> {
+  const start = await beginSalesAction("paymentsVerify");
+  if (!start.ok) return { error: start.error, verified: 0, skipped: 0 };
+
+  const parsed = verifyPaymentsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Please choose the payments again.",
+      verified: 0,
+      skipped: 0,
+    };
+  }
+
+  const ids = [...new Set(parsed.data.ids)];
+
+  // null (the setting couldn't be read) is treated as "yes", the safer answer.
+  const rules = await getPaymentRules();
+  const needsOther = rules.separateVerifier !== false;
+
+  let query = start.supabase
+    .from("sales_payments")
+    .update({ status: "Verified", status_reason: null })
+    .in("id", ids)
+    .eq("status", "Recorded");
+
+  if (needsOther) query = query.neq("recorded_by", start.userId);
+
+  const { data, error } = await query.select("id, deal_id, reservation_id");
+
+  if (error) {
+    console.error("verifyPaymentsAction error:", error);
+    return { error: mapSalesDbError(error), verified: 0, skipped: 0 };
+  }
+
+  const rows = (data ?? []) as { deal_id: string | null; reservation_id: string | null }[];
+
+  /*
+   * One revalidation per affected deal, not per payment, so verifying twenty
+   * payments on one deal doesn't queue twenty identical refreshes.
+   */
+  const deals = new Set(rows.map((row) => row.deal_id).filter((id): id is string => id !== null));
+  const reservations = new Set(
+    rows.map((row) => row.reservation_id).filter((id): id is string => id !== null),
+  );
+
+  revalidatePath("/admin/sales");
+  revalidatePath("/admin/sales/payments");
+  revalidatePath("/admin/reservations");
+  for (const id of deals) revalidatePath(`/admin/sales/${id}`);
+  for (const id of reservations) revalidatePath(`/admin/reservations/${id}`);
+
+  return { error: null, verified: rows.length, skipped: ids.length - rows.length };
 }

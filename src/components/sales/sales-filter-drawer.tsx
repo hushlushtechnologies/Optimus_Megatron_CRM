@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { CalendarDays, Car, ChevronDown, Filter, MapPin, RotateCcw, SlidersHorizontal, X } from "lucide-react";
+import {
+  CalendarDays,
+  Car,
+  ChevronDown,
+  Filter,
+  MapPin,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { useFocusTrap } from "@/src/hooks/use-focus-trap";
 import { useMotion } from "@/src/hooks/use-motion";
 import { Button } from "@/src/components/ui/button";
@@ -68,7 +77,9 @@ function Section({
         <span className="text-primary">{icon}</span>
         <span className="text-text-primary flex-1 text-sm font-semibold">{title}</span>
         {count > 0 && (
-          <span className="bg-primary/10 text-primary rounded-md px-2 py-0.5 text-xs font-semibold">{count}</span>
+          <span className="bg-primary/10 text-primary rounded-md px-2 py-0.5 text-xs font-semibold">
+            {count}
+          </span>
         )}
         <ChevronDown
           aria-hidden="true"
@@ -85,7 +96,9 @@ function Section({
 export function SalesFilterDrawer(props: SalesFilterDrawerProps) {
   if (typeof document === "undefined") return null;
   return createPortal(
-    <AnimatePresence>{props.isOpen && <SalesFilterDrawerContent key="sales-filters" {...props} />}</AnimatePresence>,
+    <AnimatePresence>
+      {props.isOpen && <SalesFilterDrawerContent key="sales-filters" {...props} />}
+    </AnimatePresence>,
     document.body,
   );
 }
@@ -184,7 +197,7 @@ function SalesFilterDrawerContent({ onClose, filters, onApply, lookups }: SalesF
           </button>
         </header>
 
-        <div className="scrollbar-none min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5">
+        <div className="min-h-0 flex-1 scrollbar-none space-y-4 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5">
           <div className="border-border bg-base/60 flex items-center justify-between rounded-lg border px-3.5 py-3">
             <div className="flex items-center gap-2.5">
               <Filter className="text-primary size-4" aria-hidden="true" />
@@ -233,7 +246,10 @@ function SalesFilterDrawerContent({ onClose, filters, onApply, lookups }: SalesF
               options={BALANCE_OPTIONS}
               value={draft.balance ?? ""}
               onChange={(e) =>
-                patch({ balance: e.target.value === "outstanding" || e.target.value === "settled" ? e.target.value : null })
+                patch({
+                  balance:
+                    e.target.value === "outstanding" || e.target.value === "settled" ? e.target.value : null,
+                })
               }
             />
           </Section>
@@ -268,8 +284,18 @@ function SalesFilterDrawerContent({ onClose, filters, onApply, lookups }: SalesF
             count={draft.from || draft.to ? 1 : 0}
           >
             <div className="grid grid-cols-1 gap-3 min-[390px]:grid-cols-2">
-              <Input label="From" type="date" value={draft.from ?? ""} onChange={(e) => patch({ from: e.target.value || null })} />
-              <Input label="To" type="date" value={draft.to ?? ""} onChange={(e) => patch({ to: e.target.value || null })} />
+              <Input
+                label="From"
+                type="date"
+                value={draft.from ?? ""}
+                onChange={(e) => patch({ from: e.target.value || null })}
+              />
+              <Input
+                label="To"
+                type="date"
+                value={draft.to ?? ""}
+                onChange={(e) => patch({ to: e.target.value || null })}
+              />
             </div>
             <p className="text-text-subtle text-xs">Dates are Dubai time.</p>
             {invalidDates && (
@@ -300,8 +326,15 @@ function SalesFilterDrawerContent({ onClose, filters, onApply, lookups }: SalesF
                 patch({ vehicle: vehicle?.id ?? null });
               }}
               search={searchSalesFilterVehiclesAction}
-              renderOption={(vehicle) => <PickerRow title={vehicle.display_title} detail={`${vehicle.stock_id}${vehicle.brand_name ? ` · ${vehicle.brand_name}` : ""}`} />}
-              renderSelected={(vehicle) => <PickerRow title={vehicle.display_title} detail={vehicle.stock_id} />}
+              renderOption={(vehicle) => (
+                <PickerRow
+                  title={vehicle.display_title}
+                  detail={`${vehicle.stock_id}${vehicle.brand_name ? ` · ${vehicle.brand_name}` : ""}`}
+                />
+              )}
+              renderSelected={(vehicle) => (
+                <PickerRow title={vehicle.display_title} detail={vehicle.stock_id} />
+              )}
               emptyMessage="No vehicles found. Check the name or stock ID."
             />
             <SearchSelect<SalesFilterCustomerOption>
@@ -313,8 +346,12 @@ function SalesFilterDrawerContent({ onClose, filters, onApply, lookups }: SalesF
                 patch({ customer: customer?.id ?? null });
               }}
               search={searchSalesFilterCustomersAction}
-              renderOption={(customer) => <PickerRow title={customer.full_name} detail={customer.customer_number} />}
-              renderSelected={(customer) => <PickerRow title={customer.full_name} detail={customer.customer_number} />}
+              renderOption={(customer) => (
+                <PickerRow title={customer.full_name} detail={customer.customer_number} />
+              )}
+              renderSelected={(customer) => (
+                <PickerRow title={customer.full_name} detail={customer.customer_number} />
+              )}
               emptyMessage="No customers found."
             />
           </Section>

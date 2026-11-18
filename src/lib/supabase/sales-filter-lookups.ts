@@ -1,8 +1,5 @@
 import { createClient } from "@/src/lib/supabase/server";
-import type {
-  SalesFilterCustomerOption,
-  SalesFilterVehicleOption,
-} from "@/src/lib/utils/sales-list-filters";
+import type { SalesFilterCustomerOption, SalesFilterVehicleOption } from "@/src/lib/utils/sales-list-filters";
 
 export interface SalesFilterLookups {
   brands: { id: string; name: string }[];
@@ -72,7 +69,10 @@ export async function getSalesFilterLookups(
       lookups: {
         brands: brands.data ?? [],
         showrooms: showrooms.data ?? [],
-        owners: ownerRows.map((owner) => ({ id: owner.id, name: owner.full_name?.trim() || "Unnamed staff" })),
+        owners: ownerRows.map((owner) => ({
+          id: owner.id,
+          name: owner.full_name?.trim() || "Unnamed staff",
+        })),
         customer: (customer?.data ?? null) as SalesFilterCustomerOption | null,
         vehicle: vehicleRow
           ? {

@@ -142,8 +142,10 @@ export async function createReservationAction(input: unknown): Promise<CreateRes
     } | null;
 
     if (!leadRow || leadRow.archived_at) return { error: "That lead could not be found." };
-    if (leadRow.customer_id !== v.customerId) return { error: "The selected lead belongs to a different customer." };
-    if (leadRow.stage?.stage_type !== "open") return { error: "That lead is already closed. Choose an open lead." };
+    if (leadRow.customer_id !== v.customerId)
+      return { error: "The selected lead belongs to a different customer." };
+    if (leadRow.stage?.stage_type !== "open")
+      return { error: "That lead is already closed. Choose an open lead." };
   }
 
   // 4. The vehicle must be fit to hold. The database refuses conflicts as well, this just says why first.
@@ -177,7 +179,9 @@ export async function createReservationAction(input: unknown): Promise<CreateRes
 
 // --- Change status ---
 
-const PERMISSION_FOR: Partial<Record<"confirm" | "reject" | "cancel" | "release" | "extend", SalesPermissionName>> = {
+const PERMISSION_FOR: Partial<
+  Record<"confirm" | "reject" | "cancel" | "release" | "extend", SalesPermissionName>
+> = {
   confirm: "reservationsConfirm",
   reject: "reservationsConfirm",
   extend: "reservationsConfirm",
@@ -245,5 +249,10 @@ export async function convertReservationAction(input: unknown): Promise<Reservat
   revalidatePath("/admin/reservations");
   revalidatePath(`/admin/reservations/${v.id}`);
   revalidatePath("/admin/sales");
-  return { error: null, dealId: row.out_deal_id, dealNumber: row.out_deal_number, linkedExisting: !row.out_created };
+  return {
+    error: null,
+    dealId: row.out_deal_id,
+    dealNumber: row.out_deal_number,
+    linkedExisting: !row.out_created,
+  };
 }

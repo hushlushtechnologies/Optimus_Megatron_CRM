@@ -26,7 +26,9 @@ export async function CustomerReservationsTab({ customerId }: { customerId: stri
           <BookmarkPlus className="size-6" aria-hidden="true" />
         </span>
         <div className="max-w-sm">
-          <p className="text-body-lg text-text-primary">You don&apos;t have permission to view reservations</p>
+          <p className="text-body-lg text-text-primary">
+            You don&apos;t have permission to view reservations
+          </p>
           <p className="text-body-sm text-text-muted mt-1">Ask an administrator if you need access.</p>
         </div>
       </div>

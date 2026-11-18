@@ -34,20 +34,75 @@ interface ReservationActionDialogProps {
 
 const CONFIG: Record<
   ReservationActionKind,
-  { title: string; confirm: string; success: string; destructive: boolean; needsReason: boolean; needsDays: boolean }
+  {
+    title: string;
+    confirm: string;
+    success: string;
+    destructive: boolean;
+    needsReason: boolean;
+    needsDays: boolean;
+  }
 > = {
-  confirm: { title: "Confirm reservation", confirm: "Confirm and hold vehicle", success: "Reservation confirmed", destructive: false, needsReason: false, needsDays: true },
-  reject: { title: "Reject request", confirm: "Reject request", success: "Request rejected", destructive: true, needsReason: true, needsDays: false },
-  cancel: { title: "Cancel request", confirm: "Cancel request", success: "Request cancelled", destructive: true, needsReason: true, needsDays: false },
-  release: { title: "Release vehicle", confirm: "Release vehicle", success: "Vehicle released", destructive: true, needsReason: true, needsDays: false },
-  extend: { title: "Extend hold", confirm: "Extend hold", success: "Hold extended", destructive: false, needsReason: false, needsDays: true },
-  convert: { title: "Create deal", confirm: "Create deal", success: "Deal ready", destructive: false, needsReason: false, needsDays: false },
+  confirm: {
+    title: "Confirm reservation",
+    confirm: "Confirm and hold vehicle",
+    success: "Reservation confirmed",
+    destructive: false,
+    needsReason: false,
+    needsDays: true,
+  },
+  reject: {
+    title: "Reject request",
+    confirm: "Reject request",
+    success: "Request rejected",
+    destructive: true,
+    needsReason: true,
+    needsDays: false,
+  },
+  cancel: {
+    title: "Cancel request",
+    confirm: "Cancel request",
+    success: "Request cancelled",
+    destructive: true,
+    needsReason: true,
+    needsDays: false,
+  },
+  release: {
+    title: "Release vehicle",
+    confirm: "Release vehicle",
+    success: "Vehicle released",
+    destructive: true,
+    needsReason: true,
+    needsDays: false,
+  },
+  extend: {
+    title: "Extend hold",
+    confirm: "Extend hold",
+    success: "Hold extended",
+    destructive: false,
+    needsReason: false,
+    needsDays: true,
+  },
+  convert: {
+    title: "Create deal",
+    confirm: "Create deal",
+    success: "Deal ready",
+    destructive: false,
+    needsReason: false,
+    needsDays: false,
+  },
 };
 
 const DAY_MS = 86_400_000;
 
 // The parent mounts this only while it is open, so every opening starts clean and reads the freshest version.
-export function ReservationActionDialog({ kind, row, settings, onClose, onDone }: ReservationActionDialogProps) {
+export function ReservationActionDialog({
+  kind,
+  row,
+  settings,
+  onClose,
+  onDone,
+}: ReservationActionDialogProps) {
   const cfg = CONFIG[kind];
   const now = useMinuteClock();
 
@@ -63,12 +118,13 @@ export function ReservationActionDialog({ kind, row, settings, onClose, onDone }
   const daysNumber = Number(days);
   const daysValid = Number.isInteger(daysNumber) && daysNumber >= 1 && daysNumber <= maxDays;
   const reasonValid = reason.trim().length >= 3;
-    // The deposit your settings ask for. If it isn't covered by verified money, confirming needs a reason to waive it.
-  const requiredDeposit = kind === "confirm" && settings ? requiredReservationDeposit(settings, row.listed_price) : null;
+  // The deposit your settings ask for. If it isn't covered by verified money, confirming needs a reason to waive it.
+  const requiredDeposit =
+    kind === "confirm" && settings ? requiredReservationDeposit(settings, row.listed_price) : null;
   const verifiedDeposit = toFils(row.deposit_verified) ?? BigInt(0);
   const depositShort = requiredDeposit !== null && verifiedDeposit < requiredDeposit;
 
-    const canSubmit =
+  const canSubmit =
     !saving &&
     !settingsMissing &&
     (!cfg.needsDays || daysValid) &&
@@ -93,7 +149,7 @@ export function ReservationActionDialog({ kind, row, settings, onClose, onDone }
               id: row.id,
               action: kind,
               expectedUpdatedAt: row.updated_at,
-                            reason: cfg.needsReason || depositShort ? reason.trim() : "",
+              reason: cfg.needsReason || depositShort ? reason.trim() : "",
               days: cfg.needsDays ? daysNumber : null,
             });
 
@@ -157,19 +213,24 @@ export function ReservationActionDialog({ kind, row, settings, onClose, onDone }
 
         {kind === "confirm" && (
           <p className="text-body-sm text-text-muted">
-            Confirming holds this vehicle for the customer until the time below. No one else can reserve or confirm it
-            until the hold ends. A request on its own never holds a vehicle.
+            Confirming holds this vehicle for the customer until the time below. No one else can reserve or
+            confirm it until the hold ends. A request on its own never holds a vehicle.
           </p>
         )}
-                {kind === "confirm" && requiredDeposit !== null && settings && (
+        {kind === "confirm" && requiredDeposit !== null && settings && (
           <div className="flex flex-col gap-3">
             <p
               role="status"
               className="border-border bg-card-hover/40 text-body-sm text-text-primary rounded-md border px-3 py-2.5"
             >
-              Deposit needed: <span className="font-semibold tabular-nums">{formatFils(requiredDeposit, settings.currency)}</span>
+              Deposit needed:{" "}
+              <span className="font-semibold tabular-nums">
+                {formatFils(requiredDeposit, settings.currency)}
+              </span>
               {" · "}verified so far:{" "}
-              <span className="font-semibold tabular-nums">{formatFils(verifiedDeposit, settings.currency)}</span>
+              <span className="font-semibold tabular-nums">
+                {formatFils(verifiedDeposit, settings.currency)}
+              </span>
             </p>
             {depositShort && (
               <Textarea
@@ -195,21 +256,26 @@ export function ReservationActionDialog({ kind, row, settings, onClose, onDone }
           </p>
         )}
         {kind === "reject" && (
-          <p className="text-body-sm text-text-muted">The request is declined and the requester is told why. This can&apos;t be undone.</p>
+          <p className="text-body-sm text-text-muted">
+            The request is declined and the requester is told why. This can&apos;t be undone.
+          </p>
         )}
         {kind === "cancel" && (
-          <p className="text-body-sm text-text-muted">The request is withdrawn. This can&apos;t be undone. A new request would be needed.</p>
+          <p className="text-body-sm text-text-muted">
+            The request is withdrawn. This can&apos;t be undone. A new request would be needed.
+          </p>
         )}
         {kind === "release" && (
           <p className="text-body-sm text-text-muted">
-            The vehicle is freed straight away for other customers. A deal that was reserved on it goes back to
-            negotiation. This can&apos;t be undone.
+            The vehicle is freed straight away for other customers. A deal that was reserved on it goes back
+            to negotiation. This can&apos;t be undone.
           </p>
         )}
         {kind === "convert" && (
           <p className="text-body-sm text-text-muted">
-            If this customer already has an open deal on this vehicle, the reservation is linked to it. Otherwise a new
-            draft deal is created from the reservation. You&apos;ll go to the deal to set the price and carry on.
+            If this customer already has an open deal on this vehicle, the reservation is linked to it.
+            Otherwise a new draft deal is created from the reservation. You&apos;ll go to the deal to set the
+            price and carry on.
           </p>
         )}
 
@@ -234,7 +300,8 @@ export function ReservationActionDialog({ kind, row, settings, onClose, onDone }
             )}
             {preview && (
               <p role="status" className="text-body-sm text-text-primary">
-                {kind === "extend" ? "New expiry" : "The hold lasts until"}: <span className="font-medium">{preview}</span>
+                {kind === "extend" ? "New expiry" : "The hold lasts until"}:{" "}
+                <span className="font-medium">{preview}</span>
               </p>
             )}
           </div>

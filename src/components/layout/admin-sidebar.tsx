@@ -40,7 +40,7 @@ const LOGO_MARK = "/logo/mark-logo.svg";
 export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
   const pathname = usePathname();
 
-    const { isCollapsed, toggleCollapsed, setMobileOpen } = useSidebar();
+  const { isCollapsed, toggleCollapsed, setMobileOpen } = useSidebar();
 
   /*
    * Exactly one destination is highlighted, and it is the most specific one.
@@ -51,8 +51,6 @@ export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
   const activeHref = activeNavHref(pathname);
 
   return (
-
-  
     <div className="border-border bg-sidebar-background relative flex h-full flex-col overflow-hidden rounded-[24px] border shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
       {/* =====================================================
           BRAND
@@ -153,7 +151,7 @@ export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
             )}
 
             <ul className="flex flex-col gap-1">
-                            {section.items.map((item) => {
+              {section.items.map((item) => {
                 const Icon = item.icon;
 
                 /*

@@ -18,8 +18,6 @@ import { cn } from "@/src/lib/utils/cn";
 import { notificationHref, notificationIcon } from "@/src/lib/utils/notification-links";
 import type { AppNotification } from "@/src/lib/types/notification";
 
-
-
 const POLL_INTERVAL_MS = 60_000;
 
 // const TYPE_ICON: Record<string, LucideIcon> = {
@@ -224,7 +222,7 @@ export function NotificationsDropdown() {
           ) : (
             <ul className="max-h-96 overflow-y-auto">
               {notifications.map((notification) => {
-                                const Icon = notificationIcon(notification.type);
+                const Icon = notificationIcon(notification.type);
                 const href = notificationHref(notification);
                 const isUnread = !notification.read_at;
 
@@ -276,7 +274,7 @@ export function NotificationsDropdown() {
                     )}
                   </li>
                 );
-                            })}
+              })}
             </ul>
           )}
 

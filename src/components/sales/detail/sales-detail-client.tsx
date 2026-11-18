@@ -16,7 +16,11 @@ import { DealActionBar } from "@/src/components/sales/actions/deal-action-bar";
 import { useDealActions } from "@/src/components/sales/actions/use-deal-actions";
 import { useMinuteClock } from "@/src/hooks/use-minute-clock";
 import { useMotion } from "@/src/hooks/use-motion";
-import { computeReadiness, describeDealVehicleContext, holdConflictFor } from "@/src/lib/utils/sales-readiness";
+import {
+  computeReadiness,
+  describeDealVehicleContext,
+  holdConflictFor,
+} from "@/src/lib/utils/sales-readiness";
 import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
 import type { SalesDealStatus } from "@/src/lib/types/sales";
 import type { SalesDealDetailData } from "@/src/lib/types/sales-detail";
@@ -38,16 +42,16 @@ interface SalesDetailClientProps {
   data: SalesDealDetailData;
   permissions: SalesPermissions;
   pricingExtras: PricingExtras;
-    assignments: AssignmentHistoryItem[] | null;
+  assignments: AssignmentHistoryItem[] | null;
   currentUserId: string | null;
   separateVerifier: boolean | null;
   documents: SalesDocumentItem[] | null;
-      delivery: DealDeliveryResult;
+  delivery: DealDeliveryResult;
   deliveryLookups: DeliveryLookups | null;
   /** This customer's test drives of this vehicle. */
   testDrives: TestDrivePanelLoad;
   /** The drive this deal was created from, when it was. */
-    /** The drive this deal was created from, when it was. */
+  /** The drive this deal was created from, when it was. */
   sourceTestDriveNumber: string | null;
   notes: DealNotesData;
 }
@@ -59,9 +63,9 @@ export function SalesDetailClient({
   currentUserId,
   separateVerifier,
   documents,
-    delivery, 
+  delivery,
   deliveryLookups,
-    testDrives,
+  testDrives,
   sourceTestDriveNumber,
   notes,
 }: SalesDetailClientProps) {
@@ -76,7 +80,7 @@ export function SalesDetailClient({
   );
   const holdConflict = useMemo(() => holdConflictFor(deal, data.vehicleContext), [deal, data.vehicleContext]);
 
-    const canReserve =
+  const canReserve =
     deal.status === "Negotiation" &&
     !!deal.reservation_id &&
     deal.reservation_status === "Confirmed" &&
@@ -108,7 +112,7 @@ export function SalesDetailClient({
         deal={deal}
         stoppedAt={stoppedAt}
         visited={visited}
-                actions={
+        actions={
           <DealActionBar
             status={deal.status}
             permissions={permissions}
@@ -131,7 +135,9 @@ export function SalesDetailClient({
               {deal.cancelled_at ? ` on ${formatDateTimeFull(deal.cancelled_at)}` : ""}
               {cancelEntry ? ` by ${cancelEntry.changed_by_name}` : ""}.
             </p>
-            {deal.cancellation_reason && <p className="text-text-muted mt-0.5">Reason: {deal.cancellation_reason}</p>}
+            {deal.cancellation_reason && (
+              <p className="text-text-muted mt-0.5">Reason: {deal.cancellation_reason}</p>
+            )}
             {deal.cancellation_refund_note && (
               <p className="text-text-muted mt-0.5">Payments: {deal.cancellation_refund_note}</p>
             )}
@@ -151,7 +157,7 @@ export function SalesDetailClient({
               </span>
             )}
           </Tab>
-                    <Tab id="documents">
+          <Tab id="documents">
             Documents
             {documents && documents.length > 0 && (
               <span className="bg-primary/10 text-primary ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
@@ -159,8 +165,8 @@ export function SalesDetailClient({
               </span>
             )}
           </Tab>
-                    <Tab id="delivery">Delivery</Tab>
-                    <Tab id="notes">
+          <Tab id="delivery">Delivery</Tab>
+          <Tab id="notes">
             Notes
             {notes.notes && notes.notes.length > 0 && (
               <span className="bg-primary/10 text-primary ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
@@ -180,7 +186,7 @@ export function SalesDetailClient({
                 <DealCustomerCard deal={deal} />
                 <DealVehicleCard deal={deal} messages={vehicleMessages} />
               </div>
-                            <DealNotesCard notes={deal.notes} />
+              <DealNotesCard notes={deal.notes} />
 
               <DealTestDrivesCard
                 load={testDrives}
@@ -188,7 +194,7 @@ export function SalesDetailClient({
                 customerName={deal.customer_name}
               />
             </div>
-                        <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6">
               <DealOwnerCard
                 deal={deal}
                 assignments={assignments}
@@ -201,7 +207,7 @@ export function SalesDetailClient({
         </TabPanel>
 
         <TabPanel id="pricing">
-                    <DealPricingTab
+          <DealPricingTab
             deal={deal}
             settings={data.settings}
             history={data.priceHistory}
@@ -211,7 +217,7 @@ export function SalesDetailClient({
         </TabPanel>
 
         <TabPanel id="payments">
-                    <DealPaymentsTab
+          <DealPaymentsTab
             deal={deal}
             payments={data.payments}
             permissions={permissions}
@@ -220,12 +226,17 @@ export function SalesDetailClient({
           />
         </TabPanel>
 
-                <TabPanel id="documents">
+        <TabPanel id="documents">
           <DealDocumentsTab deal={deal} documents={documents} permissions={permissions} />
         </TabPanel>
 
         <TabPanel id="delivery">
-          <DealDeliveryTab deal={deal} result={delivery} lookups={deliveryLookups} permissions={permissions} />
+          <DealDeliveryTab
+            deal={deal}
+            result={delivery}
+            lookups={deliveryLookups}
+            permissions={permissions}
+          />
         </TabPanel>
         <TabPanel id="notes">
           <DealNotesPanel dealId={deal.id} data={notes} />

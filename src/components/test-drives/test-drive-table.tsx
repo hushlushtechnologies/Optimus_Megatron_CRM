@@ -144,13 +144,23 @@ export function TestDriveTable({
             label: "Export Excel",
             icon: FileSpreadsheet,
             disabled: exporter.isExporting,
-            onClick: () => void exporter.run("excel", "selected", selectedRows.map((row) => row.id)),
+            onClick: () =>
+              void exporter.run(
+                "excel",
+                "selected",
+                selectedRows.map((row) => row.id),
+              ),
           },
           {
             label: "Export PDF",
             icon: FileText,
             disabled: exporter.isExporting,
-            onClick: () => void exporter.run("pdf", "selected", selectedRows.map((row) => row.id)),
+            onClick: () =>
+              void exporter.run(
+                "pdf",
+                "selected",
+                selectedRows.map((row) => row.id),
+              ),
           },
         ]
       : []),

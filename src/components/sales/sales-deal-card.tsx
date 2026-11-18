@@ -62,7 +62,9 @@ export function SalesDealCard({ row, compact = false, index = 0 }: SalesDealCard
 
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-caption text-text-subtle">{row.agreed_price !== null ? "Agreed price" : "Proposed price"}</p>
+          <p className="text-caption text-text-subtle">
+            {row.agreed_price !== null ? "Agreed price" : "Proposed price"}
+          </p>
           <p className="text-text-primary text-base font-semibold tabular-nums">
             {formatMoney(price, row.currency)}
           </p>

@@ -3,6 +3,8 @@ import { SALES_DEAL_STATUSES, type SalesDealStatus } from "@/src/lib/types/sales
 import type {
   MonthlyPoint,
   OwnerPerformanceRow,
+  ReportDealRow,
+  ReportDealsResult,
   ReportRange,
   SalesExportResult,
   SalesExportRow,
@@ -24,6 +26,14 @@ import type {
 */
 
 const EXPORT_LIMIT = 5000;
+
+/*
+ * The table view holds its rows in memory so sorting is instant. 500 is
+ * generous for a reporting table and stays well inside a single query; when
+ * the period holds more, the table says so and points at the export, which
+ * goes to 5000.
+ */
+const TABLE_LIMIT = 500;
 const AGGREGATE_LIMIT = 5000;
 
 type Numeric = number | string | null;
@@ -178,10 +188,7 @@ export async function getSalesReport(range: ReportRange): Promise<SalesReportDat
   ]);
 
   if (completedResult.error || createdResult.error || openResult.error) {
-    console.error(
-      "getSalesReport error:",
-      completedResult.error ?? createdResult.error ?? openResult.error,
-    );
+    console.error("getSalesReport error:", completedResult.error ?? createdResult.error ?? openResult.error);
     return emptyResult;
   }
 
@@ -201,10 +208,7 @@ export async function getSalesReport(range: ReportRange): Promise<SalesReportDat
 
   if (completedIds.size > 0) {
     const ids = Array.from(completedIds.keys());
-    const { data, error } = await supabase
-      .from("sales_deal_list")
-      .select(AGGREGATE_COLUMNS)
-      .in("id", ids);
+    const { data, error } = await supabase.from("sales_deal_list").select(AGGREGATE_COLUMNS).in("id", ids);
 
     if (error) {
       console.error("getSalesReport completed values error:", error);
@@ -224,13 +228,12 @@ export async function getSalesReport(range: ReportRange): Promise<SalesReportDat
 
   const completedValue = completedRows.reduce((sum, row) => sum + num(row.total_due), 0);
 
-  const collected = ((paymentsResult.data ?? []) as unknown as {
-    amount: Numeric;
-    direction: string;
-  }[]).reduce(
-    (sum, row) => sum + (row.direction === "out" ? -num(row.amount) : num(row.amount)),
-    0,
-  );
+  const collected = (
+    (paymentsResult.data ?? []) as unknown as {
+      amount: Numeric;
+      direction: string;
+    }[]
+  ).reduce((sum, row) => sum + (row.direction === "out" ? -num(row.amount) : num(row.amount)), 0);
 
   const outstanding = openRows
     .filter((row) => row.status === "Confirmed")
@@ -246,10 +249,7 @@ export async function getSalesReport(range: ReportRange): Promise<SalesReportDat
     completedValue,
     collected,
     outstanding,
-    winRate:
-      createdRows.length === 0
-        ? null
-        : Math.round((completedRows.length / createdRows.length) * 100),
+    winRate: createdRows.length === 0 ? null : Math.round((completedRows.length / createdRows.length) * 100),
     averageDealValue: completedRows.length === 0 ? null : completedValue / completedRows.length,
     currency,
   };
@@ -301,9 +301,7 @@ export async function getSalesReport(range: ReportRange): Promise<SalesReportDat
     ensureOwner(row.owner_id, row.owner_name).open += 1;
   });
 
-  const byOwner = Array.from(owners.values()).sort(
-    (a, b) => b.value - a.value || b.completed - a.completed,
-  );
+  const byOwner = Array.from(owners.values()).sort((a, b) => b.value - a.value || b.completed - a.completed);
 
   /* ---- By showroom: completed in the window ---- */
 
@@ -437,4 +435,81 @@ export async function getSalesExportRows(range: ReportRange): Promise<SalesExpor
   const total = count ?? rows.length;
 
   return { rows, total, truncated: total > rows.length };
+}
+
+/* =========================================================
+   TABLE VIEW
+========================================================= */
+
+/**
+ * One row per deal for the report's table view, newest first.
+ *
+ * completed_at lives on the sales_deals table rather than the reporting view,
+ * so it is read separately and merged by id. That keeps sales_deal_list
+ * exactly as earlier phases built it.
+ */
+export async function getSalesReportDeals(range: ReportRange): Promise<ReportDealsResult> {
+  const supabase = await createClient();
+  const { from, to } = resolveRange(range);
+
+  let query = supabase
+    .from("sales_deal_list")
+    .select(`id, ${EXPORT_COLUMNS}`, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .limit(TABLE_LIMIT);
+
+  if (from) query = query.gte("created_at", from.toISOString());
+  query = query.lte("created_at", to.toISOString());
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error("getSalesReportDeals error:", error);
+    return { rows: [], total: 0, truncated: false, failed: true };
+  }
+
+  const base = (data ?? []) as unknown as (Record<string, Numeric | string> & { id: string })[];
+
+  /* ---- Completion dates, for the deals on this page only ---- */
+
+  const completedAt = new Map<string, string>();
+
+  if (base.length > 0) {
+    const { data: completions, error: completionError } = await supabase
+      .from("sales_deals")
+      .select("id, completed_at")
+      .in(
+        "id",
+        base.map((row) => row.id),
+      )
+      .not("completed_at", "is", null);
+
+    if (completionError) {
+      // The table is still useful without the completion column.
+      console.error("getSalesReportDeals completions error:", completionError);
+    } else {
+      ((completions ?? []) as unknown as { id: string; completed_at: string }[]).forEach((row) =>
+        completedAt.set(row.id, row.completed_at),
+      );
+    }
+  }
+
+  const rows = base.map(
+    (row) =>
+      ({
+        ...row,
+        listed_price: nullableNum(row.listed_price as Numeric),
+        proposed_price: nullableNum(row.proposed_price as Numeric),
+        discount_amount: nullableNum(row.discount_amount as Numeric),
+        agreed_price: nullableNum(row.agreed_price as Numeric),
+        total_due: nullableNum(row.total_due as Numeric),
+        verified_paid: nullableNum(row.verified_paid as Numeric),
+        balance_due: nullableNum(row.balance_due as Numeric),
+        completed_at: completedAt.get(row.id) ?? null,
+      }) as unknown as ReportDealRow,
+  );
+
+  const total = count ?? rows.length;
+
+  return { rows, total, truncated: total > rows.length, failed: false };
 }

@@ -18,15 +18,7 @@ export const TEST_DRIVE_PERMISSION_KEYS = {
 
 /** The permissions that describe what the person looking at the screen can do. */
 export type TestDrivePermissionName =
-  | "create"
-  | "edit"
-  | "reschedule"
-  | "approve"
-  | "assign"
-  | "cancel"
-  | "checkIn"
-  | "complete"
-  | "export";
+  "create" | "edit" | "reschedule" | "approve" | "assign" | "cancel" | "checkIn" | "complete" | "export";
 
 export type TestDrivePermissions = Record<TestDrivePermissionName, boolean>;
 

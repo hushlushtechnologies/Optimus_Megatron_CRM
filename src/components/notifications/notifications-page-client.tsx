@@ -14,11 +14,7 @@ import { ErrorState } from "@/src/components/shared/error-state";
 import { useMotion } from "@/src/hooks/use-motion";
 import { cn } from "@/src/lib/utils/cn";
 import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
-import {
-  notificationDayLabel,
-  notificationHref,
-  notificationIcon,
-} from "@/src/lib/utils/notification-links";
+import { notificationDayLabel, notificationHref, notificationIcon } from "@/src/lib/utils/notification-links";
 
 import {
   getNotificationFeed,
@@ -27,11 +23,7 @@ import {
   markNotificationUnread,
 } from "@/app/admin/notifications/actions";
 
-import type {
-  AppNotification,
-  NotificationFeed,
-  NotificationFilter,
-} from "@/src/lib/types/notification";
+import type { AppNotification, NotificationFeed, NotificationFilter } from "@/src/lib/types/notification";
 
 interface NotificationsPageClientProps {
   initialFeed: NotificationFeed;
@@ -121,9 +113,7 @@ export function NotificationsPageClient({ initialFeed }: NotificationsPageClient
     // Optimistic: the row updates now and reverts only if the server refuses.
     setFeed((current) => ({
       ...current,
-      items: current.items.map((item) =>
-        item.id === notification.id ? { ...item, read_at: readAt } : item,
-      ),
+      items: current.items.map((item) => (item.id === notification.id ? { ...item, read_at: readAt } : item)),
       unreadCount: Math.max(0, current.unreadCount + (read ? -1 : 1)),
     }));
 
@@ -308,7 +298,10 @@ export function NotificationsPageClient({ initialFeed }: NotificationsPageClient
                             {isUnread && <span className="sr-only">Unread:</span>}
                             {notification.title}
                             {isUnread && (
-                              <span aria-hidden="true" className="bg-primary size-1.5 shrink-0 rounded-full" />
+                              <span
+                                aria-hidden="true"
+                                className="bg-primary size-1.5 shrink-0 rounded-full"
+                              />
                             )}
                           </p>
 

@@ -30,7 +30,7 @@ export interface MetricCardProps {
   suffix?: string;
   /** Text shown when there is no change figure. Defaults to the inventory wording. */
   caption?: string;
-  
+
   /**
    * Pass a rendered icon element.
    *

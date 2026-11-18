@@ -134,8 +134,9 @@ export function buildDealAudit(input: BuildInput): {
         id: `payment-${payment.id}`,
         kind: "payment",
         title: `${direction} of ${formatMoney(payment.amount, payment.currency)} recorded`,
-        detail: [payment.method, payment.reference, payment.status_reason].filter(Boolean).join(" · ")
-          || payment.status,
+        detail:
+          [payment.method, payment.reference, payment.status_reason].filter(Boolean).join(" · ") ||
+          payment.status,
         actor: payment.recorded_by_name,
         at: payment.recorded_at,
       });

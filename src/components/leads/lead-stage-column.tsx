@@ -260,7 +260,7 @@ export function LeadStageColumn({
     }
   }
 
-    const progressPercent = Math.round(scrollState.progress * 100);
+  const progressPercent = Math.round(scrollState.progress * 100);
 
   /* role="scrollbar" must name the region it scrolls, which is the card list below. */
   const listId = useId();
@@ -325,7 +325,7 @@ export function LeadStageColumn({
 
       {/* Scrollable cards */}
       <div className="relative min-h-0 flex-1">
-                <div
+        <div
           ref={scrollRef}
           id={listId}
           role="region"

@@ -185,7 +185,7 @@ export function buildTestDriveListSearchParams(input: {
   const params = new URLSearchParams({ page: String(input.page), pageSize: String(input.pageSize) });
   if (input.sort !== input.defaultSort) params.set("sort", input.sort);
   if (input.search) params.set("q", input.search);
-    if (input.archived) params.set("archived", "true");
+  if (input.archived) params.set("archived", "true");
   writeTestDriveFiltersToParams(params, input.filters);
   return params;
 }

@@ -114,3 +114,33 @@ export interface SalesExportResult {
   total: number;
   truncated: boolean;
 }
+
+/*
+|--------------------------------------------------------------------------
+| TABLE VIEW
+|--------------------------------------------------------------------------
+|
+| The same figures as the summary view, one row per deal, so a number can be
+| traced to the deals behind it. Carries the two fields the export does not
+| need but a table does: the id, to link each row, and the completion date.
+*/
+
+export interface ReportDealRow extends SalesExportRow {
+  id: string;
+  /** Null until the deal completes. Sorting puts nulls last. */
+  completed_at: string | null;
+}
+
+export interface ReportDealsResult {
+  rows: ReportDealRow[];
+  total: number;
+  /** True when the period holds more deals than the table loaded. */
+  truncated: boolean;
+  failed: boolean;
+}
+
+export type ReportView = "summary" | "table";
+
+export function parseReportView(value: string | undefined): ReportView {
+  return value === "table" ? "table" : "summary";
+}

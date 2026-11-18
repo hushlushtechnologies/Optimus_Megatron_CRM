@@ -22,7 +22,11 @@ export const issueDocumentSchema = z
 
 export const voidDocumentSchema = z.object({
   id: z.string().uuid(),
-  reason: z.string().trim().min(3, "Please give a reason (at least 3 characters).").max(300, "Keep the reason under 300 characters."),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Please give a reason (at least 3 characters).")
+    .max(300, "Keep the reason under 300 characters."),
 });
 
 const optionalText = (max: number, message: string) =>

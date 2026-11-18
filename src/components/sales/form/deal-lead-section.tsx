@@ -13,7 +13,7 @@ interface DealLeadSectionProps {
   leadId: string | null;
   onChange: (leadId: string | null) => void;
   error?: string;
-    step?: number;
+  step?: number;
   description?: string;
 }
 
@@ -31,7 +31,7 @@ export function DealLeadSection({
   description = "Link the lead this deal came from, so the original source is kept. Optional.",
 }: DealLeadSectionProps) {
   return (
-        <FormSection step={step} title="Lead" description={description}>
+    <FormSection step={step} title="Lead" description={description}>
       {!hasCustomer ? (
         <p className="text-body-sm text-text-muted">Choose a customer first to see their open leads.</p>
       ) : leads === null ? (
@@ -44,7 +44,8 @@ export function DealLeadSection({
           role="alert"
           className="text-body-sm text-text-primary rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2"
         >
-          The customer&apos;s leads couldn&apos;t be loaded. You can still create the deal and link a lead later.
+          The customer&apos;s leads couldn&apos;t be loaded. You can still create the deal and link a lead
+          later.
         </p>
       ) : leads.results.length === 0 ? (
         <p className="text-body-sm text-text-muted">

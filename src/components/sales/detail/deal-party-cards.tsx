@@ -67,7 +67,9 @@ export function DealVehicleCard({ deal, messages }: { deal: SalesDealDetail; mes
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-text-subtle">Price when the deal started</dt>
-          <dd className="text-text-primary text-right tabular-nums">{formatMoney(deal.listed_price, deal.currency)}</dd>
+          <dd className="text-text-primary text-right tabular-nums">
+            {formatMoney(deal.listed_price, deal.currency)}
+          </dd>
         </div>
       </dl>
       <DealNotices {...messages} />

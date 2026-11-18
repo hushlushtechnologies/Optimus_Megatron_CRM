@@ -88,9 +88,15 @@ function VehicleRow({ vehicle }: { vehicle: TestDriveVehicleOption }) {
   );
 }
 
-export function AddReservationForm({ lookups, settings, prefill, currentUserId, canConfirm }: AddReservationFormProps) {
+export function AddReservationForm({
+  lookups,
+  settings,
+  prefill,
+  currentUserId,
+  canConfirm,
+}: AddReservationFormProps) {
   const router = useRouter();
-    const { fadeUp } = useMotion();
+  const { fadeUp } = useMotion();
   const now = useMinuteClock();
 
   const [customer, setCustomer] = useState<TestDriveCustomerOption | null>(prefill.customer);
@@ -110,7 +116,7 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
   const [mode, setMode] = useState<Mode>(canConfirm ? "confirm" : "request");
   const [days, setDays] = useState(String(settings.defaultDays));
   const [notes, setNotes] = useState("");
-    const [waiveReason, setWaiveReason] = useState("");
+  const [waiveReason, setWaiveReason] = useState("");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -125,7 +131,10 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
 
   /* ---------- The customer's open leads ---------- */
 
-  const [leadsState, setLeadsState] = useState<{ customerId: string; result: SearchResult<TestDriveLeadOption> } | null>(null);
+  const [leadsState, setLeadsState] = useState<{
+    customerId: string;
+    result: SearchResult<TestDriveLeadOption>;
+  } | null>(null);
 
   useEffect(() => {
     if (!customerId) return;
@@ -149,7 +158,9 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
   /* ---------- What the database says about this vehicle ---------- */
 
   const contextKey = carId ? [carId, customerId, leadId ?? ""].join("|") : null;
-  const [contextState, setContextState] = useState<{ key: string; result: VehicleDealContextResult } | null>(null);
+  const [contextState, setContextState] = useState<{ key: string; result: VehicleDealContextResult } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!contextKey) return;
@@ -168,7 +179,8 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
     };
   }, [contextKey, carId, customerId, leadId]);
 
-  const contextResult = contextKey && contextState && contextState.key === contextKey ? contextState.result : null;
+  const contextResult =
+    contextKey && contextState && contextState.key === contextKey ? contextState.result : null;
   const context = contextResult?.status === "ok" ? contextResult.context : null;
   const checking = !!contextKey && !contextResult;
   const checkFailed = contextResult?.status === "error";
@@ -197,7 +209,7 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
       ? formatDateTimeFull(new Date(now + daysNumber * 86_400_000).toISOString())
       : null;
 
-    const deposit = requiredReservationDeposit(settings, context?.listedPrice ?? null);
+  const deposit = requiredReservationDeposit(settings, context?.listedPrice ?? null);
   const ownerName = lookups.owners.find((owner) => owner.id === ownerId)?.name ?? null;
 
   const showroomMismatch =
@@ -251,8 +263,10 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
       setErrors({ days: `Enter a whole number from 1 to ${settings.maxDays}.` });
       return;
     }
-        if (mode === "confirm" && deposit !== null && waiveReason.trim().length < 3) {
-      setErrors({ waiveReason: "Say why the deposit is being waived, or send a request and take the deposit first." });
+    if (mode === "confirm" && deposit !== null && waiveReason.trim().length < 3) {
+      setErrors({
+        waiveReason: "Say why the deposit is being waived, or send a request and take the deposit first.",
+      });
       return;
     }
     setErrors({});
@@ -270,7 +284,9 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
       toast.success(
         `${mode === "confirm" ? "Vehicle held" : "Request sent"}${result.reservationNumber ? ` · ${result.reservationNumber}` : ""}`,
       );
-      router.push(result.reservationId ? `/admin/reservations/${result.reservationId}` : "/admin/reservations");
+      router.push(
+        result.reservationId ? `/admin/reservations/${result.reservationId}` : "/admin/reservations",
+      );
     } catch {
       const message = "Something went wrong. Check the Reservations list before trying again.";
       setSubmitError(message);
@@ -296,8 +312,8 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
         <div>
           <h1 className="text-h1">New Reservation</h1>
           <p className="text-body-sm text-text-muted">
-            A request asks for a vehicle to be held and waits for review. Holding it now reserves the vehicle straight
-            away.
+            A request asks for a vehicle to be held and waits for review. Holding it now reserves the vehicle
+            straight away.
           </p>
         </div>
       </motion.div>
@@ -345,7 +361,11 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
               value={vehicle}
               onChange={(next) => {
                 setVehicle(next);
-                if (next?.location_id && !locationId && lookups.showrooms.some((s) => s.id === next.location_id)) {
+                if (
+                  next?.location_id &&
+                  !locationId &&
+                  lookups.showrooms.some((s) => s.id === next.location_id)
+                ) {
                   setLocationId(next.location_id);
                 }
                 touch();
@@ -381,8 +401,8 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
                 role="status"
                 className="text-body-sm text-text-primary rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2"
               >
-                We couldn&apos;t check this vehicle&apos;s current holds. You can still continue. The system re-checks when you
-                save, and it blocks conflicts.
+                We couldn&apos;t check this vehicle&apos;s current holds. You can still continue. The system
+                re-checks when you save, and it blocks conflicts.
               </p>
             )}
 
@@ -407,7 +427,11 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
         </motion.div>
 
         <motion.div {...fadeUp(4)}>
-          <FormSection step={4} title="Request or hold" description="Choose what should happen to the vehicle.">
+          <FormSection
+            step={4}
+            title="Request or hold"
+            description="Choose what should happen to the vehicle."
+          >
             <fieldset className="flex flex-col gap-2">
               <legend className="sr-only">What should happen to the vehicle</legend>
 
@@ -424,7 +448,9 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
                   className="accent-primary mt-1 size-4"
                 />
                 <span>
-                  <span className="text-body-sm text-text-primary block font-medium">Hold the vehicle now</span>
+                  <span className="text-body-sm text-text-primary block font-medium">
+                    Hold the vehicle now
+                  </span>
                   <span className="text-caption text-text-subtle block">
                     {canConfirm
                       ? "The vehicle is held for the customer straight away, until the time you choose."
@@ -474,12 +500,11 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
                 )}
                 {expiryPreview && (
                   <p role="status" className="text-body-sm text-text-primary">
-                    The hold lasts until <span className="font-medium">{expiryPreview}</span> (longest allowed:{" "}
-                    {settings.maxDays} days).
+                    The hold lasts until <span className="font-medium">{expiryPreview}</span> (longest
+                    allowed: {settings.maxDays} days).
                   </p>
-                  
                 )}
-                                {deposit !== null && (
+                {deposit !== null && (
                   <Textarea
                     label="Reason for holding without a deposit"
                     required
@@ -501,15 +526,19 @@ export function AddReservationForm({ lookups, settings, prefill, currentUserId, 
             {deposit !== null && (
               <p className="border-border bg-card-hover/40 text-body-sm text-text-primary rounded-md border px-3 py-2.5">
                 Your settings ask for a deposit of{" "}
-                <span className="font-semibold tabular-nums">{formatFils(deposit, settings.currency)}</span> to hold a
-                vehicle.
+                <span className="font-semibold tabular-nums">{formatFils(deposit, settings.currency)}</span>{" "}
+                to hold a vehicle.
               </p>
             )}
           </FormSection>
         </motion.div>
 
         <motion.div {...fadeUp(5)}>
-          <FormSection step={5} title="Showroom, owner and notes" description="Where the customer will collect, and who is looking after it.">
+          <FormSection
+            step={5}
+            title="Showroom, owner and notes"
+            description="Where the customer will collect, and who is looking after it."
+          >
             <div className="flex flex-col gap-1.5">
               <Select
                 label="Showroom"

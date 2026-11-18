@@ -21,7 +21,14 @@ interface PaymentStatusDialogProps {
 
 const CONFIG: Record<
   PaymentStatusAction,
-  { title: string; confirm: string; success: string; destructive: boolean; needsReason: boolean; body: string }
+  {
+    title: string;
+    confirm: string;
+    success: string;
+    destructive: boolean;
+    needsReason: boolean;
+    body: string;
+  }
 > = {
   verify: {
     title: "Verify payment",
@@ -115,7 +122,9 @@ export function PaymentStatusDialog({ payment, action, onClose, onDone }: Paymen
             {refund ? "− " : ""}
             {formatFils(toFils(payment.amount), payment.currency)}
           </p>
-          {payment.reference && <p className="text-caption text-text-subtle">Reference: {payment.reference}</p>}
+          {payment.reference && (
+            <p className="text-caption text-text-subtle">Reference: {payment.reference}</p>
+          )}
           <p className="text-caption text-text-subtle">Recorded by {payment.recorded_by_name}</p>
         </div>
 

@@ -43,7 +43,10 @@ function buildChips(filters: SalesListFilters, lookups: SalesFilterLookups): Fil
   const chips: FilterChip[] = [];
   filters.status.forEach((status) => chips.push({ key: `status:${status}`, label: `Status: ${status}` }));
   if (filters.showroom)
-    chips.push({ key: "showroom", label: `Showroom: ${nameOf(lookups.showrooms, filters.showroom) ?? "Selected"}` });
+    chips.push({
+      key: "showroom",
+      label: `Showroom: ${nameOf(lookups.showrooms, filters.showroom) ?? "Selected"}`,
+    });
   if (filters.owner)
     chips.push({
       key: "owner",
@@ -73,7 +76,10 @@ function buildChips(filters: SalesListFilters, lookups: SalesFilterLookups): Fil
       label: `Customer: ${lookups.customer?.id === filters.customer ? lookups.customer.full_name : "Selected"}`,
     });
   if (filters.balance)
-    chips.push({ key: "balance", label: filters.balance === "outstanding" ? "Payment: Outstanding" : "Payment: Settled" });
+    chips.push({
+      key: "balance",
+      label: filters.balance === "outstanding" ? "Payment: Outstanding" : "Payment: Settled",
+    });
   return chips;
 }
 
@@ -172,7 +178,12 @@ export function SalesToolbar({ resultCount, lookups, lookupsFailed }: SalesToolb
 
   return (
     <>
-      <div className={cn("flex min-w-0 flex-col gap-3 transition-opacity duration-200", isPending && "opacity-75")}>
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-3 transition-opacity duration-200",
+          isPending && "opacity-75",
+        )}
+      >
         <SalesStatusTabs selected={filters.status} onSelect={selectStatusTab} />
 
         <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
@@ -209,9 +220,14 @@ export function SalesToolbar({ resultCount, lookups, lookupsFailed }: SalesToolb
           </div>
 
           <div className="flex shrink-0 items-center gap-2 lg:ml-auto" role="status" aria-live="polite">
-            <span aria-hidden="true" className="bg-success size-1.5 rounded-full shadow-[0_0_8px_rgba(50,183,105,0.4)]" />
+            <span
+              aria-hidden="true"
+              className="bg-success size-1.5 rounded-full shadow-[0_0_8px_rgba(50,183,105,0.4)]"
+            />
             <span className="text-text-subtle text-xs whitespace-nowrap">
-              <strong className="text-text-primary font-semibold tabular-nums">{resultCount.toLocaleString()}</strong>{" "}
+              <strong className="text-text-primary font-semibold tabular-nums">
+                {resultCount.toLocaleString()}
+              </strong>{" "}
               {resultCount === 1 ? "deal" : "deals"}
             </span>
           </div>
@@ -223,13 +239,17 @@ export function SalesToolbar({ resultCount, lookups, lookupsFailed }: SalesToolb
             className="text-body-sm text-text-primary flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2"
           >
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />
-            Some filter options couldn&apos;t be loaded, so those lists may be incomplete. Search and sorting still
-            work. Refresh the page to try again.
+            Some filter options couldn&apos;t be loaded, so those lists may be incomplete. Search and sorting
+            still work. Refresh the page to try again.
           </p>
         )}
 
         {chips.length > 0 && (
-          <FilterBar activeFilters={chips} onRemoveFilter={removeFilter} onClearAll={() => applyFilters(EMPTY_SALES_FILTERS)}>
+          <FilterBar
+            activeFilters={chips}
+            onRemoveFilter={removeFilter}
+            onClearAll={() => applyFilters(EMPTY_SALES_FILTERS)}
+          >
             {null}
           </FilterBar>
         )}

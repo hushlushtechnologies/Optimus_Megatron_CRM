@@ -26,7 +26,15 @@ interface DealDeliveryTabProps {
   permissions: SalesPermissions;
 }
 
-function Notice({ icon, title, children }: { icon: React.ReactNode; title: string; children?: React.ReactNode }) {
+function Notice({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="surface-card flex items-start gap-3 p-5">
       <span className="text-text-subtle mt-0.5 shrink-0">{icon}</span>
@@ -92,25 +100,38 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
   if (!delivery) {
     if (deal.status === "Cancelled") {
       return (
-        <Notice icon={<XCircle className="size-5" aria-hidden="true" />} title="This deal was cancelled, so there is no delivery." />
+        <Notice
+          icon={<XCircle className="size-5" aria-hidden="true" />}
+          title="This deal was cancelled, so there is no delivery."
+        />
       );
     }
     if (deal.status !== "Confirmed") {
       return (
-        <Notice icon={<Truck className="size-5" aria-hidden="true" />} title="Delivery starts once the deal is confirmed.">
-          A confirmed sale isn&apos;t a delivered vehicle. When this deal is confirmed, you can prepare the handover here.
+        <Notice
+          icon={<Truck className="size-5" aria-hidden="true" />}
+          title="Delivery starts once the deal is confirmed."
+        >
+          A confirmed sale isn&apos;t a delivered vehicle. When this deal is confirmed, you can prepare the
+          handover here.
         </Notice>
       );
     }
     return (
-      <motion.section {...fadeUp(0)} aria-label="Delivery" className="surface-card flex flex-col items-start gap-4 p-5">
+      <motion.section
+        {...fadeUp(0)}
+        aria-label="Delivery"
+        className="surface-card flex flex-col items-start gap-4 p-5"
+      >
         <div className="flex items-start gap-3">
           <Truck className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <div>
-            <p className="text-body-sm text-text-primary font-medium">The deal is confirmed. Prepare the delivery.</p>
+            <p className="text-body-sm text-text-primary font-medium">
+              The deal is confirmed. Prepare the delivery.
+            </p>
             <p className="text-body-sm text-text-muted mt-1">
-              This starts the handover checklist and lets you plan when, where and by whom the vehicle is handed over. The
-              deal is completed when the handover is recorded.
+              This starts the handover checklist and lets you plan when, where and by whom the vehicle is
+              handed over. The deal is completed when the handover is recorded.
             </p>
           </div>
         </div>
@@ -125,7 +146,9 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
             Prepare delivery
           </Button>
         ) : (
-          <p className="text-caption text-text-subtle">You don&apos;t have permission to manage deliveries.</p>
+          <p className="text-caption text-text-subtle">
+            You don&apos;t have permission to manage deliveries.
+          </p>
         )}
       </motion.section>
     );
@@ -141,7 +164,10 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
   return (
     <div className="flex flex-col gap-6">
       {cancelled ? (
-        <Notice icon={<XCircle className="size-5" aria-hidden="true" />} title="This delivery was cancelled because the deal was cancelled." />
+        <Notice
+          icon={<XCircle className="size-5" aria-hidden="true" />}
+          title="This delivery was cancelled because the deal was cancelled."
+        />
       ) : (
         <motion.section {...fadeUp(0)} aria-label="Delivery progress" className="surface-card p-5">
           <DeliveryStepper status={delivery.status as "Preparing" | "Scheduled" | "Delivered"} />
@@ -150,30 +176,49 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-6">
-          <DeliveryChecklist items={items} editable={open_} canTick={permissions.complete} canWaive={permissions.confirm} />
+          <DeliveryChecklist
+            items={items}
+            editable={open_}
+            canTick={permissions.complete}
+            canWaive={permissions.confirm}
+          />
 
           {delivered && (
-            <motion.section {...fadeUp(1)} aria-label="Handover" className="surface-card flex flex-col gap-2 p-5">
+            <motion.section
+              {...fadeUp(1)}
+              aria-label="Handover"
+              className="surface-card flex flex-col gap-2 p-5"
+            >
               <p className="text-label">Handover</p>
               <dl className="divide-border divide-y">
-                <Row label="Handed over">{delivery.delivered_at ? formatDateTimeFull(delivery.delivered_at) : "—"}</Row>
+                <Row label="Handed over">
+                  {delivery.delivered_at ? formatDateTimeFull(delivery.delivered_at) : "—"}
+                </Row>
                 <Row label="By">{delivery.handed_over_by_name ?? "—"}</Row>
-                <Row label="Notes">{delivery.handover_notes ?? <span className="text-text-subtle">None</span>}</Row>
+                <Row label="Notes">
+                  {delivery.handover_notes ?? <span className="text-text-subtle">None</span>}
+                </Row>
               </dl>
             </motion.section>
           )}
 
           {open_ && (
-            <motion.section {...fadeUp(1)} aria-label="Complete the handover" className="surface-card flex flex-col gap-3 p-5">
+            <motion.section
+              {...fadeUp(1)}
+              aria-label="Complete the handover"
+              className="surface-card flex flex-col gap-3 p-5"
+            >
               <p className="text-label">Complete the handover</p>
               {progress.allReady ? (
                 <p className="text-body-sm text-text-muted">
-                  Every required check is ready. When the customer has the vehicle, record the handover. This also completes
-                  the deal.
+                  Every required check is ready. When the customer has the vehicle, record the handover. This
+                  also completes the deal.
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <p className="text-body-sm text-text-muted">The handover can&apos;t be completed yet. Still to do:</p>
+                  <p className="text-body-sm text-text-muted">
+                    The handover can&apos;t be completed yet. Still to do:
+                  </p>
                   <ul className="flex flex-col gap-1">
                     {progress.notReady.map((item) => (
                       <li key={item.id} className="text-body-sm text-text-primary">
@@ -200,7 +245,11 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
           )}
         </div>
 
-        <motion.section {...fadeUp(2)} aria-label="Handover plan" className="surface-card flex flex-col gap-3 p-5">
+        <motion.section
+          {...fadeUp(2)}
+          aria-label="Handover plan"
+          className="surface-card flex flex-col gap-3 p-5"
+        >
           <div className="flex items-center justify-between gap-2">
             <p className="text-label">Handover plan</p>
             {canManage && (
@@ -218,7 +267,8 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
 
           {canManage && !lookups && (
             <p role="alert" className="text-caption text-red-400">
-              The people and showrooms couldn&apos;t be loaded, so planning is paused. Refresh the page to try again.
+              The people and showrooms couldn&apos;t be loaded, so planning is paused. Refresh the page to try
+              again.
             </p>
           )}
 
@@ -252,7 +302,13 @@ export function DealDeliveryTab({ deal, result, lookups, permissions }: DealDeli
         />
       )}
       {open === "complete" && (
-        <DeliveryCompleteDialog deal={deal} delivery={delivery} items={items} onClose={() => setOpen(null)} onDone={done} />
+        <DeliveryCompleteDialog
+          deal={deal}
+          delivery={delivery}
+          items={items}
+          onClose={() => setOpen(null)}
+          onDone={done}
+        />
       )}
     </div>
   );

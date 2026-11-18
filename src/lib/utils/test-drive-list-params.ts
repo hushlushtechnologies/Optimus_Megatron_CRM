@@ -24,7 +24,7 @@ export interface TestDriveListParams {
   sort: TestDriveSort;
   search: string;
   filters: TestDriveListFilters;
-    archived: boolean;
+  archived: boolean;
 }
 
 /** Turns raw URL values into safe ones: junk becomes the default instead of an error. */
@@ -49,6 +49,6 @@ export function parseTestDriveListParams(
     sort,
     search: readParam(params, "q").slice(0, 100),
     filters: parseTestDriveFilters(params),
-        archived: readParam(params, "archived") === "true",
+    archived: readParam(params, "archived") === "true",
   };
 }
