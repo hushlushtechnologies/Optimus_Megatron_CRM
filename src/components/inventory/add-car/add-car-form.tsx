@@ -41,7 +41,7 @@ export function AddCarForm({
   const searchParams = useSearchParams();
   const [carId, setCarId] = useState(initialCarId);
   const [lookups, setLookups] = useState(initialLookups);
-  const [media, setMedia] = useState(initialMedia);
+  const [media] = useState(initialMedia);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSavingChanges, setIsSavingChanges] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type RefObject } from "react";
 import { ChevronLeft, ChevronRight, MoveHorizontal } from "lucide-react";
 
 interface TableScrollControlsProps {
@@ -17,8 +17,21 @@ export function TableScrollControls({ scrollRef, contentKey }: TableScrollContro
     thumbWidth: 100,
   });
 
-  const trackRef = useRef<HTMLDivElement>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+
+  /*
+   * role="scrollbar" requires aria-controls, naming the region it scrolls.
+   * The scroll container is owned by the caller and reaches us only as a ref,
+   * so an id is generated here and stamped onto that element — without it the
+   * control announces itself to a screen reader with nothing to point at.
+   */
+  const controlledId = useId();
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && !el.id) el.id = controlledId;
+  }, [scrollRef, controlledId]);
 
   const updateScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -113,6 +126,7 @@ export function TableScrollControls({ scrollRef, contentKey }: TableScrollContro
         ref={trackRef}
         role="scrollbar"
         aria-label="Horizontal table position"
+        aria-controls={controlledId}
         aria-orientation="horizontal"
         aria-valuemin={0}
         aria-valuemax={100}

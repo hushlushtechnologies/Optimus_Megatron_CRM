@@ -1,5 +1,14 @@
 import type { PaymentDirection, PaymentKind, PaymentMethod, PaymentStatus } from "@/src/lib/types/sales";
 
+/**
+ * How many payments one page of the verification queue holds.
+ *
+ * It lives here, in a module with no server imports, because the queue's
+ * client component needs it for pagination. Importing it from
+ * sales-payment-queries.ts pulled next/headers into the client bundle.
+ */
+export const PAYMENT_QUEUE_PAGE_SIZE = 25;
+
 export type PaymentQueueTab = "awaiting" | "verified" | "closed" | "all";
 export type PaymentStatusAction = "verify" | "reject" | "reverse";
 

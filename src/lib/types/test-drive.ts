@@ -305,10 +305,24 @@ export interface TestDriveFormLookups {
   requestSources: { id: string; name: string; slug: string }[];
 }
 
+/** A completed or upcoming drive a deal is being created from. */
+export interface TestDriveSourceOption {
+  id: string;
+  test_drive_number: string;
+  status: TestDriveStatus;
+  scheduled_start: string;
+  customer_id: string;
+  car_id: string;
+  lead_id: string | null;
+  vehicle_title: string | null;
+}
+
 export interface TestDriveFormPrefill {
   customer: TestDriveCustomerOption | null;
   vehicle: TestDriveVehicleOption | null;
   lead: TestDriveLeadOption | null;
+  /** Set when the form was opened from a test drive, so the deal records its origin. */
+  testDrive: TestDriveSourceOption | null;
 }
 
 export interface ShowroomScheduleInfo {

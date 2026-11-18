@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronsLeft, ChevronsRight, LogOut } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Lock, LogOut } from "lucide-react";
 
-import { NAV_SECTIONS } from "@/src/config/nav";
+import { NAV_SECTIONS, activeNavHref } from "@/src/config/nav";
 import { useSidebar } from "@/src/hooks/use-sidebar";
 import { useFocusTrap } from "@/src/hooks/use-focus-trap";
 
@@ -40,9 +40,19 @@ const LOGO_MARK = "/logo/mark-logo.svg";
 export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
   const pathname = usePathname();
 
-  const { isCollapsed, toggleCollapsed, setMobileOpen } = useSidebar();
+    const { isCollapsed, toggleCollapsed, setMobileOpen } = useSidebar();
+
+  /*
+   * Exactly one destination is highlighted, and it is the most specific one.
+   *
+   * /admin/sales/payments highlights Payments, not Sales as well, because
+   * activeNavHref picks the longest live href that owns the current path.
+   */
+  const activeHref = activeNavHref(pathname);
 
   return (
+
+  
     <div className="border-border bg-sidebar-background relative flex h-full flex-col overflow-hidden rounded-[24px] border shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
       {/* =====================================================
           BRAND
@@ -143,20 +153,51 @@ export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
             )}
 
             <ul className="flex flex-col gap-1">
-              {section.items.map((item) => {
-                /*
-                 * Keep parent navigation active
-                 * for nested routes.
-                 *
-                 * Example:
-                 * /admin/customers/123
-                 * keeps Customers active.
-                 */
-
-                const isActive =
-                  pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
-
+                            {section.items.map((item) => {
                 const Icon = item.icon;
+
+                /*
+                 * Exactly one item is active, decided by activeNavHref, so a
+                 * nested route such as /admin/customers/123 still highlights
+                 * Customers while /admin/sales/payments highlights Payments
+                 * instead of highlighting Sales as well.
+                 */
+                const isActive = item.status === "live" && item.href === activeHref;
+
+                /*
+                 * A module with no route yet is still listed, but locked.
+                 * Linking to a 404 is worse than saying plainly that it isn't
+                 * ready. The reason is a tooltip for mouse users and an
+                 * sr-only line for touch and screen reader users.
+                 */
+                if (item.status === "soon") {
+                  const reason = item.note ?? "Not available yet";
+
+                  return (
+                    <li key={item.href} className="relative">
+                      <div
+                        aria-disabled="true"
+                        title={`${item.label} — ${reason}`}
+                        className={cn(
+                          "text-text-subtle relative flex h-11 cursor-not-allowed items-center rounded-xl opacity-55",
+                          isCollapsed ? "justify-center px-2" : "gap-3 px-3",
+                        )}
+                      >
+                        <Icon aria-hidden="true" className="size-4.5 shrink-0" />
+
+                        {!isCollapsed && (
+                          <>
+                            <span className="flex-1 truncate text-[12px] font-medium">{item.label}</span>
+
+                            <Lock aria-hidden="true" className="size-3 shrink-0" />
+                          </>
+                        )}
+
+                        <span className="sr-only">{reason}</span>
+                      </div>
+                    </li>
+                  );
+                }
 
                 return (
                   <li key={item.href} className="relative">

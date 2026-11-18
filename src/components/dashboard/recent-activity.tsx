@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { recentActivity } from "@/src/lib/mock-data/dashboard";
+import type { ActivityEntry } from "@/src/lib/types/dashboard";
 import { cn } from "@/src/lib/utils/cn";
 
 type ActivityVisual = {
@@ -76,7 +76,7 @@ function getActivityVisual(label: string, detail: string): ActivityVisual {
   };
 }
 
-export function RecentActivity() {
+export function RecentActivity({ data: recentActivity }: { data: ActivityEntry[] }) {
   return (
     <Card variant="flat" padding="sm" className="group relative flex h-full flex-col overflow-hidden">
       {/* =====================================================

@@ -5,9 +5,9 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CarFront, CircleCheck, Gauge, PackageCheck } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { inventoryStatus } from "@/src/lib/mock-data/dashboard";
+import type { InventoryStatusSlice } from "@/src/lib/types/dashboard";
 
-export function InventoryStatus() {
+export function InventoryStatus({ data: inventoryStatus }: { data: InventoryStatusSlice[] }) {
   const total = inventoryStatus.reduce((sum, status) => sum + status.value, 0);
 
   const availableStatus = inventoryStatus.find((status) => status.name.toLowerCase().includes("available"));

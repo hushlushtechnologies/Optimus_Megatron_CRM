@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch, type FieldPath, type FieldPathValue } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { ArrowLeft, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CarFront, TriangleAlert } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ConfirmDialog } from "@/src/components/shared/confirm-dialog";
 import { DealCustomerSection } from "@/src/components/sales/form/deal-customer-section";
@@ -64,6 +65,7 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
       carId: prefill.vehicle?.id ?? "",
       locationId: initialLocation,
       leadId: prefill.lead?.id ?? null,
+      testDriveId: prefill.testDrive?.id ?? null,
       ownerId: lookups.owners.some((owner) => owner.id === currentUserId) ? currentUserId : null,
       proposedPrice: "",
       discountAmount: "",
@@ -261,7 +263,32 @@ export function AddDealForm({ lookups, prefill, currentUserId, canAssign, settin
 
       <form onSubmit={handleFormSubmit} noValidate>
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_340px]">
-          <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-6">
+            {/*
+              Where this deal came from. Shown only when the form was opened
+              from a test drive, so staff can see the origin is being kept and
+              can follow the link back to check the outcome.
+            */}
+            {prefill.testDrive && (
+              <motion.p
+                {...fadeUp(0)}
+                role="status"
+                className="border-border bg-card-hover/40 text-body-sm text-text-primary flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2.5"
+              >
+                <CarFront className="size-4 shrink-0 text-amber-400" aria-hidden="true" />
+                <span>
+                  Started from test drive{" "}
+                  <Link
+                    href={`/admin/test-drives/${prefill.testDrive.id}`}
+                    className="text-primary-text hover:text-primary-hover focus-visible:ring-primary rounded focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {prefill.testDrive.test_drive_number}
+                  </Link>
+                  . The customer and vehicle below come from it, and the deal will record the link.
+                </span>
+              </motion.p>
+            )}
+
             <motion.div {...fadeUp(1)}>
               <DealCustomerSection value={customer} onChange={handleCustomerChange} error={errors.customerId?.message} />
             </motion.div>

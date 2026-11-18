@@ -1,7 +1,7 @@
 import { getCurrentProfile } from "@/src/lib/supabase/get-profiles";
 
 import { GreetingBanner } from "@/src/components/dashboard/greeting-banner";
-import { KpiCard } from "@/src/components/dashboard/kpi-card";
+import { getDashboardData } from "@/src/lib/supabase/dashboard-queries";
 
 import { RevenueChart } from "@/src/components/dashboard/revenue-chart";
 import { InventoryStatus } from "@/src/components/dashboard/inventory-status";
@@ -14,10 +14,10 @@ import { RecentActivity } from "@/src/components/dashboard/recent-activity";
 import { UpcomingTestDrives } from "@/src/components/dashboard/upcoming-test-drives";
 import { LeadSummary } from "@/src/components/dashboard/lead-summary";
 
-import { kpis } from "@/src/lib/mock-data/dashboard";
+
 
 export default async function AdminDashboardPage() {
-  const profile = await getCurrentProfile();
+    const [profile, data] = await Promise.all([getCurrentProfile(), getDashboardData()]);
 
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] || "Admin";
 
@@ -28,18 +28,18 @@ export default async function AdminDashboardPage() {
       ===================================================== */}
 
       <section aria-label="Dashboard greeting" className="min-w-0">
-        <GreetingBanner name={firstName} />
+        <GreetingBanner name={firstName} alerts={data.alerts} />
       </section>
 
       {/* =====================================================
           KPI OVERVIEW
       ===================================================== */}
 
-      <section
+      {/* <section
         aria-label="Key performance indicators"
         className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
-        {kpis.map((kpi) => (
+        {data.kpis.map((kpi) => (
           <div key={kpi.id} className="min-w-0">
             <KpiCard
               id={kpi.id}
@@ -51,7 +51,7 @@ export default async function AdminDashboardPage() {
             />
           </div>
         ))}
-      </section>
+      </section> */}
 
       {/* =====================================================
           ANALYTICS ROW
@@ -65,13 +65,13 @@ export default async function AdminDashboardPage() {
         {/* Revenue needs more horizontal space */}
 
         <div className="min-w-0 xl:col-span-7">
-          <RevenueChart />
+          <RevenueChart data={data.revenueTrend} />
         </div>
 
         {/* Inventory */}
 
         <div className="min-w-0 xl:col-span-5">
-          <InventoryStatus />
+          <InventoryStatus data={data.inventoryStatus} />
         </div>
       </section>
 
@@ -90,19 +90,19 @@ export default async function AdminDashboardPage() {
         {/* Fastest selling */}
 
         <div className="min-w-0 2xl:col-span-4">
-          <FastestSelling />
+          <FastestSelling data={data.fastestSelling} />
         </div>
 
         {/* Top executive */}
 
         <div className="min-w-0 2xl:col-span-4">
-          <TopSalesExecutive />
+          <TopSalesExecutive data={data.topExecutive} />
         </div>
 
         {/* Conversion */}
 
         <div className="min-w-0 lg:col-span-2 2xl:col-span-4">
-          <ConversionFunnel />
+          <ConversionFunnel data={data.conversion} />
         </div>
       </section>
 
@@ -120,19 +120,19 @@ export default async function AdminDashboardPage() {
         {/* Recent activity */}
 
         <div className="min-w-0 2xl:col-span-4">
-          <RecentActivity />
+          <RecentActivity data={data.recentActivity} />
         </div>
 
         {/* Test drives */}
 
         <div className="min-w-0 2xl:col-span-4">
-          <UpcomingTestDrives />
+          <UpcomingTestDrives data={data.upcomingTestDrives} />
         </div>
 
         {/* Lead summary */}
 
         <div className="min-w-0 xl:col-span-2 2xl:col-span-4">
-          <LeadSummary />
+          <LeadSummary data={data.leadSources} />
         </div>
       </section>
     </div>

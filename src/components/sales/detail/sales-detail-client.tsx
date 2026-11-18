@@ -28,6 +28,11 @@ import { DealDocumentsTab } from "@/src/components/sales/detail/deal-documents-t
 import type { SalesDocumentItem } from "@/src/lib/types/sales-documents";
 import { DealDeliveryTab } from "@/src/components/sales/detail/deal-delivery-tab";
 import type { DealDeliveryResult, DeliveryLookups } from "@/src/lib/types/sales-delivery";
+import { DealTestDrivesCard } from "@/src/components/sales/detail/deal-test-drives-card";
+import { DealNotesPanel } from "@/src/components/sales/detail/deal-notes-panel";
+import { DealAuditTab } from "@/src/components/sales/detail/deal-audit-tab";
+import type { TestDrivePanelLoad } from "@/src/lib/types/test-drive";
+import type { DealNotesData } from "@/src/lib/types/sales-notes";
 
 interface SalesDetailClientProps {
   data: SalesDealDetailData;
@@ -37,8 +42,14 @@ interface SalesDetailClientProps {
   currentUserId: string | null;
   separateVerifier: boolean | null;
   documents: SalesDocumentItem[] | null;
-    delivery: DealDeliveryResult;
+      delivery: DealDeliveryResult;
   deliveryLookups: DeliveryLookups | null;
+  /** This customer's test drives of this vehicle. */
+  testDrives: TestDrivePanelLoad;
+  /** The drive this deal was created from, when it was. */
+    /** The drive this deal was created from, when it was. */
+  sourceTestDriveNumber: string | null;
+  notes: DealNotesData;
 }
 export function SalesDetailClient({
   data,
@@ -48,8 +59,11 @@ export function SalesDetailClient({
   currentUserId,
   separateVerifier,
   documents,
-  delivery, 
+    delivery, 
   deliveryLookups,
+    testDrives,
+  sourceTestDriveNumber,
+  notes,
 }: SalesDetailClientProps) {
   const { deal, statusChanges } = data;
   const { fadeUp } = useMotion();
@@ -146,7 +160,16 @@ export function SalesDetailClient({
             )}
           </Tab>
                     <Tab id="delivery">Delivery</Tab>
+                    <Tab id="notes">
+            Notes
+            {notes.notes && notes.notes.length > 0 && (
+              <span className="bg-primary/10 text-primary ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
+                {notes.notes.length}
+              </span>
+            )}
+          </Tab>
           <Tab id="activity">Activity</Tab>
+          <Tab id="audit">Audit</Tab>
         </TabsList>
 
         <TabPanel id="overview">
@@ -157,7 +180,13 @@ export function SalesDetailClient({
                 <DealCustomerCard deal={deal} />
                 <DealVehicleCard deal={deal} messages={vehicleMessages} />
               </div>
-              <DealNotesCard notes={deal.notes} />
+                            <DealNotesCard notes={deal.notes} />
+
+              <DealTestDrivesCard
+                load={testDrives}
+                sourceTestDriveNumber={sourceTestDriveNumber}
+                customerName={deal.customer_name}
+              />
             </div>
                         <div className="flex flex-col gap-6">
               <DealOwnerCard
@@ -198,6 +227,9 @@ export function SalesDetailClient({
         <TabPanel id="delivery">
           <DealDeliveryTab deal={deal} result={delivery} lookups={deliveryLookups} permissions={permissions} />
         </TabPanel>
+        <TabPanel id="notes">
+          <DealNotesPanel dealId={deal.id} data={notes} />
+        </TabPanel>
         <TabPanel id="activity">
           <section aria-label="Activity" className="surface-card p-5">
             {data.timeline === null ? (
@@ -211,6 +243,17 @@ export function SalesDetailClient({
               <DealTimeline entries={data.timeline} />
             )}
           </section>
+        </TabPanel>
+        <TabPanel id="audit">
+          <DealAuditTab
+            statusChanges={data.statusChanges}
+            priceHistory={data.priceHistory}
+            payments={data.payments}
+            documents={documents}
+            assignments={assignments}
+            timeline={data.timeline}
+            currency={deal.currency}
+          />
         </TabPanel>
       </Tabs>
 

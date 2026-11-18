@@ -3,25 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Bell,
-  UserCheck,
-  ArrowRightLeft,
-  Repeat,
-  Trophy,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  CheckCheck,
-  CalendarClock,
-  Ban,
-  BadgeCheck,
-  BellRing,
-  CheckCircle2,
-  ClipboardList,
-  LogIn,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Bell, CheckCheck } from "lucide-react";
 
 import { IconButton } from "@/src/components/ui/icon-button";
 import { Dropdown, DropdownTrigger, DropdownContent } from "@/src/components/ui/dropdown";
@@ -33,30 +15,33 @@ import {
 } from "@/app/admin/notifications/actions";
 
 import { cn } from "@/src/lib/utils/cn";
+import { notificationHref, notificationIcon } from "@/src/lib/utils/notification-links";
 import type { AppNotification } from "@/src/lib/types/notification";
+
+
 
 const POLL_INTERVAL_MS = 60_000;
 
-const TYPE_ICON: Record<string, LucideIcon> = {
-  lead_assigned: UserCheck,
-  lead_reassigned: ArrowRightLeft,
-  lead_stage_changed: Repeat,
-  lead_won: Trophy,
-  lead_lost: XCircle,
-  follow_up_due: Clock,
-  follow_up_overdue: AlertTriangle,
-  test_drive_assigned: UserCheck,
-  test_drive_reassigned: ArrowRightLeft,
-  test_drive_rescheduled: CalendarClock,
-  test_drive_new_request: ClipboardList,
-  test_drive_approved: CheckCircle2,
-  test_drive_rejected: XCircle,
-  test_drive_cancelled: Ban,
-  test_drive_completed: BadgeCheck,
-  test_drive_reminder: BellRing,
-  test_drive_overdue: AlertTriangle,
-  test_drive_checked_in: LogIn,
-};
+// const TYPE_ICON: Record<string, LucideIcon> = {
+//   lead_assigned: UserCheck,
+//   lead_reassigned: ArrowRightLeft,
+//   lead_stage_changed: Repeat,
+//   lead_won: Trophy,
+//   lead_lost: XCircle,
+//   follow_up_due: Clock,
+//   follow_up_overdue: AlertTriangle,
+//   test_drive_assigned: UserCheck,
+//   test_drive_reassigned: ArrowRightLeft,
+//   test_drive_rescheduled: CalendarClock,
+//   test_drive_new_request: ClipboardList,
+//   test_drive_approved: CheckCircle2,
+//   test_drive_rejected: XCircle,
+//   test_drive_cancelled: Ban,
+//   test_drive_completed: BadgeCheck,
+//   test_drive_reminder: BellRing,
+//   test_drive_overdue: AlertTriangle,
+//   test_drive_checked_in: LogIn,
+// };
 
 function getHref(notification: AppNotification): string | null {
   if (notification.entity_type === "lead" && notification.entity_id) {
@@ -239,8 +224,8 @@ export function NotificationsDropdown() {
           ) : (
             <ul className="max-h-96 overflow-y-auto">
               {notifications.map((notification) => {
-                const Icon = TYPE_ICON[notification.type] ?? Bell;
-                const href = getHref(notification);
+                                const Icon = notificationIcon(notification.type);
+                const href = notificationHref(notification);
                 const isUnread = !notification.read_at;
 
                 const content = (
@@ -291,9 +276,19 @@ export function NotificationsDropdown() {
                     )}
                   </li>
                 );
-              })}
+                            })}
             </ul>
           )}
+
+          <div className="border-border border-t">
+            <Link
+              href="/admin/notifications"
+              className="text-body-sm text-primary-text hover:bg-card-hover hover:text-primary-hover flex items-center justify-center gap-1.5 px-4 py-2.5 transition-colors"
+            >
+              View all notifications
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </div>
         </DropdownContent>
       </Dropdown>
 

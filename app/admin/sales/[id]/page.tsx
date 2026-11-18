@@ -11,6 +11,9 @@ import { SalesDetailClient } from "@/src/components/sales/detail/sales-detail-cl
 import { getPaymentRules } from "@/src/lib/supabase/sales-payment-queries";
 import { getSalesDocuments } from "@/src/lib/supabase/sales-document-queries";
 import { getDealDelivery, getDeliveryLookups } from "@/src/lib/supabase/sales-delivery-queries";
+import { getTestDrivesForPanel } from "@/src/lib/supabase/test-drive-panel-queries";
+import { getSourceTestDriveForDeal } from "@/src/lib/supabase/test-drive-sales-queries";
+import { getDealNotes } from "@/src/lib/supabase/sales-notes-queries";
 
 interface SalesDealPageProps {
   params: Promise<{ id: string }>;
@@ -64,9 +67,15 @@ export default async function SalesDealPage({ params }: SalesDealPageProps) {
 
     const documents = await getSalesDocuments({ dealId: id, reservationId: result.data.deal.reservation_id });
 
-      const [delivery, deliveryLookups] = await Promise.all([
+                 const [delivery, deliveryLookups, testDrives, sourceTestDriveNumber, notes] = await Promise.all([
     getDealDelivery(id),
     permissions.complete ? getDeliveryLookups() : Promise.resolve(null),
+    getTestDrivesForPanel({
+      customerId: result.data.deal.customer_id,
+      carId: result.data.deal.car_id,
+    }),
+    getSourceTestDriveForDeal(id),
+    getDealNotes(id),
   ]);
 
   return (
@@ -78,6 +87,9 @@ export default async function SalesDealPage({ params }: SalesDealPageProps) {
 
             delivery={delivery}
       deliveryLookups={deliveryLookups}
+      testDrives={testDrives}
+      sourceTestDriveNumber={sourceTestDriveNumber}
+       notes={notes}
       currentUserId={userResult.data.user?.id ?? null}
             separateVerifier={paymentRules.separateVerifier}
             documents={documents}

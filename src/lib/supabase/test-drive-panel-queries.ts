@@ -32,6 +32,11 @@ interface PanelRow {
 export async function getTestDrivesForPanel(filter: {
   leadId?: string;
   customerId?: string;
+  /**
+   * Narrows a customer's drives to one vehicle. Used by Sales Deal Detail,
+   * where the drives that matter are this customer's drives of this car.
+   */
+  carId?: string;
 }): Promise<TestDrivePanelLoad> {
   if (!filter.leadId && !filter.customerId) return { status: "ok", items: [] };
 
@@ -44,9 +49,12 @@ export async function getTestDrivesForPanel(filter: {
     )
     .is("archived_at", null);
 
-  query = filter.leadId
-    ? query.eq("lead_id", filter.leadId)
-    : query.eq("customer_id", filter.customerId as string);
+    if (filter.leadId) {
+    query = query.eq("lead_id", filter.leadId);
+  } else {
+    query = query.eq("customer_id", filter.customerId as string);
+    if (filter.carId) query = query.eq("car_id", filter.carId);
+  }
 
   const { data, error } = await query.order("scheduled_start", { ascending: false }).limit(100);
 

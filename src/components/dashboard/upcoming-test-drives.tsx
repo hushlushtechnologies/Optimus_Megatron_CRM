@@ -1,7 +1,7 @@
 import { CalendarClock, CarFront, ChevronRight, Clock3, UserRound } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { upcomingTestDrives } from "@/src/lib/mock-data/dashboard";
+import type { UpcomingTestDrive } from "@/src/lib/types/dashboard";
 import { cn } from "@/src/lib/utils/cn";
 
 function getScheduleLabel(time: string) {
@@ -24,7 +24,7 @@ function getScheduleLabel(time: string) {
   return null;
 }
 
-export function UpcomingTestDrives() {
+export function UpcomingTestDrives({ data: upcomingTestDrives }: { data: UpcomingTestDrive[] }) {
   const nextDrive = upcomingTestDrives[0];
 
   return (

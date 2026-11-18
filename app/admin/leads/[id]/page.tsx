@@ -10,6 +10,8 @@ import {
 import { getTestDrivesForPanel } from "@/src/lib/supabase/test-drive-panel-queries";
 import { currentUserTestDrivePermissions } from "@/src/lib/supabase/test-drive-permissions";
 import { LeadDetailPageClient } from "@/src/components/leads/lead-detail-page-client";
+import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
+import { getLeadSales } from "@/src/lib/supabase/lead-sales-queries";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -28,6 +30,8 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     sources,
     testDrives,
     testDrivePermissions,
+    sales,
+    salesPermissions,
   ] = await Promise.all([
     getLeadDetail(id),
     getActiveLeadStages(),
@@ -38,6 +42,8 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     getLeadSourceOptions(),
     getTestDrivesForPanel({ leadId: id }),
     currentUserTestDrivePermissions(),
+    getLeadSales(id),
+    currentUserSalesPermissions(),
   ]);
 
   if (!lead) notFound();
@@ -53,6 +59,8 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
       sources={sources}
       testDrives={testDrives}
       testDrivePermissions={testDrivePermissions}
+      sales={sales}
+      salesPermissions={salesPermissions}
     />
   );
 }

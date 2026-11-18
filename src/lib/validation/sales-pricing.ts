@@ -23,9 +23,9 @@ export const savePricingSchema = z
   })
   .superRefine((value, ctx) => {
     const price = value.proposedPrice === "" ? null : toFils(value.proposedPrice);
-    const discount = value.discountAmount === "" ? 0n : toFils(value.discountAmount);
+    const discount = value.discountAmount === "" ? BigInt(0) : toFils(value.discountAmount);
 
-    if (price === null || price <= 0n) {
+    if (price === null || price <= BigInt(0)) {
       ctx.addIssue({
         code: "custom",
         path: ["proposedPrice"],
@@ -33,7 +33,7 @@ export const savePricingSchema = z
       });
       return;
     }
-    if (discount === null || discount < 0n) {
+    if (discount === null || discount < BigInt(0)) {
       ctx.addIssue({
         code: "custom",
         path: ["discountAmount"],
@@ -91,7 +91,7 @@ export const salesSettingsSchema = z
     }
     if (value.depositMode === "fixed") {
       const fils = toFils(value.depositValue);
-      if (fils === null || fils < 0n) {
+      if (fils === null || fils < BigInt(0)) {
         ctx.addIssue({
           code: "custom",
           path: ["depositValue"],
@@ -119,7 +119,7 @@ export const feeTypeSchema = z
   .superRefine((fee, ctx) => {
     if (fee.calcMode === "fixed") {
       const fils = toFils(fee.value);
-      if (fils === null || fils <= 0n) {
+      if (fils === null || fils <= BigInt(0)) {
         ctx.addIssue({
           code: "custom",
           path: ["value"],

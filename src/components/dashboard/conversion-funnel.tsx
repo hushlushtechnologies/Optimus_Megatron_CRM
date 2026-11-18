@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { conversion } from "@/src/lib/mock-data/dashboard";
+import type { ConversionCounts } from "@/src/lib/types/dashboard";
 import { cn } from "@/src/lib/utils/cn";
 
 type ConversionKey = "leads" | "testDrives" | "reservations" | "sold";
@@ -76,7 +76,7 @@ const stages: StageConfig[] = [
   },
 ];
 
-export function ConversionFunnel() {
+export function ConversionFunnel({ data: conversion }: { data: ConversionCounts }) {
   const totalLeads = conversion.leads ?? 0;
   const sold = conversion.sold ?? 0;
 
@@ -210,10 +210,7 @@ export function ConversionFunnel() {
               const stageConversion =
                 index === 0 ? 100 : previousValue > 0 ? (value / previousValue) * 100 : 0;
 
-              const dropOff = index === 0 ? 0 : Math.max(previousValue - value, 0);
-
-              const dropOffPercentage =
-                index === 0 || previousValue === 0 ? 0 : (dropOff / previousValue) * 100;
+              
 
               const Icon = stage.Icon;
 

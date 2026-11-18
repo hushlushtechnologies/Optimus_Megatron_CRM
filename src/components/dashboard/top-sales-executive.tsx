@@ -1,9 +1,37 @@
 import { BadgeDollarSign, Crown, Handshake, MapPin, Target, Trophy } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { topSalesExecutive } from "@/src/lib/mock-data/dashboard";
+import type { TopExecutive } from "@/src/lib/types/dashboard";
 
-export function TopSalesExecutive() {
+export function TopSalesExecutive({ data: topSalesExecutive }: { data: TopExecutive | null }) {
+  /*
+   * No deal has been completed this month yet. Saying so is better than
+   * showing a leader with zeroes beside their name.
+   */
+  if (!topSalesExecutive) {
+    return (
+      <Card variant="flat" padding="sm" className="relative flex h-full flex-col overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="bg-primary/10 pointer-events-none absolute -top-24 -right-20 size-64 rounded-full blur-[100px]"
+        />
+
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 px-5 py-12 text-center">
+          <span className="border-primary/15 bg-primary/8 text-primary flex size-11 items-center justify-center rounded-[14px] border">
+            <Trophy className="size-5" strokeWidth={1.8} aria-hidden="true" />
+          </span>
+
+          <div>
+            <p className="text-text-primary text-[15px] font-semibold">No deals closed yet this month</p>
+            <p className="text-body-sm text-text-muted mt-1">
+              The top performer appears here as soon as the first deal completes.
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   const averageDealValue =
     topSalesExecutive.dealsClosed > 0 ? topSalesExecutive.revenue / topSalesExecutive.dealsClosed : 0;
 

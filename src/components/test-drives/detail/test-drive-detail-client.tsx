@@ -20,6 +20,9 @@ import { NotesCard } from "@/src/components/test-drives/detail/notes-card";
 import { AppointmentInfoCard } from "@/src/components/test-drives/detail/appointment-info-card";
 import { ScheduleHistoryList } from "@/src/components/test-drives/detail/schedule-history-list";
 import { getAvailableActions } from "@/src/lib/utils/test-drive-actions";
+import { TestDriveSalesCard } from "@/src/components/test-drives/detail/test-drive-sales-card";
+import type { TestDriveDealResult } from "@/src/lib/supabase/test-drive-sales-queries";
+import type { SalesPermissions } from "@/src/lib/utils/sales-permissions";
 import type {
   TestDriveDetailData,
   TestDriveFeedbackLoad,
@@ -37,14 +40,21 @@ interface TestDriveDetailClientProps {
   /** The drive's feedback, or the fact that it couldn't be loaded. */
   feedback: TestDriveFeedbackLoad;
   /** The follow-ups created from this drive, or the fact that they couldn't be loaded. */
+    /** The follow-ups created from this drive, or the fact that they couldn't be loaded. */
   followUps: TestDriveFollowUpLoad;
+  /** The deal started from this drive, if any. */
+  deal: TestDriveDealResult;
+  salesPermissions: SalesPermissions;
 }
+
 
 export function TestDriveDetailClient({
   data,
   permissions,
   feedback,
   followUps,
+  deal,
+  salesPermissions
 }: TestDriveDetailClientProps) {
   const { detail } = data;
   const actions = useTestDriveActions();
@@ -201,6 +211,16 @@ export function TestDriveDetailClient({
             checkedInByName={detail.checked_in_by_name}
             canCheckIn={permissions.checkIn}
             onCheckIn={() => actions.request("check_in", detail)}
+          />
+
+                    <TestDriveSalesCard
+            testDriveId={detail.id}
+            status={detail.status}
+            isArchived={!!detail.archived_at}
+            isCheckedIn={!!detail.checked_in_at}
+            vehicleIsSold={false}
+            canCreateDeal={salesPermissions.create}
+            result={deal}
           />
 
           <AppointmentInfoCard detail={detail} />

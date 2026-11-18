@@ -1,7 +1,7 @@
 import { Globe2, Search, UsersRound, Trophy, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { leadSummary } from "@/src/lib/mock-data/dashboard";
+import type { LeadSourceCount } from "@/src/lib/types/dashboard";
 import { cn } from "@/src/lib/utils/cn";
 
 type LeadSourceVisual = {
@@ -58,7 +58,7 @@ function getSourceVisual(source: string): LeadSourceVisual {
   };
 }
 
-export function LeadSummary() {
+export function LeadSummary({ data: leadSummary }: { data: LeadSourceCount[] }) {
   const sortedLeads = [...leadSummary].sort((a, b) => b.count - a.count);
 
   const total = sortedLeads.reduce((sum, item) => sum + item.count, 0);

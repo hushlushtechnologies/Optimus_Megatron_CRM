@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Filter, Search, TriangleAlert } from "lucide-react";
+import { Archive, ArchiveRestore, Filter, Search, TriangleAlert } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { SortControl } from "@/src/components/shared/sort-control";
@@ -255,7 +255,32 @@ export function TestDriveToolbar({ resultCount, lookups, lookupsFailed }: TestDr
               )}
             </Button>
 
-            <SortControl options={SORT_OPTIONS} value={sort} onChange={updateSort} />
+                        <SortControl options={SORT_OPTIONS} value={sort} onChange={updateSort} />
+
+            {/*
+              The archived view. The handler existed but was never rendered, so
+              archived test drives were unreachable from the list even though
+              archive and restore both worked.
+            */}
+            <Button
+              variant="outline"
+              size="sm"
+              aria-pressed={isArchivedView}
+              leftIcon={
+                isArchivedView ? (
+                  <ArchiveRestore className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Archive className="size-3.5" aria-hidden="true" />
+                )
+              }
+              onClick={toggleArchivedView}
+              className={cn(
+                "h-10 shrink-0 rounded-lg px-3 text-[11px] font-medium",
+                isArchivedView && ["border-primary/30", "text-primary"],
+              )}
+            >
+              {isArchivedView ? "Active" : "Archived"}
+            </Button>
           </div>
 
           <div className="flex min-w-0 items-center gap-2 lg:ml-auto">

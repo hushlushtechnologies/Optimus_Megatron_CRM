@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { revenueTrend } from "@/src/lib/mock-data/dashboard";
 import { cn } from "@/src/lib/utils/cn";
+import type { RevenuePoint } from "@/src/lib/types/dashboard";
 
-export function RevenueChart() {
+export function RevenueChart({ data: revenueTrend }: { data: RevenuePoint[] }) {
   const metrics = useMemo(() => {
     if (!revenueTrend.length) {
       return {
@@ -51,7 +51,7 @@ export function RevenueChart() {
       highestMonth: highestItem.month,
       change,
     };
-  }, []);
+    }, [revenueTrend]);
 
   const isPositive = metrics.change >= 0;
 

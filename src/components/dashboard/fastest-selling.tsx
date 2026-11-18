@@ -1,10 +1,10 @@
 import { ArrowRight, Clock3, MapPin, Trophy, Zap } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
-import { fastestSelling } from "@/src/lib/mock-data/dashboard";
+import type { FastestSellingCar } from "@/src/lib/types/dashboard";
 import { cn } from "@/src/lib/utils/cn";
 
-export function FastestSelling() {
+export function FastestSelling({ data: fastestSelling }: { data: FastestSellingCar[] }) {
   const sortedCars = [...fastestSelling].sort((a, b) => a.daysToSell - b.daysToSell);
 
   const fastestCar = sortedCars[0];

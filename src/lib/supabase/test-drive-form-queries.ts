@@ -6,6 +6,7 @@ import type {
   TestDriveFormLookups,
   TestDriveFormPrefill,
   TestDriveLeadOption,
+  TestDriveSourceOption,
   TestDriveVehicleOption,
 } from "@/src/lib/types/test-drive";
 import { listTestDriveHosts } from "@/src/lib/supabase/test-drive-permissions";
@@ -257,7 +258,7 @@ export async function getOpenLeadsForCustomer(
 
 // --- Page data ---
 
-/** Returns null (not empty lists) when a lookup fails, so the page can say so. */
+
 /** Returns null (not empty lists) when a lookup fails, so the page can say so. */
 export async function getTestDriveFormLookups(): Promise<TestDriveFormLookups | null> {
   const supabase = await createClient();
@@ -288,13 +289,52 @@ export async function getTestDriveFormLookups(): Promise<TestDriveFormLookups | 
 }
 
 /** Reads ?customerId=, ?carId= and ?leadId= so other screens can link straight into this form. */
+// --- Test drives ---
+
+const TEST_DRIVE_SOURCE_COLUMNS =
+  "id, test_drive_number, status, scheduled_start, customer_id, car_id, lead_id, vehicle_title";
+
+/** The drive a deal is being created from. Archived drives are never offered. */
+export async function getTestDriveById(id: string): Promise<TestDriveSourceOption | null> {
+  if (!isUuid(id)) return null;
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("test_drive_list")
+    .select(TEST_DRIVE_SOURCE_COLUMNS)
+    .eq("id", id)
+    .is("archived_at", null)
+    .maybeSingle();
+
+  if (error) console.error("getTestDriveById error:", error);
+
+  return data ? (data as unknown as TestDriveSourceOption) : null;
+}
+
+// --- Page data ---
+
+/**
+ * Reads ?customerId=, ?carId=, ?leadId= and ?testDriveId= so other screens can
+ * link straight into this form.
+ *
+ * A test drive is the strongest hint there is: it already knows the customer,
+ * the vehicle and often the lead, so anything it provides fills the gaps left
+ * by the other parameters. Explicit parameters still win, and every record is
+ * cross-checked so a mismatched link can never prefill the wrong customer.
+ */
 export async function getTestDriveFormPrefill(
   params: Record<string, string | undefined>,
 ): Promise<TestDriveFormPrefill> {
-  const lead = params.leadId ? await getLeadById(params.leadId) : null;
+  const testDrive = params.testDriveId ? await getTestDriveById(params.testDriveId) : null;
 
-  const customerId = isUuid(params.customerId) ? params.customerId : lead?.customer_id;
-  const carId = isUuid(params.carId) ? params.carId : lead?.car_id;
+  const leadId = isUuid(params.leadId) ? params.leadId : (testDrive?.lead_id ?? undefined);
+  const lead = leadId ? await getLeadById(leadId) : null;
+
+  const customerId = isUuid(params.customerId)
+    ? params.customerId
+    : (testDrive?.customer_id ?? lead?.customer_id);
+
+  const carId = isUuid(params.carId) ? params.carId : (testDrive?.car_id ?? lead?.car_id);
 
   const [customer, vehicle] = await Promise.all([
     customerId ? getCustomerById(customerId) : Promise.resolve(null),
@@ -304,5 +344,8 @@ export async function getTestDriveFormPrefill(
   // A lead only makes sense with its own customer.
   const usableLead = lead && customer && lead.customer_id === customer.id ? lead : null;
 
-  return { customer, vehicle, lead: usableLead };
+  // The same rule for the drive: it must belong to the customer being prefilled.
+  const usableTestDrive = testDrive && customer && testDrive.customer_id === customer.id ? testDrive : null;
+
+  return { customer, vehicle, lead: usableLead, testDrive: usableTestDrive };
 }

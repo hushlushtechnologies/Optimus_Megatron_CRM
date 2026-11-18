@@ -3,9 +3,9 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -260,12 +260,10 @@ export function LeadStageColumn({
     }
   }
 
-  const progressPercent = Math.round(scrollState.progress * 100);
+    const progressPercent = Math.round(scrollState.progress * 100);
 
-  const thumbStyle: CSSProperties = {
-    height: `${scrollState.thumbSize}%`,
-    top: `${scrollState.progress * (100 - scrollState.thumbSize)}%`,
-  };
+  /* role="scrollbar" must name the region it scrolls, which is the card list below. */
+  const listId = useId();
 
   return (
     <section
@@ -327,8 +325,9 @@ export function LeadStageColumn({
 
       {/* Scrollable cards */}
       <div className="relative min-h-0 flex-1">
-        <div
+                <div
           ref={scrollRef}
+          id={listId}
           role="region"
           aria-label={`${stage.name} lead cards`}
           tabIndex={0}
@@ -396,7 +395,8 @@ export function LeadStageColumn({
               ref={trackRef}
               role="scrollbar"
               aria-label={`${stage.name} vertical scroll position`}
-              aria-orientation="horizontal"
+              aria-controls={listId}
+              aria-orientation="vertical"
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progressPercent}

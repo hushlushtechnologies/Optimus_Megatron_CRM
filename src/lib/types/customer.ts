@@ -18,7 +18,9 @@ export interface CustomerProfile {
   primary_relationship_manager_id: string | null;
   profile_photo_url: string | null;
   last_login: string | null;
-  last_activity_at: string | null;
+    last_activity_at: string | null;
+  /** Set when the customer is archived. Archived customers are kept, never deleted. */
+  archived_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_by: string | null;

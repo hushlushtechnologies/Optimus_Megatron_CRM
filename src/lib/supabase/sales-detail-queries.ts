@@ -4,7 +4,6 @@ import { FINAL_DEAL_STATUSES, type SalesDealStatus } from "@/src/lib/types/sales
 import type { SalesListRow } from "@/src/lib/types/sales-list";
 import type { VehicleDealContext } from "@/src/lib/types/sales-deal-form";
 import type {
-  DealActivityItem,
   DealPayment,
   DealPriceChange,
   DealReservation,

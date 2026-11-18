@@ -39,7 +39,14 @@ export const createDealSchema =
             "Choose a showroom."
           ),
 
-      leadId:
+            leadId:
+        z
+          .string()
+          .uuid()
+          .nullable(),
+
+      /* The test drive this deal came from, when it was started from one. */
+      testDriveId:
         z
           .string()
           .uuid()

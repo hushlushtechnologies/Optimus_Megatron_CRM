@@ -7,6 +7,8 @@ import { getTestDriveFeedback } from "@/src/lib/supabase/test-drive-feedback-que
 import { getFollowUpsForTestDrive } from "@/src/lib/supabase/test-drive-panel-queries";
 import { isUuid } from "@/src/lib/utils/search-term";
 import { TestDriveDetailClient } from "@/src/components/test-drives/detail/test-drive-detail-client";
+import { getDealForTestDrive } from "@/src/lib/supabase/test-drive-sales-queries";
+import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
 
 interface TestDriveDetailPageProps {
   params: Promise<{ id: string }>;
@@ -18,11 +20,13 @@ export default async function TestDriveDetailPage({ params }: TestDriveDetailPag
   // Anything that isn't a real ID can't exist, so don't even ask the database.
   if (!isUuid(id)) notFound();
 
-  const [result, permissions, feedback, followUps] = await Promise.all([
+    const [result, permissions, feedback, followUps, deal, salesPermissions] = await Promise.all([
     getTestDriveDetail(id),
     currentUserTestDrivePermissions(),
     getTestDriveFeedback(id),
     getFollowUpsForTestDrive(id),
+    getDealForTestDrive(id),
+    currentUserSalesPermissions(),
   ]);
 
   if (result.status === "not_found") notFound();
@@ -55,6 +59,8 @@ export default async function TestDriveDetailPage({ params }: TestDriveDetailPag
       permissions={permissions}
       feedback={feedback}
       followUps={followUps}
+      deal={deal}
+      salesPermissions={salesPermissions}
     />
   );
 }

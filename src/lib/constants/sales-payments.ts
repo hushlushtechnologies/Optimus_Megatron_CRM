@@ -1,0 +1,1 @@
+export const PAYMENT_QUEUE_PAGE_SIZE = 25;

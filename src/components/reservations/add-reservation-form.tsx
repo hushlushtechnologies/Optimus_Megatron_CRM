@@ -90,7 +90,7 @@ function VehicleRow({ vehicle }: { vehicle: TestDriveVehicleOption }) {
 
 export function AddReservationForm({ lookups, settings, prefill, currentUserId, canConfirm }: AddReservationFormProps) {
   const router = useRouter();
-  const { fadeUp, reduce } = useMotion();
+    const { fadeUp } = useMotion();
   const now = useMinuteClock();
 
   const [customer, setCustomer] = useState<TestDriveCustomerOption | null>(prefill.customer);

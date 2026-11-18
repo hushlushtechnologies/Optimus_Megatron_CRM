@@ -6,8 +6,8 @@ import { CloudSun, MoonStar, Sparkles, Sun, Sunset } from "lucide-react";
 
 import { FloatingAlertDock } from "@/src/components/dashboard/floating-alert-dock";
 
-import { actionAlerts } from "@/src/lib/mock-data/dashboard";
 import { cn } from "@/src/lib/utils/cn";
+import type { DashboardAlert } from "@/src/lib/types/dashboard";
 
 type TimePeriod = "morning" | "afternoon" | "evening" | "night";
 
@@ -225,7 +225,7 @@ function GreetingVisual({ period }: { period: TimePeriod }) {
   );
 }
 
-export function GreetingBanner({ name }: { name: string }) {
+export function GreetingBanner({ name, alerts }: { name: string; alerts: DashboardAlert[] }) {
   const reduceMotion = useReducedMotion();
 
   const [hour, setHour] = useState<number | null>(null);
@@ -348,7 +348,7 @@ export function GreetingBanner({ name }: { name: string }) {
       {/* =====================================================
           RIGHT — LEAVE CURRENT ALERT AREA FOR NOW
       ===================================================== */}
-      <FloatingAlertDock alerts={actionAlerts} />
+      <FloatingAlertDock alerts={alerts} />
     </div>
   );
 }

@@ -1,15 +1,7 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  CalendarClock,
-  CarFront,
-  MailQuestion,
-  Landmark,
-  Repeat,
-  Sparkles,
-  Heart,
-  MessageCircle,
-} from "lucide-react";
+import { ArrowUpRight, Heart, Landmark, MailQuestion, Repeat, Sparkles } from "lucide-react";
 
 import {
   getCustomerDetail,
@@ -18,6 +10,7 @@ import {
 } from "@/src/lib/supabase/customer-detail-queries";
 
 import { getCustomerFilterLookups } from "@/src/lib/supabase/customer-lookups";
+import { getMyCustomerAdminRights } from "@/app/admin/customers/[id]/admin-actions";
 
 import { Tabs, TabsList, Tab, TabPanel } from "@/src/components/ui/tabs";
 
@@ -41,6 +34,8 @@ import { FutureModuleTab } from "@/src/components/customers/profile-tabs/future-
 import { CommunicationsTab } from "@/src/components/customers/profile-tabs/communications-tab";
 
 import { VehiclesTab } from "@/src/components/customers/profile-tabs/vehicles-tab";
+import { CustomerTestDrivesTab } from "@/src/components/customers/profile-tabs/customer-test-drives-tab";
+import { CustomerReservationsTab } from "@/src/components/customers/profile-tabs/customer-reservations-tab";
 
 /* =========================================================
    TYPES
@@ -73,12 +68,14 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
      RELATED DATA
   ========================================================= */
 
-  const [authStatus, assignedTags, lookups] = await Promise.all([
+  const [authStatus, assignedTags, lookups, rights] = await Promise.all([
     getCustomerAuthStatus(customer.user_id),
 
     getCustomerTags(id),
 
     getCustomerFilterLookups(),
+
+    getMyCustomerAdminRights(),
   ]);
 
   const staffOptions = lookups.staff.map((staff) => ({
@@ -96,7 +93,13 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
           HEADER
       ===================================================== */}
 
-      <CustomerDetailHeader customer={customer} assignedTags={assignedTags} availableTags={lookups.tags} />
+      <CustomerDetailHeader
+        customer={customer}
+        assignedTags={assignedTags}
+        availableTags={lookups.tags}
+        canManage={rights.canManage}
+        canDelete={rights.canDelete}
+      />
 
       {/* =====================================================
           MAIN LAYOUT
@@ -122,6 +125,14 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
 
               <Tab id="test-drives">Test Drives</Tab>
 
+              <Tab id="communications">Communications</Tab>
+
+              <Tab id="notes">Notes</Tab>
+
+              <Tab id="activity">Activity</Tab>
+
+              <Tab id="audit">Audit Trail</Tab>
+
               <Tab id="enquiries">Enquiries</Tab>
 
               <Tab id="finance">Finance</Tab>
@@ -131,14 +142,6 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Tab id="dream-cars">Dream Cars</Tab>
 
               <Tab id="wishlist">Wishlist</Tab>
-
-              <Tab id="communications">Communications</Tab>
-
-              <Tab id="notes">Notes</Tab>
-
-              <Tab id="activity">Activity</Tab>
-
-              <Tab id="audit">Audit Trail</Tab>
             </TabsList>
 
             {/* ===============================================
@@ -150,11 +153,27 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             </TabPanel>
 
             {/* ===============================================
-                VEHICLES
+                VEHICLES / DEALS
+
+                The relationship list lives here. The full
+                sales panel — deals, reservations, payments and
+                totals — is one click away on its own page.
             =============================================== */}
 
             <TabPanel id="vehicles">
-              <VehiclesTab customerId={id} />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <Link
+                    href={`/admin/customers/${id}/sales`}
+                    className="text-body-sm text-primary-text hover:text-primary-hover focus-visible:ring-primary inline-flex items-center gap-1.5 rounded focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    Sales, payments &amp; totals
+                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+
+                <VehiclesTab customerId={id} />
+              </div>
             </TabPanel>
 
             {/* ===============================================
@@ -162,7 +181,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             =============================================== */}
 
             <TabPanel id="reservations">
-              <FutureModuleTab icon={CalendarClock} title="No reservations yet" />
+              <CustomerReservationsTab customerId={id} />
             </TabPanel>
 
             {/* ===============================================
@@ -170,51 +189,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             =============================================== */}
 
             <TabPanel id="test-drives">
-              <FutureModuleTab icon={CarFront} title="This customer has no test drive requests" />
-            </TabPanel>
-
-            {/* ===============================================
-                ENQUIRIES
-            =============================================== */}
-
-            <TabPanel id="enquiries">
-              <FutureModuleTab icon={MailQuestion} title="No enquiries yet" />
-            </TabPanel>
-
-            {/* ===============================================
-                FINANCE
-            =============================================== */}
-
-            <TabPanel id="finance">
-              <FutureModuleTab icon={Landmark} title="No finance applications available" />
-            </TabPanel>
-
-            {/* ===============================================
-                TRADE-IN
-            =============================================== */}
-
-            <TabPanel id="trade-in">
-              <FutureModuleTab icon={Repeat} title="No sell or trade-in requests yet" />
-            </TabPanel>
-
-            {/* ===============================================
-                DREAM CARS
-            =============================================== */}
-
-            <TabPanel id="dream-cars">
-              <FutureModuleTab icon={Sparkles} title="No dream car requests yet" />
-            </TabPanel>
-
-            {/* ===============================================
-                WISHLIST
-            =============================================== */}
-
-            <TabPanel id="wishlist">
-              <FutureModuleTab icon={Heart} title="This customer's wishlist is empty" />
-            </TabPanel>
-
-            <TabPanel id="communications">
-              <CommunicationsTab customerId={id} />
+              <CustomerTestDrivesTab customerId={id} />
             </TabPanel>
 
             {/* ===============================================
@@ -222,11 +197,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             =============================================== */}
 
             <TabPanel id="communications">
-              <FutureModuleTab
-                icon={MessageCircle}
-                title="No communications logged yet"
-                description="Manual communication logging arrives in Sprint 3 Phase 15."
-              />
+              <CommunicationsTab customerId={id} />
             </TabPanel>
 
             {/* ===============================================
@@ -251,6 +222,53 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
 
             <TabPanel id="audit">
               <AuditTrailTab customerId={id} />
+            </TabPanel>
+
+            {/* ===============================================
+                MODULES NOT BUILT YET
+
+                These say plainly that the module isn't ready,
+                rather than claiming the customer has none.
+            =============================================== */}
+
+            <TabPanel id="enquiries">
+              <FutureModuleTab
+                icon={MailQuestion}
+                title="Enquiries aren't available yet"
+                description="Website enquiries arrive with the Public Website Integration sprint. This customer is already set up to use them."
+              />
+            </TabPanel>
+
+            <TabPanel id="finance">
+              <FutureModuleTab
+                icon={Landmark}
+                title="Finance isn't available yet"
+                description="Finance applications arrive with the Finance & Accounting sprint."
+              />
+            </TabPanel>
+
+            <TabPanel id="trade-in">
+              <FutureModuleTab
+                icon={Repeat}
+                title="Sell / Trade-In isn't available yet"
+                description="Trade-in valuations arrive with a later sprint."
+              />
+            </TabPanel>
+
+            <TabPanel id="dream-cars">
+              <FutureModuleTab
+                icon={Sparkles}
+                title="Dream Cars aren't available yet"
+                description="Dream car requests arrive with the Public Website Integration sprint."
+              />
+            </TabPanel>
+
+            <TabPanel id="wishlist">
+              <FutureModuleTab
+                icon={Heart}
+                title="Wishlist isn't available yet"
+                description="Customer wishlists arrive with the Public Website Integration sprint."
+              />
             </TabPanel>
           </Tabs>
         </div>

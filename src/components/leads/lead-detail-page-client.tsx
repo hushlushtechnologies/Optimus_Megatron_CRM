@@ -26,6 +26,9 @@ import { LeadTestDrivesTab } from "@/src/components/leads/profile-tabs/lead-test
 import type { LiveLeadAction } from "@/src/components/leads/future-module-actions";
 import type { TestDrivePermissions } from "@/src/lib/utils/test-drive-permissions";
 import type { TestDrivePanelLoad } from "@/src/lib/types/test-drive";
+import { LeadSalesTab } from "@/src/components/leads/profile-tabs/lead-sales-tab";
+import type { LeadSalesData } from "@/src/lib/types/lead-sales";
+import type { SalesPermissions } from "@/src/lib/utils/sales-permissions";
 import type { LeadFutureAction, LeadSourceOption, StaffOption } from "@/src/lib/supabase/lead-lookups";
 
 interface LeadDetailPageClientProps {
@@ -38,7 +41,10 @@ interface LeadDetailPageClientProps {
   sources: LeadSourceOption[];
   testDrives: TestDrivePanelLoad;
   testDrivePermissions: TestDrivePermissions;
+  sales: LeadSalesData;
+  salesPermissions: SalesPermissions;
 }
+
 
 export function LeadDetailPageClient({
   initialLead,
@@ -50,6 +56,8 @@ export function LeadDetailPageClient({
   sources,
   testDrives,
   testDrivePermissions,
+  sales,
+  salesPermissions
 }: LeadDetailPageClientProps) {
   const router = useRouter();
   const [lead, setLead] = useState(initialLead);
@@ -79,12 +87,34 @@ export function LeadDetailPageClient({
   const leadIsOpen = lead.stage.stage_type === "open";
 
   // Only Create Test Drive is live. It opens the booking form for this lead's customer and vehicle.
+    /*
+   * Test Drive and Sales are both live now. Every other action in the Next
+   * Steps card stays locked until its module exists.
+   *
+   * The sales action is registered under several keys because the card is
+   * driven by the lead_future_actions table, and the row that means "turn
+   * this into a sale" may be keyed differently in each environment. Any key
+   * that isn't present is simply ignored.
+   */
+  const createDealAction: LiveLeadAction = !salesPermissions.create
+    ? { disabledReason: "You don't have permission to create deals." }
+    : !leadIsOpen
+      ? { disabledReason: "This lead is closed." }
+      : sales.hasActiveDeal && sales.activeDealNumber
+        ? { disabledReason: `This lead already has an open deal (${sales.activeDealNumber}).` }
+        : { href: `/admin/sales/new?leadId=${lead.id}` };
+
   const liveActions: Record<string, LiveLeadAction> = {
     test_drive: !testDrivePermissions.create
       ? { disabledReason: "You don't have permission to create test drives." }
       : !leadIsOpen
         ? { disabledReason: "This lead is closed." }
         : { href: `/admin/test-drives/new?leadId=${lead.id}` },
+    sale: createDealAction,
+    sales: createDealAction,
+    deal: createDealAction,
+    purchase: createDealAction,
+    create_deal: createDealAction,
   };
 
   return (
@@ -108,6 +138,7 @@ export function LeadDetailPageClient({
           <Tab id="overview">Overview</Tab>
           <Tab id="customer">Customer</Tab>
           <Tab id="vehicle">Vehicle</Tab>
+          <Tab id="sales">Sales</Tab>
           <Tab id="test-drives">Test Drives</Tab>
           <Tab id="follow-ups">Follow-Ups</Tab>
           <Tab id="notes">Notes</Tab>
@@ -132,6 +163,17 @@ export function LeadDetailPageClient({
         <TabPanel id="vehicle">
           <VehicleTab lead={lead} />
         </TabPanel>
+                <TabPanel id="sales">
+          <LeadSalesTab
+            leadId={lead.id}
+            customerId={lead.customer.id}
+            leadIsOpen={leadIsOpen}
+            data={sales}
+            canCreate={salesPermissions.create}
+            canLink={salesPermissions.edit}
+          />
+        </TabPanel>
+
         <TabPanel id="test-drives">
           <LeadTestDrivesTab
             load={testDrives}

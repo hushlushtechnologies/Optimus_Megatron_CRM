@@ -17,7 +17,6 @@ import {
   MoreHorizontal,
   RefreshCw,
   Search,
-  SlidersHorizontal,
   Table as TableIcon,
 } from "lucide-react";
 

@@ -10,6 +10,8 @@ import {
   getVehicleById,
   searchCustomers,
   searchVehicles,
+   
+  getTestDriveById,
 } from "@/src/lib/supabase/test-drive-form-queries";
 import { createDealSchema } from "@/src/lib/validation/sales-deal";
 import { describeVehicleContext } from "@/src/lib/utils/sales-deal-form";
@@ -177,6 +179,22 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
     if (leadRow.stage?.stage_type !== "open") return { error: "That lead is already closed. Choose an open lead." };
   }
 
+    // 3b. A test drive this deal came from must be this customer's, and for this vehicle.
+  //     The link records provenance, so a mismatched one is worse than none.
+  if (v.testDriveId) {
+    const drive = await getTestDriveById(v.testDriveId);
+
+    if (!drive) return { error: "That test drive could not be found." };
+    if (drive.customer_id !== v.customerId) {
+      return { error: "That test drive belongs to a different customer." };
+    }
+    if (drive.car_id !== v.carId) {
+      return { error: "That test drive was for a different vehicle. Choose the matching vehicle." };
+    }
+  }
+
+
+
   // 4. The vehicle must be fit to start a deal on. The database refuses to reserve or confirm
   //    a vehicle someone else holds. This stops pointless drafts being created.
   const context = await fetchContext(supabase, v.carId, v.customerId, v.leadId);
@@ -190,7 +208,8 @@ export async function createDealAction(input: unknown): Promise<CreateDealResult
       customer_id: v.customerId,
       car_id: v.carId,
       location_id: v.locationId,
-      lead_id: v.leadId,
+            lead_id: v.leadId,
+      source_test_drive_id: v.testDriveId,
       owner_id: v.ownerId,
       proposed_price: decimalOrNull(v.proposedPrice),
       discount_amount: decimalOrNull(v.discountAmount) ?? "0.00",
