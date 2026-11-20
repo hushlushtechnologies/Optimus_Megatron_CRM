@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Clock, Inbox, Plus, Search, TriangleAlert, UserX } from "lucide-react";
+import { Plus, Search, TriangleAlert } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -8,14 +8,17 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { toast } from "sonner";
 
 import { EmptyState } from "@/src/components/shared/empty-state";
-import { MetricCard } from "@/src/components/shared/metric-card";
 import { Pagination } from "@/src/components/shared/pagination";
 import { Input } from "@/src/components/ui/input";
 
 import { EnquiryCard, type EnquiryQuickAction } from "@/src/components/enquiries/enquiry-card";
-import { EnquiryFilterBar } from "@/src/components/enquiries/enquiry-filter-bar";
+import { EnquiryFilterBar, type FilterOption } from "@/src/components/enquiries/enquiry-filter-bar";
+import { EnquirySummaryCards } from "@/src/components/enquiries/enquiry-summary-cards";
+import { EnquiryTable } from "@/src/components/enquiries/enquiry-table";
+import { EnquiryTypeTabs } from "@/src/components/enquiries/enquiry-type-tabs";
 
 import { assignEnquiryAction, setEnquiryStatusAction } from "@/app/admin/enquiries/actions";
+import { EnquiryExportMenu } from "@/src/components/enquiries/enquiry-export-menu";
 
 import { useMotion } from "@/src/hooks/use-motion";
 import { ENQUIRY_PAGE_SIZE } from "@/src/lib/constants/enquiries";
@@ -27,6 +30,7 @@ import {
   type EnquiryListRow,
   type EnquirySummary,
   type EnquiryTab,
+  type EnquiryTypeCounts,
 } from "@/src/lib/types/enquiry";
 import { cn } from "@/src/lib/utils/cn";
 import {
@@ -50,8 +54,16 @@ interface EnquiriesClientProps {
   filters: EnquiryFilters;
   sortId: EnquirySortId;
   staff: { id: string; full_name: string }[];
+  /** Only the statuses that belong to the tab in view. */
+  statuses: FilterOption[];
+  sources: FilterOption[];
+  locations: { id: string; name: string }[];
   permissions: EnquiryPermissions;
   currentUserId: string;
+  /** The active enquiry types, in workflow order, for the top-level tabs. */
+  types: { key: string; label: string }[];
+  /** null means the tab counts couldn't be read. The tabs still work. */
+  typeCounts: EnquiryTypeCounts | null;
 }
 
 /* =========================================================
@@ -67,8 +79,13 @@ export function EnquiriesClient({
   filters,
   sortId,
   staff,
+  statuses,
+  sources,
+  locations,
   permissions,
   currentUserId,
+  types,
+  typeCounts,
 }: EnquiriesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -78,8 +95,12 @@ export function EnquiriesClient({
   const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(urlQuery);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
+
+  /* Everything still waiting on somebody, for the badge on the Open tab. */
+  const openCount = summary ? summary.newCount + summary.inProgress : 0;
 
   /* =======================================================
      NAVIGATION
@@ -154,6 +175,28 @@ export function EnquiriesClient({
        */
       params.delete("sort");
 
+      setRowSelection({});
+      navigate(params);
+    },
+    [navigate, searchParams],
+  );
+
+  /*
+   * The type tabs write the same `type` parameter the filters used to own,
+   * so an old link to a filtered list still works and lights up the matching
+   * tab. Changing it clears the selection: ticks belong to rows that are
+   * about to be replaced.
+   */
+  const changeType = useCallback(
+    (next: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (next) params.set("type", next);
+      else params.delete("type");
+
+      params.set("page", "1");
+
+      setRowSelection({});
       navigate(params);
     },
     [navigate, searchParams],
@@ -204,7 +247,7 @@ export function EnquiriesClient({
 
       toast.success(
         action === "claim"
-          ? `${enquiry.enquiry_number} is yours. It is now in review.`
+          ? `${enquiry.enquiry_number} is yours.`
           : `${enquiry.enquiry_number} moved to Spam. You can put it back from the Spam tab.`,
       );
 
@@ -214,18 +257,6 @@ export function EnquiriesClient({
     } finally {
       setBusyId(null);
     }
-  };
-
-  /* =======================================================
-     SUMMARY FALLBACK
-  ======================================================= */
-
-  const s = summary ?? {
-    newCount: 0,
-    inReviewCount: 0,
-    unassignedCount: 0,
-    convertedMonth: 0,
-    staleCount: 0,
   };
 
   /* =======================================================
@@ -240,23 +271,32 @@ export function EnquiriesClient({
 
       <motion.div {...fadeUp(0)} className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-h3">Enquiry requests</h1>
+          <h1 className="text-h3">Enquiry Requests</h1>
 
           <p className="text-body-sm text-text-muted mt-1 max-w-2xl">
-            Everything that comes in from the website, the phone and the showroom door. Reply, then convert
-            the real ones into leads.
+            Manage customer finance, trade-in, selling, dream car and general requests — everything that comes
+            in from the website, the phone and the showroom door.
           </p>
         </div>
 
-        {permissions.manage && (
-          <Link
-            href="/admin/enquiries/new"
-            className="border-primary bg-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-4 text-sm font-medium text-[#0b1220] transition-colors hover:brightness-105 focus-visible:ring-2 focus-visible:outline-none"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-            Add an enquiry
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {/*
+            Gated on export, not view: looking at one customer's details on
+            screen and taking every customer's details away in a file are
+            different acts, so they get different permissions.
+          */}
+          {permissions.export && <EnquiryExportMenu tab={tab} search={urlQuery} enquiryType={filters.type} />}
+
+          {permissions.manage && (
+            <Link
+              href="/admin/enquiries/new"
+              className="border-primary bg-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-4 text-sm font-medium text-[#0b1220] transition-colors hover:brightness-105 focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              New Enquiry
+            </Link>
+          )}
+        </div>
       </motion.div>
 
       {/* ===================================================
@@ -278,39 +318,18 @@ export function EnquiriesClient({
           SUMMARY
       =================================================== */}
 
-      <section aria-label="Enquiry summary" className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <MetricCard label="New" value={s.newCount} icon={<Inbox />} caption="Nobody has replied yet" />
-
-        <MetricCard label="In review" value={s.inReviewCount} icon={<Clock />} caption="Someone is on it" />
-
-        <MetricCard
-          label="Unassigned"
-          value={s.unassignedCount}
-          icon={<UserX />}
-          caption="Open, with no owner"
-        />
-
-        <MetricCard
-          label="Waiting over a day"
-          value={s.staleCount}
-          icon={<TriangleAlert />}
-          caption="New and still untouched"
-        />
-
-        <MetricCard
-          label="Converted this month"
-          value={s.convertedMonth}
-          icon={<CheckCircle2 />}
-          caption="Became leads"
-        />
-      </section>
+      <EnquirySummaryCards summary={summary} />
 
       {/* ===================================================
           FILTERS / RESULTS
       =================================================== */}
 
       <div className={cn("flex flex-col gap-4 transition-opacity", isPending && "opacity-75")}>
-        {/* ---- Tabs ---- */}
+        {/* ---- Type tabs ---- */}
+
+        <EnquiryTypeTabs types={types} value={filters.type} counts={typeCounts} onChange={changeType} />
+
+        {/* ---- Status tabs ---- */}
 
         <div
           role="group"
@@ -333,9 +352,9 @@ export function EnquiriesClient({
               >
                 {ENQUIRY_TAB_LABELS[key]}
 
-                {key === "open" && s.newCount + s.inReviewCount > 0 && (
+                {key === "open" && openCount > 0 && (
                   <span className="bg-primary/10 text-primary ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
-                    {s.newCount + s.inReviewCount}
+                    {openCount}
                   </span>
                 )}
 
@@ -370,6 +389,9 @@ export function EnquiriesClient({
           filters={filters}
           sortId={sortId}
           staff={staff}
+          statuses={statuses}
+          sources={sources}
+          locations={locations}
           isPending={isPending}
           onFiltersChange={changeFilters}
           onSortChange={changeSort}
@@ -402,20 +424,42 @@ export function EnquiriesClient({
             />
           </div>
         ) : (
-          <div className="surface-card overflow-hidden">
-            <ul className="divide-border divide-y">
-              {rows.map((row, index) => (
-                <EnquiryCard
-                  key={row.id}
-                  enquiry={row}
-                  index={index}
-                  currentUserId={currentUserId}
-                  canManage={permissions.manage}
-                  isBusy={busyId === row.id}
-                  onQuickAction={(enquiry, action) => void runQuickAction(enquiry, action)}
-                />
-              ))}
-            </ul>
+          <div className="flex flex-col gap-4">
+            {/*
+              Thirteen columns don't fit a phone, and a horizontal scrollbar
+              is not a design. Below the large breakpoint the same rows are
+              cards, which read down a narrow screen properly.
+            */}
+            <div className="hidden lg:block">
+              <EnquiryTable
+                rows={rows}
+                currentUserId={currentUserId}
+                canManage={permissions.manage}
+                canExport={permissions.export}
+                busyId={busyId}
+                onRowAction={(enquiry, action) => void runQuickAction(enquiry, action)}
+                rowSelection={rowSelection}
+                onRowSelectionChange={setRowSelection}
+                staff={staff}
+                onChanged={() => router.refresh()}
+              />
+            </div>
+
+            <div className="surface-card overflow-hidden lg:hidden">
+              <ul className="divide-border divide-y">
+                {rows.map((row, index) => (
+                  <EnquiryCard
+                    key={row.id}
+                    enquiry={row}
+                    index={index}
+                    currentUserId={currentUserId}
+                    canManage={permissions.manage}
+                    isBusy={busyId === row.id}
+                    onQuickAction={(enquiry, action) => void runQuickAction(enquiry, action)}
+                  />
+                ))}
+              </ul>
+            </div>
 
             <Pagination
               page={page}
@@ -424,6 +468,8 @@ export function EnquiriesClient({
               onPageChange={(next) => {
                 const params = new URLSearchParams(searchParams.toString());
                 params.set("page", String(next));
+
+                setRowSelection({});
                 navigate(params);
               }}
               itemLabel={{ singular: "enquiry", plural: "enquiries" }}

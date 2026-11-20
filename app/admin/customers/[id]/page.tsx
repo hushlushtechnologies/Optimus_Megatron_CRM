@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ArrowUpRight, Heart, Landmark, MailQuestion, Repeat, Sparkles } from "lucide-react";
+import { ArrowUpRight, Heart, Landmark, Repeat, Sparkles } from "lucide-react";
 
 import {
   getCustomerDetail,
@@ -36,6 +36,7 @@ import { CommunicationsTab } from "@/src/components/customers/profile-tabs/commu
 import { VehiclesTab } from "@/src/components/customers/profile-tabs/vehicles-tab";
 import { CustomerTestDrivesTab } from "@/src/components/customers/profile-tabs/customer-test-drives-tab";
 import { CustomerReservationsTab } from "@/src/components/customers/profile-tabs/customer-reservations-tab";
+import { CustomerEnquiriesTab } from "@/src/components/customers/profile-tabs/customer-enquiries-tab";
 
 /* =========================================================
    TYPES
@@ -232,11 +233,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             =============================================== */}
 
             <TabPanel id="enquiries">
-              <FutureModuleTab
-                icon={MailQuestion}
-                title="Enquiries aren't available yet"
-                description="Website enquiries arrive with the Public Website Integration sprint. This customer is already set up to use them."
-              />
+              <CustomerEnquiriesTab customerId={id} />
             </TabPanel>
 
             <TabPanel id="finance">

@@ -1,8 +1,9 @@
 import { createHash } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 import { ENQUIRY_MIN_FILL_SECONDS } from "@/src/lib/constants/enquiries";
 import { createClient } from "@/src/lib/supabase/server";
+import { notifyEnquiryReceivedByNumber } from "@/src/lib/notifications/enquiry-notifications";
 import { publicEnquirySchema } from "@/src/lib/validation/enquiry";
 
 /*
@@ -225,6 +226,19 @@ export async function POST(request: NextRequest) {
 
   const row = (Array.isArray(data) ? data[0] : data) as
     { enquiry_number: string; duplicate: boolean } | null | undefined;
+
+  /*
+   * Telling the team happens after the response has gone, so a visitor
+   * never waits on our internal fan-out — and a notification problem can
+   * never turn a saved enquiry into an error on their screen.
+   *
+   * Not for a duplicate: it is the same person sending the same thing
+   * twice, and the first one was already announced.
+   */
+  if (row?.enquiry_number && !row.duplicate) {
+    const reference = row.enquiry_number;
+    after(() => notifyEnquiryReceivedByNumber(reference));
+  }
 
   /*
    * The reply is the same whatever we concluded. Someone probing the form

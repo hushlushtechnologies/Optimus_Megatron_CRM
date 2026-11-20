@@ -41,17 +41,6 @@ const POLL_INTERVAL_MS = 60_000;
 //   test_drive_checked_in: LogIn,
 // };
 
-function getHref(notification: AppNotification): string | null {
-  if (notification.entity_type === "lead" && notification.entity_id) {
-    return `/admin/leads/${notification.entity_id}`;
-  }
-  if (notification.entity_type === "leads") return "/admin/leads";
-  if (notification.entity_type === "test_drive" && notification.entity_id) {
-    return `/admin/test-drives/${notification.entity_id}`;
-  }
-  return null;
-}
-
 export function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);

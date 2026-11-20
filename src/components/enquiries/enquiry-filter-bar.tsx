@@ -8,22 +8,39 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
 import { useMotion } from "@/src/hooks/use-motion";
-import { ENQUIRY_SOURCES, ENQUIRY_TYPES } from "@/src/lib/types/enquiry";
+import { ENQUIRY_PRIORITIES } from "@/src/lib/types/enquiry";
 import { cn } from "@/src/lib/utils/cn";
 import {
   countActiveEnquiryFilters,
   EMPTY_ENQUIRY_FILTERS,
+  ENQUIRY_FOLLOW_UP_LABELS,
+  ENQUIRY_FOLLOW_UP_STATES,
   ENQUIRY_SORTS,
   UNASSIGNED,
   type EnquiryFilters,
+  type EnquiryFollowUpState,
   type EnquirySortId,
 } from "@/src/lib/utils/enquiry-filters";
 import { formatDay } from "@/src/lib/utils/test-drive-format";
+
+/* =========================================================
+   TYPES
+========================================================= */
+
+/** A key/label pair, however the list was built. */
+export interface FilterOption {
+  key: string;
+  label: string;
+}
 
 interface EnquiryFilterBarProps {
   filters: EnquiryFilters;
   sortId: EnquirySortId;
   staff: { id: string; full_name: string }[];
+  /** Only the statuses that belong to the tab in view. */
+  statuses: FilterOption[];
+  sources: FilterOption[];
+  locations: { id: string; name: string }[];
   isPending: boolean;
   onFiltersChange: (next: EnquiryFilters) => void;
   onSortChange: (next: EnquirySortId) => void;
@@ -38,17 +55,45 @@ interface Chip {
   label: string;
 }
 
-function describe(filters: EnquiryFilters, staff: { id: string; full_name: string }[]): Chip[] {
+/**
+ * The applied filters, in words.
+ *
+ * Every chip reads as a phrase rather than a value — "With Priya", not
+ * "Priya" — so a row of four says what the list is showing without anyone
+ * having to open the panel to find out.
+ */
+function describe(
+  filters: EnquiryFilters,
+  staff: { id: string; full_name: string }[],
+  statuses: FilterOption[],
+  locations: { id: string; name: string }[],
+): Chip[] {
   const chips: Chip[] = [];
 
+  const name = (list: { key: string; label: string }[], key: string) =>
+    list.find((item) => item.key === key)?.label ?? key;
+
+  /* Set by the type tabs rather than this bar, but still shown so it can be cleared. */
   if (filters.type) chips.push({ key: "type", label: filters.type });
+
+  if (filters.status) chips.push({ key: "status", label: name(statuses, filters.status) });
+  if (filters.priority) chips.push({ key: "priority", label: `${filters.priority} priority` });
   if (filters.source) chips.push({ key: "source", label: `From ${filters.source}` });
 
   if (filters.assignedTo === UNASSIGNED) {
     chips.push({ key: "assignedTo", label: "Unassigned" });
   } else if (filters.assignedTo) {
-    const name = staff.find((person) => person.id === filters.assignedTo)?.full_name;
-    chips.push({ key: "assignedTo", label: `With ${name ?? "someone"}` });
+    const person = staff.find((item) => item.id === filters.assignedTo)?.full_name;
+    chips.push({ key: "assignedTo", label: `With ${person ?? "someone"}` });
+  }
+
+  if (filters.location) {
+    const place = locations.find((item) => item.id === filters.location)?.name;
+    chips.push({ key: "location", label: `At ${place ?? "a showroom"}` });
+  }
+
+  if (filters.followUp) {
+    chips.push({ key: "followUp", label: ENQUIRY_FOLLOW_UP_LABELS[filters.followUp] });
   }
 
   if (filters.from) chips.push({ key: "from", label: `From ${formatDay(filters.from)}` });
@@ -67,11 +112,18 @@ function describe(filters: EnquiryFilters, staff: { id: string; full_name: strin
  * Applied as they are changed rather than behind an Apply button: the URL is
  * the state, so every narrowing of the list is somewhere a person can link
  * to, go back from, or leave open on a second screen.
+ *
+ * The vocabularies come in as props rather than from a list in here, because
+ * statuses and sources live in database tables now. One added in settings
+ * appears in these dropdowns without this file being touched.
  */
 export function EnquiryFilterBar({
   filters,
   sortId,
   staff,
+  statuses,
+  sources,
+  locations,
   isPending,
   onFiltersChange,
   onSortChange,
@@ -82,7 +134,7 @@ export function EnquiryFilterBar({
   const activeCount = countActiveEnquiryFilters(filters);
   const [open, setOpen] = useState(activeCount > 0);
 
-  const chips = describe(filters, staff);
+  const chips = describe(filters, staff, statuses, locations);
 
   const set = <K extends keyof EnquiryFilters>(key: K, value: EnquiryFilters[K]) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -164,28 +216,43 @@ export function EnquiryFilterBar({
           >
             <div
               className={cn(
-                "surface-card grid grid-cols-1 gap-4 p-4 transition-opacity sm:grid-cols-2 xl:grid-cols-5",
+                "surface-card grid grid-cols-1 gap-4 p-4 transition-opacity sm:grid-cols-2 xl:grid-cols-4",
                 isPending && "opacity-70",
               )}
             >
+              {/*
+                Only the statuses in the current tab are offered. Letting
+                somebody pick Converted while on the Open tab would produce a
+                blank list that looks broken and isn't.
+              */}
               <Select
-                label="What it is about"
+                label="Status"
                 options={[
-                  { value: "", label: "Any kind" },
-                  ...ENQUIRY_TYPES.map((item) => ({ value: item, label: item })),
+                  { value: "", label: "Any status" },
+                  ...statuses.map((item) => ({ value: item.key, label: item.label })),
                 ]}
-                value={filters.type}
-                onChange={(event) => set("type", event.target.value as EnquiryFilters["type"])}
+                value={filters.status}
+                onChange={(event) => set("status", event.target.value)}
+              />
+
+              <Select
+                label="Priority"
+                options={[
+                  { value: "", label: "Any priority" },
+                  ...ENQUIRY_PRIORITIES.map((item) => ({ value: item, label: item })),
+                ]}
+                value={filters.priority}
+                onChange={(event) => set("priority", event.target.value)}
               />
 
               <Select
                 label="Where it came from"
                 options={[
                   { value: "", label: "Anywhere" },
-                  ...ENQUIRY_SOURCES.map((item) => ({ value: item, label: item })),
+                  ...sources.map((item) => ({ value: item.key, label: item.label })),
                 ]}
                 value={filters.source}
-                onChange={(event) => set("source", event.target.value as EnquiryFilters["source"])}
+                onChange={(event) => set("source", event.target.value)}
               />
 
               <Select
@@ -197,6 +264,29 @@ export function EnquiryFilterBar({
                 ]}
                 value={filters.assignedTo}
                 onChange={(event) => set("assignedTo", event.target.value)}
+              />
+
+              <Select
+                label="Showroom"
+                options={[
+                  { value: "", label: "Any showroom" },
+                  ...locations.map((place) => ({ value: place.id, label: place.name })),
+                ]}
+                value={filters.location}
+                onChange={(event) => set("location", event.target.value)}
+              />
+
+              <Select
+                label="Follow-up"
+                options={[
+                  { value: "", label: "Any" },
+                  ...ENQUIRY_FOLLOW_UP_STATES.map((state) => ({
+                    value: state,
+                    label: ENQUIRY_FOLLOW_UP_LABELS[state],
+                  })),
+                ]}
+                value={filters.followUp}
+                onChange={(event) => set("followUp", event.target.value as EnquiryFollowUpState)}
               />
 
               <Input

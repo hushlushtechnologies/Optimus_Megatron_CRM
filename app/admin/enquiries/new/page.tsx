@@ -1,12 +1,11 @@
-import Link from "next/link";
-
-import { TriangleAlert } from "lucide-react";
-
 import { getMyEnquiryPermissions } from "@/src/lib/supabase/enquiry-permissions";
 import { getEnquiryLookups } from "@/src/lib/supabase/enquiry-queries";
+import { getEnquiryWorkflow } from "@/src/lib/supabase/enquiry-workflow-queries";
 import { createClient } from "@/src/lib/supabase/server";
+import { activeSources, activeTypes } from "@/src/lib/utils/enquiry-workflow";
 
-import { ManualEnquiryForm } from "@/src/components/enquiries/manual-enquiry-form";
+import { EnquiryAccessDenied } from "@/src/components/enquiries/enquiry-access-denied";
+import { NewEnquiryForm } from "@/src/components/enquiries/form/new-enquiry-form";
 
 export default async function NewEnquiryPage() {
   const supabase = await createClient();
@@ -19,30 +18,39 @@ export default async function NewEnquiryPage() {
 
   if (!user || !permissions || !permissions.manage) {
     return (
-      <div role="alert" className="surface-card flex max-w-2xl items-start gap-3 p-5">
-        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden="true" />
-
-        <div>
-          <p className="text-body-sm text-text-primary font-medium">
-            You don&apos;t have permission to add an enquiry.
-          </p>
-
-          <p className="text-body-sm text-text-muted mt-1">
-            Ask an administrator if you take enquiries by phone or at the showroom.
-          </p>
-
-          <Link
-            href="/admin/enquiries"
-            className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
-          >
-            Back to enquiry requests
-          </Link>
-        </div>
-      </div>
+      <EnquiryAccessDenied
+        action="add an enquiry"
+        reason="Ask an administrator if you take enquiries by phone or at the showroom."
+        backHref="/admin/enquiries"
+        backLabel="Back to enquiry requests"
+      />
     );
   }
 
-  const lookups = await getEnquiryLookups();
+  const [lookups, workflow] = await Promise.all([getEnquiryLookups(), getEnquiryWorkflow()]);
 
-  return <ManualEnquiryForm staff={lookups.staff} cars={lookups.cars} currentUserId={user.id} />;
+  const types = activeTypes(workflow).map((item) => ({ key: item.key, label: item.label }));
+
+  /*
+   * Website is left out on purpose. An enquiry entered here came in some
+   * other way, and letting somebody label a phone call as a website enquiry
+   * would quietly corrupt the one figure this module exists to report on.
+   */
+  const sources = activeSources(workflow)
+    .filter((item) => item.key !== "Website")
+    .map((item) => ({ key: item.key, label: item.label }));
+
+  return (
+    <NewEnquiryForm
+      types={types}
+      sources={sources}
+      staff={lookups.staff}
+      locations={lookups.locations}
+      cars={lookups.cars}
+      brands={lookups.brands}
+      fuelTypes={lookups.fuelTypes}
+      transmissions={lookups.transmissions}
+      currentUserId={user.id}
+    />
+  );
 }

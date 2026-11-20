@@ -35,7 +35,7 @@ export function EnquiryCloseDialog({ enquiry, onClose }: EnquiryCloseDialogProps
     setSaving(true);
 
     try {
-      const result = await setEnquiryStatusAction({ id: enquiry.id, status: "Closed", reason });
+      const result = await setEnquiryStatusAction({ id: enquiry.id, status: "Cancelled", reason });
 
       if (result.error) {
         setError(result.error);

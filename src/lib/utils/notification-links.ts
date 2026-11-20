@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Clock,
   LogIn,
+  MailQuestion,
   PackageCheck,
   Repeat,
   Trophy,
@@ -43,6 +44,13 @@ const TYPE_ICON: Record<string, LucideIcon> = {
   lead_lost: XCircle,
   follow_up_due: Clock,
   follow_up_overdue: AlertTriangle,
+
+  // Enquiries
+  enquiry_received: MailQuestion,
+  enquiry_assigned: UserCheck,
+  enquiry_reassigned: ArrowRightLeft,
+  enquiry_status_changed: Repeat,
+  enquiry_urgent: AlertTriangle,
 
   // Test drives
   test_drive_assigned: UserCheck,
@@ -90,6 +98,7 @@ export function notificationIcon(type: string): LucideIcon {
  * than sending someone to a 404 from their own notification list.
  */
 const ENTITY_ROUTES: Record<string, string> = {
+  enquiry: "/admin/enquiries",
   lead: "/admin/leads",
   test_drive: "/admin/test-drives",
   customer: "/admin/customers",
@@ -101,6 +110,7 @@ const ENTITY_ROUTES: Record<string, string> = {
 };
 
 const LIST_ROUTES: Record<string, string> = {
+  enquiries: "/admin/enquiries",
   leads: "/admin/leads",
   test_drives: "/admin/test-drives",
   customers: "/admin/customers",

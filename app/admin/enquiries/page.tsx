@@ -1,11 +1,15 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { TriangleAlert } from "lucide-react";
-
 import { getMyEnquiryPermissions } from "@/src/lib/supabase/enquiry-permissions";
-import { getEnquiryList, getEnquiryLookups, getEnquirySummary } from "@/src/lib/supabase/enquiry-queries";
+import {
+  getEnquiryList,
+  getEnquiryLookups,
+  getEnquirySummary,
+  getEnquiryTypeCounts,
+} from "@/src/lib/supabase/enquiry-queries";
+import { getEnquiryWorkflow } from "@/src/lib/supabase/enquiry-workflow-queries";
 import { createClient } from "@/src/lib/supabase/server";
+import { activeSources, activeStatuses, activeTypes } from "@/src/lib/utils/enquiry-workflow";
 
 import { ENQUIRY_PAGE_SIZE } from "@/src/lib/constants/enquiries";
 import {
@@ -17,6 +21,7 @@ import {
 import { readParam } from "@/src/lib/utils/test-drive-list-filters";
 
 import { EnquiriesClient } from "@/src/components/enquiries/enquiries-client";
+import { EnquiryAccessDenied } from "@/src/components/enquiries/enquiry-access-denied";
 
 interface EnquiriesPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -37,27 +42,10 @@ export default async function EnquiriesPage({ searchParams }: EnquiriesPageProps
 
   if (!user || !permissions || !permissions.view) {
     return (
-      <div role="alert" className="surface-card flex max-w-2xl items-start gap-3 p-5">
-        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden="true" />
-
-        <div>
-          <p className="text-body-sm text-text-primary font-medium">
-            You don&apos;t have permission to view enquiries.
-          </p>
-
-          <p className="text-body-sm text-text-muted mt-1">
-            Enquiries hold the contact details of people who have written in, so access is granted by role.
-            Ask an administrator if you need it.
-          </p>
-
-          <Link
-            href="/admin"
-            className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
-          >
-            Back to the dashboard
-          </Link>
-        </div>
-      </div>
+      <EnquiryAccessDenied
+        action="view enquiries"
+        reason="Enquiries hold the contact details of people who have written in, so access is granted by role. Ask an administrator if you need it."
+      />
     );
   }
 
@@ -78,11 +66,34 @@ export default async function EnquiriesPage({ searchParams }: EnquiriesPageProps
      DATA
   ======================================================= */
 
-  const [data, summary, lookups] = await Promise.all([
+  const [data, summary, lookups, typeCounts, workflow] = await Promise.all([
     getEnquiryList({ tab, search, page, filters, sort }),
     getEnquirySummary(),
     getEnquiryLookups(),
+    getEnquiryTypeCounts({ tab, search, filters }),
+    getEnquiryWorkflow(),
   ]);
+
+  /* Retired types keep their rows but stop getting a tab of their own. */
+  const types = activeTypes(workflow).map((item) => ({ key: item.key, label: item.label }));
+
+  const sources = activeSources(workflow).map((item) => ({ key: item.key, label: item.label }));
+
+  /*
+   * Only the statuses the current tab can contain. Offering Converted while
+   * someone is on the Open tab would produce an empty list that reads as a
+   * bug, so the two controls are kept from contradicting each other here.
+   */
+  const statuses = activeStatuses(workflow)
+    .filter((item) => {
+      if (tab === "open") return item.isOpen;
+      if (tab === "converted") return item.key === "Converted";
+      if (tab === "spam") return item.key === "Spam";
+      if (tab === "closed") return !item.isOpen && item.key !== "Converted" && item.key !== "Spam";
+
+      return item.key !== "Spam";
+    })
+    .map((item) => ({ key: item.key, label: item.label }));
 
   /* =======================================================
      INVALID PAGE REDIRECT
@@ -118,8 +129,13 @@ export default async function EnquiriesPage({ searchParams }: EnquiriesPageProps
       filters={filters}
       sortId={sort.id}
       staff={lookups.staff}
+      statuses={statuses}
+      sources={sources}
+      locations={lookups.locations}
       permissions={permissions}
       currentUserId={user.id}
+      types={types}
+      typeCounts={typeCounts}
     />
   );
 }

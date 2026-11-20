@@ -22,6 +22,16 @@ type IconProps = {
 
 export type MetricChangeTone = "positive" | "negative" | "neutral";
 
+/**
+ * The colour family a card wears.
+ *
+ * Cards normally take their accent from their label, which keeps the
+ * inventory palette consistent without every caller repeating it. A module
+ * whose labels say nothing about colour — "Urgent Requests", "Completed" —
+ * names one instead.
+ */
+export type MetricAccent = "primary" | "success" | "warning" | "danger" | "info" | "muted";
+
 export interface MetricCardProps {
   label: string;
   value: number;
@@ -44,6 +54,14 @@ export interface MetricCardProps {
    * Server Component / Client Component boundary.
    */
   icon?: ReactElement<IconProps>;
+
+  /**
+   * Overrides the accent normally derived from the label.
+   *
+   * Nothing about the words "Urgent Requests" says red, so a module that
+   * cares says so here. Left out, the label decides exactly as before.
+   */
+  accent?: MetricAccent;
 
   /**
    * Numeric change.
@@ -90,84 +108,75 @@ export interface MetricCardProps {
    METRIC ACCENT
 ========================================================= */
 
-function getMetricAccent(label: string) {
-  const normalized = label.toLowerCase();
-
-  /* Available */
-
-  if (normalized.includes("available")) {
-    return {
-      icon: "text-success",
-      iconBackground: "bg-success/[0.07]",
-      iconBorder: "border-success/15",
-      spotlight: "bg-success/[0.08]",
-      topLine: "bg-gradient-to-r from-success/45 to-transparent",
-      spark: "var(--omc-success)",
-    };
-  }
-
-  /* Reserved */
-
-  if (normalized.includes("reserved")) {
-    return {
-      icon: "text-warning",
-      iconBackground: "bg-warning/[0.07]",
-      iconBorder: "border-warning/15",
-      spotlight: "bg-warning/[0.07]",
-      topLine: "bg-gradient-to-r from-warning/45 to-transparent",
-      spark: "var(--omc-warning)",
-    };
-  }
-
-  /* Sold */
-
-  if (normalized.includes("sold")) {
-    return {
-      icon: "text-primary",
-      iconBackground: "bg-primary/[0.07]",
-      iconBorder: "border-primary/15",
-      spotlight: "bg-primary/[0.07]",
-      topLine: "bg-gradient-to-r from-primary/45 to-transparent",
-      spark: "var(--omc-primary)",
-    };
-  }
-
-  /* Coming Soon */
-
-  if (normalized.includes("coming") || normalized.includes("soon")) {
-    return {
-      icon: "text-blue-400",
-      iconBackground: "bg-blue-400/[0.07]",
-      iconBorder: "border-blue-400/15",
-      spotlight: "bg-blue-400/[0.07]",
-      topLine: "bg-gradient-to-r from-blue-400/40 to-transparent",
-      spark: "#60a5fa",
-    };
-  }
-
-  /* Draft */
-
-  if (normalized.includes("draft")) {
-    return {
-      icon: "text-text-muted",
-      iconBackground: "bg-card-hover",
-      iconBorder: "border-border",
-      spotlight: "bg-text-muted/[0.06]",
-      topLine: "bg-gradient-to-r from-text-subtle/30 to-transparent",
-      spark: "var(--omc-text-muted)",
-    };
-  }
-
-  /* Total Cars / Default */
-
-  return {
+const ACCENTS = {
+  primary: {
     icon: "text-primary",
     iconBackground: "bg-primary/[0.07]",
     iconBorder: "border-primary/15",
     spotlight: "bg-primary/[0.07]",
     topLine: "bg-gradient-to-r from-primary/45 to-transparent",
     spark: "var(--omc-primary)",
-  };
+  },
+  success: {
+    icon: "text-success",
+    iconBackground: "bg-success/[0.07]",
+    iconBorder: "border-success/15",
+    spotlight: "bg-success/[0.08]",
+    topLine: "bg-gradient-to-r from-success/45 to-transparent",
+    spark: "var(--omc-success)",
+  },
+  warning: {
+    icon: "text-warning",
+    iconBackground: "bg-warning/[0.07]",
+    iconBorder: "border-warning/15",
+    spotlight: "bg-warning/[0.07]",
+    topLine: "bg-gradient-to-r from-warning/45 to-transparent",
+    spark: "var(--omc-warning)",
+  },
+  danger: {
+    icon: "text-danger",
+    iconBackground: "bg-danger/[0.07]",
+    iconBorder: "border-danger/15",
+    spotlight: "bg-danger/[0.07]",
+    topLine: "bg-gradient-to-r from-danger/45 to-transparent",
+    spark: "var(--omc-danger)",
+  },
+  info: {
+    icon: "text-blue-400",
+    iconBackground: "bg-blue-400/[0.07]",
+    iconBorder: "border-blue-400/15",
+    spotlight: "bg-blue-400/[0.07]",
+    topLine: "bg-gradient-to-r from-blue-400/40 to-transparent",
+    spark: "#60a5fa",
+  },
+  muted: {
+    icon: "text-text-muted",
+    iconBackground: "bg-card-hover",
+    iconBorder: "border-border",
+    spotlight: "bg-text-muted/[0.06]",
+    topLine: "bg-gradient-to-r from-text-subtle/30 to-transparent",
+    spark: "var(--omc-text-muted)",
+  },
+} as const satisfies Record<MetricAccent, unknown>;
+
+/**
+ * Which accent a label implies.
+ *
+ * Inventory words only. A label this doesn't recognise gets the house gold,
+ * which is why a module with its own vocabulary passes `accent` instead of
+ * hoping a keyword lands here.
+ */
+function getMetricAccent(label: string) {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes("available")) return ACCENTS.success;
+  if (normalized.includes("reserved")) return ACCENTS.warning;
+  if (normalized.includes("sold")) return ACCENTS.primary;
+  if (normalized.includes("coming") || normalized.includes("soon")) return ACCENTS.info;
+  if (normalized.includes("draft")) return ACCENTS.muted;
+
+  /* Total Cars / Default */
+  return ACCENTS.primary;
 }
 
 /* =========================================================
@@ -200,6 +209,7 @@ export function MetricCard({
   suffix = "",
 
   icon,
+  accent: accentName,
 
   change,
   changeTone,
@@ -216,7 +226,7 @@ export function MetricCard({
 
   const prefersReducedMotion = useReducedMotion();
 
-  const accent = getMetricAccent(label);
+  const accent = accentName ? ACCENTS[accentName] : getMetricAccent(label);
 
   const generatedId = useId();
 

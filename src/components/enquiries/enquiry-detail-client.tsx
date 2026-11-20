@@ -7,6 +7,7 @@ import {
   Clock,
   ExternalLink,
   Globe,
+  History,
   Mail,
   MessageSquare,
   Phone,
@@ -24,22 +25,44 @@ import { toast } from "sonner";
 
 import { ConvertEnquiryDialog } from "@/src/components/enquiries/convert-enquiry-dialog";
 import { EnquiryCloseDialog } from "@/src/components/enquiries/enquiry-close-dialog";
-import { EnquiryStatusBadge } from "@/src/components/enquiries/enquiry-status-badge";
+import { EnquiryFinanceCard } from "@/src/components/enquiries/enquiry-finance-card";
+import { EnquiryCustomerVehicleCard } from "@/src/components/enquiries/enquiry-customer-vehicle-card";
+import { EnquiryAssignControl } from "@/src/components/enquiries/enquiry-assign-control";
+import { EnquirySection } from "@/src/components/enquiries/enquiry-detail-section";
+import { EnquiryDreamCarCard } from "@/src/components/enquiries/enquiry-dream-car-card";
+import { EnquiryLinksPanel } from "@/src/components/enquiries/enquiry-links-panel";
+import { EnquiryFollowUpsPanel } from "@/src/components/enquiries/enquiry-follow-ups-panel";
+import { EnquiryNotesPanel } from "@/src/components/enquiries/enquiry-notes-panel";
+import type { EnquiryFollowUp, EnquiryNote } from "@/src/lib/types/enquiry-work";
+import { EnquiryPriorityBadge } from "@/src/components/enquiries/enquiry-priority-badge";
+import { EnquiryPriorityControl } from "@/src/components/enquiries/enquiry-priority-control";
+import { EnquiryStatusControl } from "@/src/components/enquiries/enquiry-status-control";
+import { EnquiryTimeline } from "@/src/components/enquiries/enquiry-timeline";
+import { EnquiryTypeBadge } from "@/src/components/enquiries/enquiry-type-badge";
+import type { EnquiryLinks } from "@/src/lib/types/enquiry-links";
+import type { EnquiryTimelineEntry } from "@/src/lib/types/enquiry-timeline";
+import type { EnquiryWorkflow } from "@/src/lib/types/enquiry-workflow";
+import { EnquiryTradeComparison } from "@/src/components/enquiries/enquiry-trade-comparison";
+import type {
+  EnquiryCustomerVehicle,
+  EnquiryDreamCarDetails,
+  EnquiryFinanceDetails,
+  EnquiryPhoto,
+  EnquiryStockCar,
+} from "@/src/lib/types/enquiry-details";
 import { Button } from "@/src/components/ui/button";
-import { Select } from "@/src/components/ui/select";
 
 import {
-  assignEnquiryAction,
   deleteEnquiryAction,
   linkEnquiryCustomerAction,
   setEnquiryStatusAction,
 } from "@/app/admin/enquiries/actions";
 
 import { useMotion } from "@/src/hooks/use-motion";
-import type { EnquiryActivityEntry, EnquiryCustomerMatch, EnquiryListRow } from "@/src/lib/types/enquiry";
+import type { EnquiryCustomerMatch, EnquiryListRow } from "@/src/lib/types/enquiry";
 import { enquiryVehicleLabel, waitingFor } from "@/src/lib/utils/enquiry-format";
 import type { EnquiryPermissions } from "@/src/lib/utils/enquiry-permissions";
-import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
+import { formatDateTimeFull, formatDay } from "@/src/lib/utils/test-drive-format";
 
 /* =========================================================
    TYPES
@@ -47,11 +70,32 @@ import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
 
 interface EnquiryDetailClientProps {
   enquiry: EnquiryListRow;
-  /** null means the trail couldn't be loaded, which is not the same as empty. */
-  activity: EnquiryActivityEntry[] | null;
   matches: EnquiryCustomerMatch[];
   stages: { id: string; name: string }[];
   staff: { id: string; full_name: string }[];
+  /** null when this isn't a finance enquiry, which is the usual case. */
+  finance: EnquiryFinanceDetails | null;
+  /** The customer's own cars, if any. null means they couldn't be read. */
+  vehicles: EnquiryCustomerVehicle[] | null;
+  photos: EnquiryPhoto[] | null;
+  /** Our half of a trade-in. null when nothing was picked from stock. */
+  stockCar: EnquiryStockCar | null;
+  /** The brief for a car we haven't got. null for every other kind. */
+  dreamCar: EnquiryDreamCarDetails | null;
+  /**
+   * The car linked to that brief, read live from stock rather than stored
+   * alongside the match: a car that has since sold should say so here.
+   */
+  matchedCar: EnquiryStockCar | null;
+  /** Status and assignment history merged with the activity trail. */
+  timeline: EnquiryTimelineEntry[] | null;
+  /** null for either means it couldn't be read, not that there are none. */
+  notes: EnquiryNote[] | null;
+  followUps: EnquiryFollowUp[] | null;
+  /** The lead, deal, test drive and reservation this enquiry points at. */
+  links: EnquiryLinks;
+  /** The configured statuses and the moves each one allows. */
+  workflow: EnquiryWorkflow;
   permissions: EnquiryPermissions;
   currentUserId: string;
 }
@@ -98,10 +142,20 @@ function whatsappHref(phone: string): string | null {
 
 export function EnquiryDetailClient({
   enquiry,
-  activity,
   matches,
   stages,
   staff,
+  finance,
+  vehicles,
+  photos,
+  stockCar,
+  dreamCar,
+  matchedCar,
+  timeline,
+  notes,
+  followUps,
+  links,
+  workflow,
   permissions,
   currentUserId,
 }: EnquiryDetailClientProps) {
@@ -141,13 +195,17 @@ export function EnquiryDetailClient({
     }
   };
 
-  const setStatus = (status: "New" | "In Review" | "Spam", label: string) =>
+  /*
+   * Two shortcuts that skip the status dialog, for the moves nobody wants a
+   * form for: flagging junk, and reopening something closed by mistake.
+   *
+   * They still go through setEnquiryStatusAction, which checks the workflow
+   * server-side, so a move the transitions table forbids is refused here
+   * exactly as it would be from the dialog. The shortcut is to the form, not
+   * past the rules.
+   */
+  const setStatus = (status: "New" | "Spam", label: string) =>
     run(label, () => setEnquiryStatusAction({ id: enquiry.id, status, reason: "" }));
-
-  const assign = (assignedTo: string | null) =>
-    run(assignedTo ? "Assigned." : "Assignment cleared.", () =>
-      assignEnquiryAction({ id: enquiry.id, assignedTo }),
-    );
 
   const remove = async () => {
     const ok = await run("Enquiry deleted.", () => deleteEnquiryAction({ id: enquiry.id }));
@@ -173,37 +231,53 @@ export function EnquiryDetailClient({
           Enquiry requests
         </Link>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h1 className="text-h3">{enquiry.full_name}</h1>
-              <EnquiryStatusBadge status={enquiry.status} />
+
+              <EnquiryTypeBadge type={enquiry.enquiry_type} label={enquiry.type_label} />
+              <EnquiryPriorityBadge priority={enquiry.priority} hideNormal />
             </div>
 
+            {/*
+              The seven facts the plan asks for in the header, as one
+              sentence rather than a grid of labelled boxes: somebody opening
+              an enquiry reads this once to orient themselves, and a sentence
+              is faster to read than seven captions.
+            */}
             <p className="text-body-sm text-text-muted mt-1">
-              {enquiry.enquiry_number} · {enquiry.enquiry_type} · arrived from {enquiry.source}
-              <span className="text-text-subtle">
-                {" · "}
-                <Clock className="mb-0.5 inline size-3.5" aria-hidden="true" /> waiting{" "}
-                {waitingFor(enquiry.created_at)}
-              </span>
+              <span className="tabular-nums">{enquiry.enquiry_number}</span>
+              {" · from "}
+              {enquiry.source}
+              {" · "}
+              {formatDay(enquiry.created_at)}
+              {enquiry.status_is_open && (
+                <span className="text-text-subtle">
+                  {" · "}
+                  <Clock className="mb-0.5 inline size-3.5" aria-hidden="true" /> waiting{" "}
+                  {waitingFor(enquiry.created_at)}
+                </span>
+              )}
             </p>
+
+            {/* The status and what it may become next, from the workflow. */}
+            <div className="mt-3">
+              <EnquiryStatusControl
+                enquiryId={enquiry.id}
+                currentStatus={enquiry.status}
+                statusLabel={enquiry.status_label ?? enquiry.status}
+                enquiryType={enquiry.enquiry_type}
+                version={enquiry.version}
+                workflow={workflow}
+                canManage={permissions.manage}
+              />
+            </div>
           </div>
 
           {/* ---- Primary actions ---- */}
 
           <div className="flex flex-wrap gap-2">
-            {canManage && enquiry.status !== "In Review" && enquiry.status !== "Spam" && (
-              <Button
-                variant="outline"
-                className="h-11 sm:h-10"
-                disabled={busy}
-                onClick={() => void setStatus("In Review", "Moved to in review.")}
-              >
-                Start reviewing
-              </Button>
-            )}
-
             {canManage && (
               <Button
                 variant="gradient"
@@ -235,6 +309,51 @@ export function EnquiryDetailClient({
         ================================================= */}
 
         <div className="flex flex-col gap-6">
+          {/* ---- Finance figures, when this is a finance enquiry ---- */}
+
+          {finance && <EnquiryFinanceCard details={finance} index={1} />}
+
+          {/* ---- What they want that we haven't got ---- */}
+
+          {dreamCar && (
+            <EnquiryDreamCarCard
+              details={dreamCar}
+              enquiryId={enquiry.id}
+              matchedCar={matchedCar}
+              canManage={permissions.manage}
+              index={1}
+            />
+          )}
+
+          {/* ---- The customer's own car, for a sale or a trade-in ---- */}
+
+          {(vehicles ?? []).map((vehicle, position) => (
+            <div key={vehicle.id} className="flex flex-col gap-3">
+              <EnquiryCustomerVehicleCard
+                vehicle={vehicle}
+                photos={(photos ?? []).filter((photo) => photo.vehicleId === vehicle.id)}
+                canValuate={permissions.valuate}
+                index={position + 1}
+              />
+
+              {/*
+                A trade-in is two cars, so our side is shown directly beneath
+                theirs with the sum between them. Stacked rather than two
+                columns: the detail page already sits in a narrow column on
+                desktop, and a column split inside it would give each car
+                less room than it needs.
+              */}
+              {vehicle.role === "trade_in" && (
+                <EnquiryTradeComparison
+                  expected={vehicle.askingPrice}
+                  car={stockCar}
+                  wanted={enquiry.vehicle_text}
+                  index={position + 2}
+                />
+              )}
+            </div>
+          ))}
+
           {/* ---- What they asked ---- */}
 
           <motion.section
@@ -405,50 +524,65 @@ export function EnquiryDetailClient({
             </motion.section>
           )}
 
-          {/* ---- Activity ---- */}
+          {/* ===============================================
+              FOLLOW-UPS AND CONTACT
+          =============================================== */}
 
-          <motion.section
-            {...fadeUp(4)}
-            aria-label="History"
-            className="surface-card flex flex-col gap-3 p-5"
+          <EnquiryFollowUpsPanel
+            enquiryId={enquiry.id}
+            followUps={followUps}
+            staff={staff}
+            canManage={canManage}
+            index={4}
+          />
+
+          {/* ===============================================
+              CONNECTED RECORDS
+          =============================================== */}
+
+          <EnquiryLinksPanel
+            enquiryId={enquiry.id}
+            links={links}
+            customerId={enquiry.customer_id}
+            canManage={canManage}
+            index={5}
+          />
+
+          {/* ===============================================
+              NOTES
+          =============================================== */}
+
+          <EnquiryNotesPanel
+            enquiryId={enquiry.id}
+            notes={notes}
+            currentUserId={currentUserId}
+            canManage={canManage}
+            /*
+             * Anybody who can delete an enquiry can tidy anybody's note.
+             * Without this a colleague who leaves takes their notes with
+             * them, uneditable by anyone.
+             */
+            canManageAllNotes={permissions.delete}
+            index={6}
+          />
+
+          {/* ===============================================
+              ACTIVITY AND HISTORY
+
+              One list, not two. Phase 1 split what happens to an enquiry
+              across three tables because each has different columns; the
+              question somebody actually asks is "what happened to this",
+              which has one answer in time order.
+          =============================================== */}
+
+          <EnquirySection
+            title="History"
+            index={7}
+            icon={<History className="size-4" aria-hidden="true" />}
+            description="Everything that has happened, newest first."
           >
-            <p className="text-label">History</p>
-
-            {activity === null ? (
-              <p
-                role="alert"
-                className="text-body-sm text-text-primary rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2"
-              >
-                The history couldn&apos;t be loaded. Refresh the page to try again.
-              </p>
-            ) : activity.length === 0 ? (
-              <p className="text-body-sm text-text-muted">Nothing has happened to this enquiry yet.</p>
-            ) : (
-              <ol className="flex flex-col gap-3">
-                {activity.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="border-border flex flex-col gap-0.5 border-b pb-3 last:border-0 last:pb-0"
-                  >
-                    <p className="text-body-sm text-text-primary">
-                      {entry.description}
-                      {entry.old_value && entry.new_value && entry.activity_type === "status" && (
-                        <span className="text-text-muted">
-                          {": "}
-                          {entry.old_value} → {entry.new_value}
-                        </span>
-                      )}
-                    </p>
-
-                    <p className="text-caption text-text-subtle">
-                      {formatDateTimeFull(entry.changed_at)}
-                      {entry.changed_by_name ? ` · ${entry.changed_by_name}` : " · from the website"}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </motion.section>
+            <EnquiryTimeline entries={timeline} />
+          </EnquirySection>
         </div>
 
         {/* =================================================
@@ -465,32 +599,34 @@ export function EnquiryDetailClient({
           >
             <p className="text-label">Who has it</p>
 
-            {canManage ? (
-              <Select
-                aria-label="Assign this enquiry"
-                options={[
-                  { value: "", label: "Nobody yet" },
-                  ...staff.map((person) => ({ value: person.id, label: person.full_name })),
-                ]}
-                value={enquiry.assigned_to ?? ""}
-                disabled={busy}
-                onChange={(event) => void assign(event.target.value || null)}
-              />
-            ) : (
-              <p className="text-body-sm text-text-primary">{enquiry.assigned_to_name || "Nobody yet"}</p>
-            )}
+            {/*
+              A dropdown that reassigns on change was too quiet for this: a
+              mis-click handed somebody else's enquiry away with no reason
+              recorded and no way to see why. Taking it on is still one
+              click; handing it over now asks who and why.
+            */}
+            <EnquiryAssignControl
+              enquiryId={enquiry.id}
+              assignedTo={enquiry.assigned_to}
+              assignedToName={enquiry.assigned_to_name}
+              version={enquiry.version}
+              staff={staff}
+              currentUserId={currentUserId}
+              canManage={canManage}
+            />
 
-            {canManage && enquiry.assigned_to !== currentUserId && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-11 sm:h-9"
-                disabled={busy}
-                onClick={() => void assign(currentUserId)}
-              >
-                Take it on myself
-              </Button>
-            )}
+            <div className="border-border border-t pt-4">
+              <p className="text-label">Priority</p>
+
+              <div className="mt-2">
+                <EnquiryPriorityControl
+                  enquiryId={enquiry.id}
+                  priority={enquiry.priority}
+                  version={enquiry.version}
+                  canManage={canManage}
+                />
+              </div>
+            </div>
 
             {enquiry.customer_id && enquiry.customer_name && (
               <Field label="Customer">
@@ -570,7 +706,7 @@ export function EnquiryDetailClient({
             >
               <p className="text-label">Other actions</p>
 
-              {canManage && enquiry.status !== "Closed" && (
+              {canManage && enquiry.status !== "Cancelled" && (
                 <Button
                   variant="outline"
                   className="h-11 justify-start sm:h-10"
@@ -594,7 +730,7 @@ export function EnquiryDetailClient({
                 </Button>
               )}
 
-              {canManage && (enquiry.status === "Spam" || enquiry.status === "Closed") && (
+              {canManage && (enquiry.status === "Spam" || enquiry.status === "Cancelled") && (
                 <Button
                   variant="outline"
                   className="h-11 justify-start sm:h-10"
