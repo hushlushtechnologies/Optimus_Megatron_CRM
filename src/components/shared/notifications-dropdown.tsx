@@ -1,22 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Bell, CheckCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
+import { Dropdown, DropdownContent, DropdownTrigger } from "@/src/components/ui/dropdown";
 import { IconButton } from "@/src/components/ui/icon-button";
-import { Dropdown, DropdownTrigger, DropdownContent } from "@/src/components/ui/dropdown";
 
 import {
   getMyNotifications,
-  markNotificationRead,
   markAllNotificationsRead,
+  markNotificationRead,
 } from "@/app/admin/notifications/actions";
 
+import type { AppNotification } from "@/src/lib/types/notification";
 import { cn } from "@/src/lib/utils/cn";
 import { notificationHref, notificationIcon } from "@/src/lib/utils/notification-links";
-import type { AppNotification } from "@/src/lib/types/notification";
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -219,7 +219,7 @@ export function NotificationsDropdown() {
                   <div
                     className={cn(
                       "border-border hover:bg-card-hover flex items-start gap-3 border-b px-4 py-3 transition-colors last:border-0",
-                      isUnread && "bg-primary/[0.04]",
+                      isUnread && "bg-primary/4",
                     )}
                   >
                     <span className="bg-card-hover text-primary mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">

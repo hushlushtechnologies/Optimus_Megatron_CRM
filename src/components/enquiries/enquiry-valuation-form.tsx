@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Gavel, Info, TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -145,7 +145,7 @@ export function EnquiryValuationForm({ vehicle, canValuate }: EnquiryValuationFo
       </div>
 
       {vehicle.valuationNotes && (
-        <p className="text-body-sm text-text-muted break-words whitespace-pre-wrap">
+        <p className="text-body-sm text-text-muted wrap-break-word whitespace-pre-wrap">
           {vehicle.valuationNotes}
         </p>
       )}
