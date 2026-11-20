@@ -175,12 +175,14 @@ export function EnquiryCard({
             a navigation that can't be opened in a new tab or copied is a
             navigation people quietly resent.
           */}
-          <Link
-            href={`/admin/enquiries/${enquiry.id}`}
-            className="border-border bg-card hover:bg-card-hover text-text-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-          >
-            <Mail className="size-4" aria-hidden="true" />
-            Open
+          <Link href={`/admin/enquiries/${enquiry.id}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Mail className="size-4" aria-hidden="true" />}
+            >
+              Open
+            </Button>
           </Link>
         </div>
       </div>

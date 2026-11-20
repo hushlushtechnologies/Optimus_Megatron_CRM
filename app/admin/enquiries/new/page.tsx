@@ -1,8 +1,8 @@
 import { getMyEnquiryPermissions } from "@/src/lib/supabase/enquiry-permissions";
 import { getEnquiryLookups } from "@/src/lib/supabase/enquiry-queries";
 import { getEnquiryWorkflow } from "@/src/lib/supabase/enquiry-workflow-queries";
-import { createClient } from "@/src/lib/supabase/server";
 import { activeSources, activeTypes } from "@/src/lib/utils/enquiry-workflow";
+import { createClient } from "@/src/lib/supabase/server";
 
 import { EnquiryAccessDenied } from "@/src/components/enquiries/enquiry-access-denied";
 import { NewEnquiryForm } from "@/src/components/enquiries/form/new-enquiry-form";

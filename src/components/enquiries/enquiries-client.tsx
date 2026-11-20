@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Search, TriangleAlert } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -9,16 +9,17 @@ import { toast } from "sonner";
 
 import { EmptyState } from "@/src/components/shared/empty-state";
 import { Pagination } from "@/src/components/shared/pagination";
-import { Input } from "@/src/components/ui/input";
 
 import { EnquiryCard, type EnquiryQuickAction } from "@/src/components/enquiries/enquiry-card";
-import { EnquiryFilterBar, type FilterOption } from "@/src/components/enquiries/enquiry-filter-bar";
+import { Button } from "@/src/components/ui/button";
+import { EnquiryToolbar, type FilterOption } from "@/src/components/enquiries/enquiry-toolbar";
 import { EnquirySummaryCards } from "@/src/components/enquiries/enquiry-summary-cards";
 import { EnquiryTable } from "@/src/components/enquiries/enquiry-table";
 import { EnquiryTypeTabs } from "@/src/components/enquiries/enquiry-type-tabs";
 
 import { assignEnquiryAction, setEnquiryStatusAction } from "@/app/admin/enquiries/actions";
-import { EnquiryExportMenu } from "@/src/components/enquiries/enquiry-export-menu";
+import { ExportMenu } from "@/src/components/shared/export-menu";
+import { triggerDownloadFromUrl } from "@/src/lib/utils/trigger-download";
 
 import { useMotion } from "@/src/hooks/use-motion";
 import { ENQUIRY_PAGE_SIZE } from "@/src/lib/constants/enquiries";
@@ -159,6 +160,36 @@ export function EnquiriesClient({
   }, [searchValue, navigate]);
 
   /* =======================================================
+     EXPORT
+  ======================================================= */
+
+  /*
+   * Throws rather than toasting, because the shared ExportMenu owns the
+   * spinner, the success toast and the error toast. Reporting it here too
+   * would show the person two toasts for one click.
+   */
+  const exportEnquiries = useCallback(
+    async (format: "pdf" | "excel") => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      /* Paging is about the screen, not about the file. */
+      params.delete("page");
+      params.delete("pageSize");
+
+      params.set("format", format);
+      params.set("scope", "current");
+      params.set("tab", tab);
+
+      if (urlQuery) params.set("q", urlQuery);
+
+      const result = await triggerDownloadFromUrl(`/admin/enquiries/export?${params.toString()}`);
+
+      if (result.error) throw new Error(result.error);
+    },
+    [searchParams, tab, urlQuery],
+  );
+
+  /* =======================================================
      TAB, FILTERS, SORT
   ======================================================= */
 
@@ -285,15 +316,29 @@ export function EnquiriesClient({
             screen and taking every customer's details away in a file are
             different acts, so they get different permissions.
           */}
-          {permissions.export && <EnquiryExportMenu tab={tab} search={urlQuery} enquiryType={filters.type} />}
+          {/*
+            The shared ExportMenu, which already existed for exactly this and
+            was going unused. Scope is the current view: the filters it sends
+            include the type tab, so "current" on the Trade-In tab is Trade-In.
+            Exporting a ticked selection lives on the bulk bar, where a
+            selection actually exists.
+          */}
+          {permissions.export && (
+            <ExportMenu
+              onExportPDF={() => exportEnquiries("pdf")}
+              onExportExcel={() => exportEnquiries("excel")}
+            />
+          )}
 
           {permissions.manage && (
-            <Link
-              href="/admin/enquiries/new"
-              className="border-primary bg-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-4 text-sm font-medium text-[#0b1220] transition-colors hover:brightness-105 focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              New Enquiry
+            <Link href="/admin/enquiries/new">
+              <Button
+                variant="gradient"
+                size="sm"
+                leftIcon={<Plus className="size-4" aria-hidden="true" />}
+              >
+                New Enquiry
+              </Button>
             </Link>
           )}
         </div>
@@ -370,29 +415,19 @@ export function EnquiriesClient({
           })}
         </div>
 
-        {/* ---- Search ---- */}
+        {/* ---- Search, filters, sort ---- */}
 
-        <div className="max-w-md">
-          <Input
-            aria-label="Search enquiries"
-            placeholder="Search name, number, email, phone or message..."
-            leftIcon={<Search className="text-text-subtle size-4" aria-hidden="true" />}
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            className="h-11 rounded-lg text-base sm:h-10 sm:text-sm"
-          />
-        </div>
-
-        {/* ---- Filters ---- */}
-
-        <EnquiryFilterBar
+        <EnquiryToolbar
           filters={filters}
           sortId={sortId}
+          search={searchValue}
+          resultCount={data?.totalCount ?? 0}
           staff={staff}
           statuses={statuses}
           sources={sources}
           locations={locations}
           isPending={isPending}
+          onSearchChange={setSearchValue}
           onFiltersChange={changeFilters}
           onSortChange={changeSort}
         />

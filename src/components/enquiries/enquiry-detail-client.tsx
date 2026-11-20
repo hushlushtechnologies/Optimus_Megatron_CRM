@@ -291,12 +291,14 @@ export function EnquiryDetailClient({
             )}
 
             {converted && enquiry.lead_id && (
-              <Link
-                href={`/admin/leads/${enquiry.lead_id}`}
-                className="border-primary bg-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-4 text-sm font-medium text-[#0b1220] transition-colors hover:brightness-105 focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
-              >
-                Open {enquiry.lead_number ?? "the lead"}
-                <ArrowRight className="size-4" aria-hidden="true" />
+              <Link href={`/admin/leads/${enquiry.lead_id}`}>
+                <Button
+                  variant="gradient"
+                  size="sm"
+                  rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+                >
+                  Open {enquiry.lead_number ?? "the lead"}
+                </Button>
               </Link>
             )}
           </div>
@@ -432,25 +434,27 @@ export function EnquiryDetailClient({
 
             <div className="flex flex-wrap gap-2">
               {enquiry.phone && (
-                <a
-                  href={`tel:${enquiry.phone}`}
-                  className="border-border bg-card hover:bg-card-hover text-text-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-                >
-                  <Phone className="size-4" aria-hidden="true" />
-                  Call
+                <a href={`tel:${enquiry.phone}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Phone className="size-4" aria-hidden="true" />}
+                  >
+                    Call
+                  </Button>
                 </a>
               )}
 
               {enquiry.phone && whatsappHref(enquiry.phone) && (
-                <a
-                  href={whatsappHref(enquiry.phone)!}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="border-border bg-card hover:bg-card-hover text-text-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-                >
-                  <MessageSquare className="size-4" aria-hidden="true" />
-                  WhatsApp
-                  <ExternalLink className="size-3" aria-hidden="true" />
+                <a href={whatsappHref(enquiry.phone)!} target="_blank" rel="noreferrer noopener">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<MessageSquare className="size-4" aria-hidden="true" />}
+                    rightIcon={<ExternalLink className="size-3" aria-hidden="true" />}
+                  >
+                    WhatsApp
+                  </Button>
                 </a>
               )}
 
@@ -459,10 +463,14 @@ export function EnquiryDetailClient({
                   href={`mailto:${enquiry.email}?subject=${encodeURIComponent(
                     `Your enquiry ${enquiry.enquiry_number} — Optimus Megatron Cars`,
                   )}`}
-                  className="border-border bg-card hover:bg-card-hover text-text-primary focus-visible:ring-primary inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
                 >
-                  <Mail className="size-4" aria-hidden="true" />
-                  Email
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Mail className="size-4" aria-hidden="true" />}
+                  >
+                    Email
+                  </Button>
                 </a>
               )}
             </div>

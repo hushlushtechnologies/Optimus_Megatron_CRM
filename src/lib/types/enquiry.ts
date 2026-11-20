@@ -2,12 +2,23 @@
    ENQUIRY VOCABULARY
 ========================================================= */
 
+/*
+ * The statuses this code knows about.
+ *
+ * The database is the real list — enquiry_statuses, which a dealership can
+ * add to — so this union is a fallback for tones and tab grouping when a row
+ * arrives without its resolved label. A status added in settings and missing
+ * from here still works; it just falls back to a neutral badge.
+ */
 export type EnquiryStatus =
   | "New"
   | "Assigned"
   | "In Review"
   | "Waiting for Customer"
   | "Follow-Up"
+  | "Inspection Needed"
+  | "Valuation Prepared"
+  | "Referred to Finance Team"
   | "Offer Sent"
   | "Completed"
   | "Converted"
@@ -37,6 +48,9 @@ export const ENQUIRY_STATUSES: EnquiryStatus[] = [
   "New",
   "Assigned",
   "In Review",
+  "Inspection Needed",
+  "Valuation Prepared",
+  "Referred to Finance Team",
   "Waiting for Customer",
   "Follow-Up",
   "Offer Sent",
@@ -120,36 +134,6 @@ export const ENQUIRY_TABS: EnquiryTab[] = ["open", "converted", "spam", "closed"
 ========================================================= */
 
 /** One row of public.enquiry_list. Names are already resolved. */
-/** One row of public.enquiry_list. Names are already resolved. */
-
-/**
- * What came of a bulk action.
- *
- * Counts rather than a single pass/fail, because a selection of forty will
- * routinely contain two the workflow refuses — already converted, already
- * spam — and "38 done, 2 skipped" is the truth. `error` is for the whole
- * request failing before anything was attempted.
- */
-export interface EnquiryBulkResult {
-  done: number;
-  skipped: number;
-  /** Why the first skipped one was skipped, so the message can say. */
-  firstProblem: string | null;
-  error: string | null;
-}
-
-/**
- * How many enquiries sit behind each type tab.
- *
- * Keyed by type rather than a fixed shape, because the types live in a
- * database table now: one added in settings gets a tab and a count without
- * this type changing.
- */
-export interface EnquiryTypeCounts {
-  all: number;
-  byType: Record<string, number>;
-}
-
 export interface EnquiryListRow {
   id: string;
   enquiry_number: string;
@@ -267,6 +251,35 @@ export interface EnquirySummary {
   /** Daily counts for the last 14 days in Dubai, oldest first. */
   trend: number[] | null;
 }
+
+/**
+ * How many enquiries sit behind each type tab.
+ *
+ * Keyed by type rather than a fixed shape, because the types live in a
+ * database table now: one added in settings gets a tab and a count without
+ * this type changing.
+ */
+/**
+ * What came of a bulk action.
+ *
+ * Counts rather than a single pass/fail, because a selection of forty will
+ * routinely contain two the workflow refuses — already converted, already
+ * spam — and "38 done, 2 skipped" is the truth. `error` is for the whole
+ * request failing before anything was attempted.
+ */
+export interface EnquiryBulkResult {
+  done: number;
+  skipped: number;
+  /** Why the first skipped one was skipped, so the message can say. */
+  firstProblem: string | null;
+  error: string | null;
+}
+
+export interface EnquiryTypeCounts {
+  all: number;
+  byType: Record<string, number>;
+}
+
 export interface EnquiryListResult {
   rows: EnquiryListRow[];
   totalCount: number;
@@ -313,6 +326,9 @@ export const ENQUIRY_STATUS_TONES: Record<EnquiryStatus, EnquiryStatusTone> = {
   New: "info",
   Assigned: "info",
   "In Review": "warning",
+  "Inspection Needed": "warning",
+  "Valuation Prepared": "info",
+  "Referred to Finance Team": "info",
   "Waiting for Customer": "warning",
   "Follow-Up": "warning",
   "Offer Sent": "info",
@@ -333,6 +349,9 @@ export const OPEN_ENQUIRY_STATUSES: EnquiryStatus[] = [
   "New",
   "Assigned",
   "In Review",
+  "Inspection Needed",
+  "Valuation Prepared",
+  "Referred to Finance Team",
   "Waiting for Customer",
   "Follow-Up",
   "Offer Sent",
@@ -340,6 +359,7 @@ export const OPEN_ENQUIRY_STATUSES: EnquiryStatus[] = [
 
 /** The statuses the "Closed" tab gathers. */
 export const CLOSED_ENQUIRY_STATUSES: EnquiryStatus[] = ["Completed", "Rejected", "Cancelled"];
+
 export const ENQUIRY_TAB_LABELS: Record<EnquiryTab, string> = {
   open: "Needs attention",
   converted: "Converted",

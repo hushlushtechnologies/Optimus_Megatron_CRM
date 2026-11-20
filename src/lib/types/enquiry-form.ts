@@ -31,6 +31,12 @@ export interface EnquiryDraft {
   email: string;
   preferredContact: PreferredContact | "";
 
+  /**
+   * What a general question is about. Only ever set when the type is
+   * General; the table refuses it on anything else.
+   */
+  generalCategory: string;
+
   /* ---- 3. Which vehicle ---- */
   carId: string | null;
   vehicleText: string;
@@ -66,6 +72,8 @@ export function emptyEnquiryDraft(currentUserId: string): EnquiryDraft {
     phone: "",
     email: "",
     preferredContact: "",
+
+    generalCategory: "",
 
     carId: null,
     vehicleText: "",
@@ -106,7 +114,28 @@ export const enquirySectionReady = {
       : draft.fullName.trim().length >= 2 && (draft.phone.trim() !== "" || draft.email.trim() !== ""),
 };
 
-/** The vehicle question only makes sense for some kinds of enquiry. */
-export function needsVehicle(enquiryType: string): boolean {
-  return enquiryType !== "General";
+/**
+ * A general enquiry needs a category and something to go on.
+ *
+ * Its own rule because it has no detail table to fall back on: a General
+ * enquiry with no category and no message is a record that somebody rang,
+ * and nothing else.
+ */
+export function generalReady(draft: EnquiryDraft): boolean {
+  return draft.generalCategory !== "" && (draft.subject.trim() !== "" || draft.message.trim() !== "");
+}
+
+/**
+ * Whether this type uses the shared "which car from stock?" step.
+ *
+ * True for most kinds, including General — a general enquiry is very often
+ * about one specific car, and the plan asks for it as an optional field.
+ *
+ * False for the two types that ask about vehicles themselves: a trade-in
+ * puts the customer's car next to ours in one comparison, and a dream car
+ * is by definition not in stock, so a stock picker there invites the wrong
+ * answer.
+ */
+export function usesStockPicker(enquiryType: string): boolean {
+  return enquiryType !== "Trade-In" && enquiryType !== "Dream Car";
 }

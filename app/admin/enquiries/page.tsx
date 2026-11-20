@@ -8,8 +8,8 @@ import {
   getEnquiryTypeCounts,
 } from "@/src/lib/supabase/enquiry-queries";
 import { getEnquiryWorkflow } from "@/src/lib/supabase/enquiry-workflow-queries";
-import { createClient } from "@/src/lib/supabase/server";
 import { activeSources, activeStatuses, activeTypes } from "@/src/lib/utils/enquiry-workflow";
+import { createClient } from "@/src/lib/supabase/server";
 
 import { ENQUIRY_PAGE_SIZE } from "@/src/lib/constants/enquiries";
 import {
