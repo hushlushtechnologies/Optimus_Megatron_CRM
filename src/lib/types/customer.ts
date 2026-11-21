@@ -84,3 +84,24 @@ export interface CustomerCommunication {
   staff_id: string | null;
   created_at: string;
 }
+
+/*
+ * The lifecycle values, as a list.
+ *
+ * Added in Sprint 8 because the offer eligibility builder needs to offer
+ * them and three other files already hold their own copy
+ * (customer-filter-drawer, customer-table, add-customer-form). Those are
+ * left alone; new code should use this, and those three can be pointed at
+ * it whenever they are next touched.
+ *
+ * `satisfies` ties it to the Customer type, so adding a status to one and
+ * not the other is a compile error rather than a dropdown that quietly
+ * misses an option.
+ */
+export const CUSTOMER_LIFECYCLE_STATUSES = [
+  "Prospect",
+  "Active",
+  "VIP",
+  "Inactive",
+  "Do Not Contact",
+] as const satisfies readonly CustomerProfile["lifecycle_status"][];

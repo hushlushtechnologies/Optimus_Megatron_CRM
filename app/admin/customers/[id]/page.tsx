@@ -28,6 +28,14 @@ import { NotesTab } from "@/src/components/customers/profile-tabs/notes-tab";
 
 import { ActivityTab } from "@/src/components/customers/profile-tabs/activity-tab";
 
+import { LoyaltyTab } from "@/src/components/customers/profile-tabs/loyalty-tab";
+import { currentUserOfferPermissions } from "@/src/lib/supabase/offer-permissions";
+import {
+  getCustomerLoyalty,
+  getCustomerOffers,
+  getLoyaltySettings,
+} from "@/src/lib/supabase/loyalty-queries";
+
 import { AuditTrailTab } from "@/src/components/customers/profile-tabs/audit-trail-tab";
 
 import { FutureModuleTab } from "@/src/components/customers/profile-tabs/future-module-tab";
@@ -69,7 +77,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
      RELATED DATA
   ========================================================= */
 
-  const [authStatus, assignedTags, lookups, rights] = await Promise.all([
+  const [authStatus, assignedTags, lookups, rights, offerPermissions] = await Promise.all([
     getCustomerAuthStatus(customer.user_id),
 
     getCustomerTags(id),
@@ -77,7 +85,24 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
     getCustomerFilterLookups(),
 
     getMyCustomerAdminRights(),
+
+    currentUserOfferPermissions(),
   ]);
+
+  /*
+   * Loyalty and offers for this customer (Sprint 8, Phase 22).
+   *
+   * Gated on loyaltyView / offers.view, so somebody without them sees the
+   * profile exactly as it was before Sprint 8. Fetched here rather than in
+   * the tab so the page keeps its single round of parallel reads.
+   */
+  const [loyaltyProgram, wallet, customerOffers] = await Promise.all([
+    offerPermissions.loyaltyView ? getLoyaltySettings() : Promise.resolve(null),
+    offerPermissions.loyaltyView ? getCustomerLoyalty(id) : Promise.resolve(null),
+    offerPermissions.view ? getCustomerOffers(id) : Promise.resolve(null),
+  ]);
+
+  const showLoyaltyTab = offerPermissions.loyaltyView || offerPermissions.view;
 
   const staffOptions = lookups.staff.map((staff) => ({
     id: staff.id,
@@ -135,6 +160,8 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Tab id="audit">Audit Trail</Tab>
 
               <Tab id="enquiries">Enquiries</Tab>
+
+              {showLoyaltyTab && <Tab id="loyalty">Loyalty &amp; Offers</Tab>}
 
               <Tab id="finance">Finance</Tab>
 
@@ -235,6 +262,27 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             <TabPanel id="enquiries">
               <CustomerEnquiriesTab customerId={id} />
             </TabPanel>
+
+            {/* ===============================================
+                LOYALTY & OFFERS (Sprint 8, Phase 22)
+
+                One tab added to the existing structure rather
+                than a redesign. Purchases are not repeated
+                here — the Vehicles / Deals tab has them.
+            =============================================== */}
+
+            {showLoyaltyTab && (
+              <TabPanel id="loyalty">
+                <LoyaltyTab
+                  customerId={id}
+                  customerName={customer.full_name ?? "This customer"}
+                  wallet={wallet}
+                  offers={customerOffers}
+                  loyaltyEnabled={loyaltyProgram?.settings.isEnabled ?? false}
+                  canAdjust={offerPermissions.loyaltyAdjust}
+                />
+              </TabPanel>
+            )}
 
             <TabPanel id="finance">
               <FutureModuleTab

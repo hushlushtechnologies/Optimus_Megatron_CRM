@@ -142,8 +142,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Offers & Promotions",
         href: "/admin/offers",
         icon: Tag,
-        status: "soon",
-        note: "Arrives with Offers & Loyalty Points",
+        status: "live",
       },
       {
         label: "Communications",

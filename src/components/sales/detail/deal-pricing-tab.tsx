@@ -7,6 +7,8 @@ import { BadgeCheck, Pencil, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
 import { DealPricingDialog } from "@/src/components/sales/pricing/deal-pricing-dialog";
+import { DealPromotionsPanel } from "@/src/components/sales/detail/deal-promotions-panel";
+import { DealPointsPanel } from "@/src/components/sales/detail/deal-points-panel";
 import { DealApproveDialog } from "@/src/components/sales/pricing/deal-approve-dialog";
 
 import { useMotion } from "@/src/hooks/use-motion";
@@ -447,6 +449,39 @@ export function DealPricingTab({ deal, settings, history, extras, permissions }:
           </ol>
         )}
       </motion.section>
+
+      {/* ===================================================
+          PROMOTIONS (Sprint 8, Phase 16)
+
+          Its own panel rather than a section inside the pricing dialog.
+          The dialog is the manual-discount editor and it already works; a
+          promotion is a different act with its own server-side checks, so
+          it gets its own place and the dialog is left exactly as it was.
+      =================================================== */}
+
+      <DealPromotionsPanel
+        dealId={deal.id}
+        updatedAt={deal.updated_at}
+        manualDiscount={deal.discount_amount}
+        proposedPrice={deal.proposed_price}
+        canEdit={isOpen && permissions.edit}
+      />
+
+      {/* ===================================================
+          LOYALTY POINTS (Sprint 8, Phase 20)
+
+          Renders nothing at all when the loyalty program is
+          switched off, which is the normal state until it is
+          configured.
+      =================================================== */}
+
+      <DealPointsPanel
+        dealId={deal.id}
+        updatedAt={deal.updated_at}
+        manualDiscount={deal.discount_amount}
+        proposedPrice={deal.proposed_price}
+        canEdit={isOpen && permissions.edit}
+      />
 
       {/* ===================================================
           EDIT PRICING

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getCarDetail } from "@/src/lib/supabase/inventory-detail-queries";
 import { getAddCarLookups } from "@/src/lib/supabase/inventory-lookups";
+import { currentUserOfferPermissions } from "@/src/lib/supabase/offer-permissions";
+import { getCarPromotionsView } from "@/src/lib/supabase/offer-evaluation";
 import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
 import { getVehicleSales } from "@/src/lib/supabase/vehicle-sales-queries";
 import { Tabs, TabsList, Tab, TabPanel } from "@/src/components/ui/tabs";
@@ -21,10 +23,11 @@ interface ViewCarPageProps {
 export default async function ViewCarPage({ params }: ViewCarPageProps) {
   const { id } = await params;
 
-  const [detail, lookups, salesPermissions] = await Promise.all([
+  const [detail, lookups, salesPermissions, offerPermissions] = await Promise.all([
     getCarDetail(id),
     getAddCarLookups(),
     currentUserSalesPermissions(),
+    currentUserOfferPermissions(),
   ]);
 
   if (!detail) {
@@ -33,6 +36,12 @@ export default async function ViewCarPage({ params }: ViewCarPageProps) {
 
   const showSales = salesPermissions.view || salesPermissions.reservationsView;
   const sales = showSales ? await getVehicleSales(id) : null;
+
+  /*
+   * Gated on offers.view: somebody who can see a car but not campaigns gets
+   * the Pricing tab exactly as it was before Sprint 8, with no panel.
+   */
+  const promotions = offerPermissions.view ? await getCarPromotionsView(id) : null;
 
   const { car, createdByName, updatedByName, activity } = detail;
   const featuredImage = car.media?.find((m: { is_featured: boolean }) => m.is_featured) ?? car.media?.[0];
@@ -73,7 +82,7 @@ export default async function ViewCarPage({ params }: ViewCarPageProps) {
           <ExteriorInteriorTab car={car} />
         </TabPanel>
         <TabPanel id="pricing">
-          <PricingTab car={car} />
+          <PricingTab car={car} promotions={promotions} />
         </TabPanel>
         <TabPanel id="warranty-inspection">
           <WarrantyInspectionTab car={car} />

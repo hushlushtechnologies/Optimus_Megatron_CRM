@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 
-import { Inbox, Search, SearchX, FileQuestion, CarFront, Users, type LucideIcon } from "lucide-react";
+import { Inbox, Search, SearchX, FileQuestion, CarFront, Tag, Users, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/src/lib/utils/cn";
 
@@ -10,7 +10,14 @@ import { cn } from "@/src/lib/utils/cn";
    TYPES
 ========================================================= */
 
-export type EmptyStateVisualIcon = "Inbox" | "Search" | "SearchX" | "FileQuestion" | "CarFront" | "Users";
+export type EmptyStateVisualIcon =
+  | "Inbox"
+  | "Search"
+  | "SearchX"
+  | "FileQuestion"
+  | "CarFront"
+  | "Tag"
+  | "Users";
 
 interface EmptyStateVisualProps {
   icon?: EmptyStateVisualIcon;
@@ -27,6 +34,7 @@ const iconMap: Record<EmptyStateVisualIcon, LucideIcon> = {
   SearchX,
   FileQuestion,
   CarFront,
+  Tag,
   Users,
 };
 
