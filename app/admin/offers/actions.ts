@@ -5,6 +5,11 @@ import type { ZodError } from "zod";
 
 import { beginOfferAction, type BeginOfferResult } from "@/src/lib/supabase/offer-permissions";
 import {
+  notifyOfferAssigned,
+  notifyPromotionStatusChanged,
+  notifyPromotionsBulkStatusChanged,
+} from "@/src/lib/notifications/offer-notifications";
+import {
   countTargetedVehicles,
   searchCarsForTargeting,
   searchCustomersForAssignment,
@@ -259,19 +264,25 @@ async function replaceTargetingAndRules(
  * a campaign removes it from the Inventory dropdown without this action
  * knowing Inventory exists.
  */
-export async function setOfferStatusAction(input: unknown): Promise<ActionResult> {
-  const start = await beginOfferAction("publish");
-  if (!start.ok) return { error: start.error };
-
-  const parsed = setOfferStatusSchema.safeParse(input);
-  if (!parsed.success) return { error: "Please try again." };
-
-  const v = parsed.data;
-
+/**
+ * The body of the status change, with notifying under the caller's control.
+ *
+ * Not exported, and that is the point. Every export of a "use server" file
+ * becomes a callable endpoint, so an exported `notify` flag would let a
+ * client silence the notification that says a live campaign was paused.
+ * The bulk path below is the only caller that passes false, and it sends one
+ * summary of its own instead.
+ */
+async function applyOfferStatus(
+  start: Extract<BeginOfferResult, { ok: true }>,
+  id: string,
+  status: string,
+  notify: boolean,
+): Promise<ActionResult> {
   const { data, error } = await start.supabase
     .from("promotions")
-    .update({ status: v.status, updated_by: start.userId })
-    .eq("id", v.id)
+    .update({ status, updated_by: start.userId })
+    .eq("id", id)
     .is("archived_at", null)
     .select("id");
 
@@ -284,8 +295,27 @@ export async function setOfferStatusAction(input: unknown): Promise<ActionResult
     return { error: "That campaign is no longer there, or has been archived." };
   }
 
-  refresh(v.id);
+  /* Sprint 8 Phase 23: going live or being paused changes what customers are
+     charged, so the people who manage campaigns hear about it. Only those two
+     statuses notify — see notifyPromotionStatusChanged. */
+  if (notify) {
+    await notifyPromotionStatusChanged(id, status, start.userId);
+  }
+
+  refresh(id);
   return { error: null };
+}
+
+export async function setOfferStatusAction(input: unknown): Promise<ActionResult> {
+  const start = await beginOfferAction("publish");
+  if (!start.ok) return { error: start.error };
+
+  const parsed = setOfferStatusSchema.safeParse(input);
+  if (!parsed.success) return { error: "Please try again." };
+
+  const v = parsed.data;
+
+  return applyOfferStatus(start, v.id, v.status, true);
 }
 
 export async function archiveOfferAction(input: unknown): Promise<ActionResult> {
@@ -461,7 +491,32 @@ export async function bulkSetOfferStatusAction(input: unknown): Promise<OfferBul
 
   const v = parsed.data;
 
-  return runBulk(v.ids, (id) => setOfferStatusAction({ id, status: v.status, reason: v.reason }));
+  /*
+   * Phase 23: each campaign still goes through the same checks one at a time,
+   * but they do not each notify. Pausing twenty campaigns is one decision by
+   * one person, and twenty notifications apiece to everybody who manages
+   * campaigns is how a notification list stops being read. One summary says
+   * the same thing.
+   */
+  const succeeded: string[] = [];
+
+  /*
+   * The permission was checked once, above. Each row is still re-read and
+   * re-checked against the lifecycle rules by its own guarded update, which
+   * is the part that stops a bulk pause from touching a campaign somebody
+   * else just published.
+   */
+  const result = await runBulk(v.ids, async (id) => {
+    const outcome = await applyOfferStatus(start, id, v.status, false);
+    if (!outcome.error) succeeded.push(id);
+    return outcome;
+  });
+
+  if (succeeded.length > 0) {
+    await notifyPromotionsBulkStatusChanged(succeeded, v.status, start.userId);
+  }
+
+  return result;
 }
 
 /** Archives or restores a selection of campaigns. */
@@ -607,9 +662,22 @@ export async function assignOfferToCustomerAction(input: unknown): Promise<Creat
     return { error: "The offer couldn't be assigned. Try again." };
   }
 
-  refresh(v.promotionId);
+  const assignmentId = (data as { id: string }).id;
 
-  return { error: null, id: (data as { id: string }).id };
+  /*
+   * Sprint 8 Phase 23: tell whoever looks after this customer, because they
+   * are the person who will mention it next time they speak.
+   *
+   * This does not contact the customer. There is no customer email or
+   * WhatsApp integration in this application, so nothing here claims one was
+   * sent — see the header of offer-notifications.ts.
+   */
+  await notifyOfferAssigned(assignmentId, v.promotionId, v.customerId, start.userId);
+
+  refresh(v.promotionId);
+  revalidatePath(`/admin/customers/${v.customerId}`);
+
+  return { error: null, id: assignmentId };
 }
 
 /**

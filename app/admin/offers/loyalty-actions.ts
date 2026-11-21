@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { beginOfferAction } from "@/src/lib/supabase/offer-permissions";
+import { notifyPointsAdjusted } from "@/src/lib/notifications/offer-notifications";
+import { noticePointsRedeemed } from "@/src/lib/supabase/loyalty-settlement";
 import {
   adjustPointsSchema,
   commitReservationSchema,
@@ -189,6 +191,16 @@ export async function adjustCustomerPointsAction(input: unknown): Promise<Result
     };
   }
 
+  /*
+   * Sprint 8 Phase 23: a manual adjustment is the one action in the loyalty
+   * module that creates value out of nothing, and the plan names
+   * unauthorised manual adjustment as a case to test. So this notification
+   * goes further than the others — to the customer's relationship manager
+   * and to whoever owns the loyalty programme. Oversight of a hand-written
+   * credit should not depend on somebody thinking to go and look.
+   */
+  await notifyPointsAdjusted(v.customerId, v.points, v.reason, start.userId);
+
   revalidatePath(`/admin/customers/${v.customerId}`);
 
   return {
@@ -269,7 +281,7 @@ export async function commitPointsRedemptionAction(input: unknown): Promise<Resu
   const parsed = commitReservationSchema.safeParse(input);
   if (!parsed.success) return { error: "Please try again." };
 
-  const { error } = await start.supabase.rpc("commit_loyalty_redemption", {
+  const { data, error } = await start.supabase.rpc("commit_loyalty_redemption", {
     p_reservation_id: parsed.data.reservationId,
     p_actor_id: start.userId,
   });
@@ -289,6 +301,43 @@ export async function commitPointsRedemptionAction(input: unknown): Promise<Resu
         "The redemption couldn't be completed. Try again.",
       ),
     };
+  }
+
+  /*
+   * Sprint 8 Phase 23: say that points were spent.
+   *
+   * The ledger entry is read back rather than trusting anything the client
+   * sent, because the authoritative record of how many points moved and
+   * whose they were is the row the database just wrote. The function returns
+   * that row's id for exactly this.
+   *
+   * A redeem entry carries negative points, so the sign is flipped for the
+   * message. Failure here is logged and ignored: the redemption is committed
+   * and must not be reported as failed because a notification did not land.
+   */
+  const ledgerId = typeof data === "string" ? data : null;
+
+  if (ledgerId) {
+    try {
+      const { data: entry } = await start.supabase
+        .from("loyalty_ledger")
+        .select("customer_id, deal_id, points")
+        .eq("id", ledgerId)
+        .maybeSingle();
+
+      const row = entry as { customer_id: string; deal_id: string | null; points: number } | null;
+
+      if (row?.deal_id) {
+        await noticePointsRedeemed({
+          customerId: row.customer_id,
+          points: Math.abs(row.points),
+          dealId: row.deal_id,
+          actorId: start.userId,
+        });
+      }
+    } catch (notifyError) {
+      console.error("commitPointsRedemption notify error:", notifyError);
+    }
   }
 
   revalidatePath("/admin/sales");

@@ -10,10 +10,16 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Coins,
+  Gift,
+  HandCoins,
   LogIn,
   MailQuestion,
+  Megaphone,
   PackageCheck,
+  PauseCircle,
   Repeat,
+  SlidersHorizontal,
   Trophy,
   UserCheck,
   XCircle,
@@ -85,6 +91,16 @@ const TYPE_ICON: Record<string, LucideIcon> = {
   reservation_cancelled: Ban,
   delivery_ready: PackageCheck,
   delivery_completed: BadgeCheck,
+
+  // Offers and loyalty
+  offer_assigned: Gift,
+  offer_expiring: CalendarClock,
+  promotion_started: Megaphone,
+  promotion_paused: PauseCircle,
+  points_earned: Coins,
+  points_redeemed: HandCoins,
+  points_expiring: Clock,
+  points_adjusted: SlidersHorizontal,
 };
 
 /** The icon for a notification type, falling back to a plain bell. */
@@ -107,6 +123,7 @@ const ENTITY_ROUTES: Record<string, string> = {
   reservation: "/admin/reservations",
   car: "/admin/inventory",
   vehicle: "/admin/inventory",
+  promotion: "/admin/offers",
 };
 
 const LIST_ROUTES: Record<string, string> = {
@@ -119,6 +136,8 @@ const LIST_ROUTES: Record<string, string> = {
   reservations: "/admin/reservations",
   cars: "/admin/inventory",
   payments: "/admin/sales/payments",
+  offers: "/admin/offers",
+  promotions: "/admin/offers",
 };
 
 /** Where a notification should take the person, or null when nothing can be opened. */

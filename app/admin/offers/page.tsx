@@ -6,7 +6,13 @@ import { OffersOverview } from "@/src/components/offers/offers-overview";
 import { OffersListClient } from "@/src/components/offers/offers-list-client";
 import { currentUserOfferPermissions } from "@/src/lib/supabase/offer-permissions";
 import { getOfferList, getOfferLookups, getOfferSummary } from "@/src/lib/supabase/offer-queries";
-import { OFFER_SORTS, OFFER_TABS, type OfferSortId, type OfferTab } from "@/src/lib/types/offer-list";
+import {
+  parseOfferFilters,
+  parseOfferPage,
+  parseOfferSearch,
+  parseOfferSort,
+  parseOfferTab,
+} from "@/src/lib/utils/offer-list-params";
 import { cn } from "@/src/lib/utils/cn";
 
 export const metadata = {
@@ -152,30 +158,18 @@ export default async function OffersPage({ searchParams }: { searchParams: Param
      ALL CAMPAIGNS
   ======================================================= */
 
-  const rawTab = one(params.tab);
-  const tab: OfferTab = (OFFER_TABS as readonly string[]).includes(rawTab)
-    ? (rawTab as OfferTab)
-    : "all";
-
-  const rawSort = one(params.sort);
-  const sortId: OfferSortId = OFFER_SORTS.some((option) => option.id === rawSort)
-    ? (rawSort as OfferSortId)
-    : "newest";
-
-  const search = one(params.q).slice(0, 100);
-
-  /* A page number from a URL is whatever somebody typed, so it is clamped. */
-  const parsedPage = Number.parseInt(one(params.page), 10);
-  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
-
-  const filters = {
-    type: one(params.type),
-    status: one(params.status),
-    discountType: one(params.discountType),
-    createdBy: one(params.createdBy),
-    from: one(params.from),
-    to: one(params.to),
-  };
+  /*
+   * Phase 24: parsed by the shared helpers rather than inline here, so the
+   * export route reads the URL exactly as this page does. A file that claims
+   * to hold "the campaigns on screen" stops being true the moment there are
+   * two copies of this parsing — a filter added here and missed there is a
+   * file with more rows in it than the person was looking at.
+   */
+  const tab = parseOfferTab(params.tab);
+  const sortId = parseOfferSort(params.sort);
+  const search = parseOfferSearch(params.q);
+  const page = parseOfferPage(params.page);
+  const filters = parseOfferFilters(params);
 
   const [data, lookups] = await Promise.all([
     getOfferList({ tab, search, filters, sortId, page, pageSize: PAGE_SIZE }),

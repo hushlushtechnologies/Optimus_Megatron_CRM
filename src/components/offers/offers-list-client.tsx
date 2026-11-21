@@ -333,6 +333,7 @@ export function OffersListClient({
         resultCount={data?.totalCount ?? 0}
         staff={staff}
         statusLocked={statusLocked}
+        canExport={permissions.export}
         isPending={isPending}
         onSearchChange={setSearchValue}
         onFiltersChange={changeFilters}

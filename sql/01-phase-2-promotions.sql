@@ -552,17 +552,31 @@ create trigger promotions_log_status
 -- 13. Permissions
 -- ---------------------------------------------------------------------------
 
-insert into public.permissions (key, description)
-values
-  ('offers.view',    'View promotions, personalised offers and redemptions'),
-  ('offers.manage',  'Create and edit promotions, targeting and codes'),
-  ('offers.publish', 'Activate, pause, expire and archive promotions'),
-  ('offers.assign',  'Assign private offers to specific customers'),
-  ('offers.export',  'Download promotion and redemption data'),
-  ('loyalty.view',   'View customer points balances and ledger history'),
-  ('loyalty.adjust', 'Manually credit, deduct or reverse loyalty points'),
-  ('loyalty.settings','Change loyalty program settings')
-on conflict (key) do nothing;
+-- CORRECTED: the table is app_permissions, not permissions, and it takes
+-- module/label/description/sort_order — the same shape sprint-7-migration.sql
+-- uses. The first version of this insert named a table that does not exist,
+-- which rolled this whole migration back.
+insert into public.app_permissions (key, module, label, description, sort_order)
+select v.key, 'Offers & Loyalty', v.label, v.description, v.sort_order
+from (values
+  ('offers.view',      'View offers',
+   'See promotions, personalised offers and redemption history.', 10),
+  ('offers.manage',    'Manage offers',
+   'Create and edit promotions, their targeting and their codes.', 20),
+  ('offers.publish',   'Publish offers',
+   'Activate, pause, expire and archive promotions. Changes what customers are charged.', 30),
+  ('offers.assign',    'Assign private offers',
+   'Give a specific customer an exclusive offer.', 40),
+  ('offers.export',    'Export offers',
+   'Download promotion and redemption data.', 50),
+  ('loyalty.view',     'View loyalty',
+   'See customer point balances and ledger history.', 60),
+  ('loyalty.adjust',   'Adjust loyalty points',
+   'Manually credit, deduct or reverse points. Changes what customers hold.', 70),
+  ('loyalty.settings', 'Loyalty settings',
+   'Change the earn rate and what points are worth.', 80)
+) as v (key, label, description, sort_order)
+where not exists (select 1 from public.app_permissions p where p.key = v.key);
 
 -- Whoever can already manage sales gets the viewing keys, so the module is
 -- not invisible to everyone on day one. The three that move money or change
@@ -570,7 +584,10 @@ on conflict (key) do nothing;
 insert into public.role_permission_grants (role_id, permission)
 select g.role_id, v.key
 from public.role_permission_grants g
-cross join (values ('offers.view'), ('offers.manage'), ('offers.assign'), ('loyalty.view')) as v (key)
+cross join (values
+  ('offers.view'), ('offers.manage'), ('offers.assign'),
+  ('offers.export'), ('loyalty.view')
+) as v (key)
 where g.permission = 'sales.edit'
   and not exists (
     select 1 from public.role_permission_grants x
@@ -676,7 +693,8 @@ where table_schema = 'public'
 order by table_name;
 
 -- 5. The new permissions exist.
-select key from public.permissions where key like 'offers.%' or key like 'loyalty.%' order by key;
+select key, module, label from public.app_permissions
+where key like 'offers.%' or key like 'loyalty.%' order by sort_order;
 
 -- ===========================================================================
 -- ROLLBACK

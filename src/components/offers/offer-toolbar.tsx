@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { FilterBar } from "@/src/components/shared/filter-bar";
 import { SortControl } from "@/src/components/shared/sort-control";
+import { OfferExportMenu } from "@/src/components/offers/offer-export-menu";
 import { OfferFilterDrawer } from "@/src/components/offers/offer-filter-drawer";
 
 import { cn } from "@/src/lib/utils/cn";
@@ -38,6 +39,8 @@ interface OfferToolbarProps {
   staff: { id: string; full_name: string }[];
   /** True when the tab in view already pins the status. */
   statusLocked: boolean;
+  /** Phase 24: offers.export, which is not offers.view. */
+  canExport: boolean;
   isPending: boolean;
   onSearchChange: (next: string) => void;
   onFiltersChange: (next: OfferFilters) => void;
@@ -124,6 +127,7 @@ export function OfferToolbar({
   resultCount,
   staff,
   statusLocked,
+  canExport,
   isPending,
   onSearchChange,
   onFiltersChange,
@@ -195,6 +199,11 @@ export function OfferToolbar({
               value={sortId}
               onChange={(value) => onSortChange(value as OfferSortId)}
             />
+
+            {/* Phase 24. Hidden without offers.export rather than shown
+                disabled: a control that refuses everybody who can see it is
+                worse than no control. The route checks the same key again. */}
+            {canExport && <OfferExportMenu />}
           </div>
 
           <div className="flex shrink-0 items-center gap-2 lg:ml-auto" role="status" aria-live="polite">
