@@ -52,7 +52,7 @@ export const LeadCard = memo(function LeadCard({
       className={cn(
         "group border-border bg-card relative overflow-hidden rounded-lg border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-[border-color,box-shadow,transform] duration-150",
         "hover:border-primary/35 focus-within:border-primary/50 hover:-translate-y-0.5 hover:shadow-[0_7px_22px_rgba(0,0,0,0.12)]",
-        overdue && "border-l-danger border-l-[3px]",
+        overdue && "border-danger border-l-[3px]",
         className,
       )}
     >

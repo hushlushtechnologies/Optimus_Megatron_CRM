@@ -28,6 +28,43 @@
   --omc-danger: #e5484d;
   --omc-info: #4d8fd8;
 
+  /* The focus ring is a token of its own, not the brand gold.
+     WCAG 1.4.11 wants 3:1 for a focus indicator against what surrounds it,
+     and the brand gold cannot reach that on a white card — see the light
+     block below for the arithmetic. On the dark surface the brand value is
+     already comfortable (8.29:1), so dark keeps it. */
+  --omc-focus: #ebb811;
+
+  /* Foreground variants, for these colours used as TEXT, icons or borders
+     rather than as fills.
+
+     TWO THINGS THESE FIX.
+
+     First, `text-primary-text` was already used in 97 files — 154 times —
+     and was never defined. Tailwind generates a utility only for a colour
+     it knows, so the class produced NO CSS and every one of those elements
+     rendered in the inherited body colour instead of gold. Links that were
+     meant to stand out looked like ordinary text, and because
+     `hover:text-primary-hover` IS defined, they turned gold only on hover.
+     Defining the token here makes all 154 render as intended.
+
+     Second, it does so accessibly. A fill and a foreground are different
+     jobs and in light mode they need different values: a gold dark enough
+     to read on white is too dark to sit under the dark text of a primary
+     button. checks/audit-contrast.py prints the arithmetic showing no
+     single value does both.
+
+     Named `--omc-primary-text`, not `-ink`, because that is the name the
+     97 files already ask for. Note it is NOT `--omc-text-primary`, which is
+     the body text colour — the two are one word-order apart and mean
+     different things.
+
+     In dark mode the fill values already read well as text, so these match
+     the fills exactly and nothing shifts. */
+  --omc-primary-text: #ebb811;
+  --omc-success-text: #32b769;
+  --omc-warning-text: #e3a008;
+
   --omc-status-text: var(--omc-status-raw, currentColor);
   /* Glass surfaces (dark) */
   --omc-glass-bg: rgba(5, 13, 36, 0.5);
@@ -67,8 +104,42 @@
   --omc-primary-hover: #cca237;
   --omc-success: #32b769;
   --omc-warning: #e3a008;
-  --omc-danger: #e5484d;
+  /* Darkened for light mode: #e5484d gives 3.91:1 as text on a white card,
+     under the 4.5:1 AA wants. #d93036 gives 4.74:1 as text and still carries
+     white text at 4.74:1 where it is used as a fill, so one value serves
+     both roles here — unlike the gold, which cannot. */
+  --omc-danger: #d93036;
   --omc-info: #3d77ba;
+
+  /* A darker gold for the focus ring in light mode.
+     The brand gold gives 2.32:1 against a white card, below the 3:1 WCAG
+     1.4.11 asks of a focus indicator — so a keyboard user genuinely cannot
+     see where they are. #8f6a08 gives 4.96:1 on a white card and 3.62:1 on the
+     light page background — both above 3:1, which matters because a focused
+     control sits on either. #a67c0a cleared the card but only reached
+     2.78:1 on the page background. The brand token itself is untouched: it backs 239 buttons that
+     carry dark text at 8.06:1, and darkening it to fix the ring would have
+     broken those. */
+  --omc-focus: #8f6a08;
+
+  /* The light-mode foreground values, while the fill tokens above stay
+     exactly as they are.
+
+     Chosen to clear 4.5:1 on BOTH light backgrounds, not just the white
+     card: the page background is #d0ddf3, and a value tuned to white alone
+     lands around 3.9:1 there. Semantic text appears on both, so the harder
+     background sets the value.
+
+       primary-text  6.38:1 on the card, 4.65:1 on the page background
+       success-text  6.83:1 / 4.98:1
+       warning-text  6.57:1 / 4.80:1
+
+     And in the pattern these are actually used in — gold text on a
+     bg-primary/10 tint over the card — the current fill value gives
+     2.06-2.15:1 while these give 5.66-5.90:1. */
+  --omc-primary-text: #7a5a07;
+  --omc-success-text: #16683a;
+  --omc-warning-text: #7a5708;
 
   --omc-glass-bg: rgba(255, 255, 255, 0.6);
   --omc-glass-border: rgba(11, 18, 32, 0.07);
@@ -106,6 +177,10 @@
   --color-primary-hover: var(--omc-primary-hover);
   --color-success: var(--omc-success);
   --color-warning: var(--omc-warning);
+  --color-primary-text: var(--omc-primary-text);
+  --color-success-text: var(--omc-success-text);
+  --color-warning-text: var(--omc-warning-text);
+  --color-focus: var(--omc-focus);
   --color-danger: var(--omc-danger);
   --color-surface: var(--omc-surface);
   --color-info: var(--omc-info);
@@ -151,7 +226,7 @@
 
   /* Never rely on color alone for focus — always a visible outline */
   :focus-visible {
-    outline: 2px solid var(--omc-primary);
+    outline: 2px solid var(--omc-focus);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -202,6 +277,20 @@
   .text-h3 {
     font-size: 1.25rem;
     line-height: 1.3;
+    font-weight: 600;
+  }
+  /* The fourth step, added in Sprint 9 Phase 16.
+     Seven files were already using `text-h4` — four Sprint 9 report
+     sections and three Sprint 8 offers views — and the scale stopped at h3,
+     so the class generated nothing and those headings rendered at the
+     browser's default size for their tag. Nothing errors when a Tailwind
+     class does not exist; it simply has no effect.
+     1.0625rem sits between h3 and body-lg, which is the step those files
+     wanted: a sub-heading inside a page already titled with h2.
+     checks/check-color-classes.py now catches this class of bug. */
+  .text-h4 {
+    font-size: 1.0625rem;
+    line-height: 1.4;
     font-weight: 600;
   }
   .text-body-lg {

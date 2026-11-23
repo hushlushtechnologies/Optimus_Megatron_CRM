@@ -97,12 +97,21 @@ export async function generateOfferExcel<TRow>(
   sheet.getCell("B2").font = { size: 9, color: { argb: GREY } };
 
   /* ---- columns ---- */
-  const spacer: Partial<ExcelJS.Column> = { header: "", key: "_spacer", width: 2 };
+
+  /*
+   * Widths and keys only — deliberately no `header`.
+   *
+   * Giving ExcelJS a header here does not just describe the column, it
+   * writes that text into row 1, straight over the merged title cell at B1.
+   * The merge means the last write wins, so "Optimus Megatron Cars —
+   * Campaigns" came out reading "Code", the name of the final column. The
+   * header row is written explicitly below, where it belongs.
+   */
+  const spacer: Partial<ExcelJS.Column> = { key: "_spacer", width: 2 };
 
   sheet.columns = [
     spacer,
     ...columns.map((column, index) => ({
-      header: column.header,
       key: `c${index}`,
       width: column.width,
     })),

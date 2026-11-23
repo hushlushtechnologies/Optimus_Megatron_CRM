@@ -1,59 +1,62 @@
-import { TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { SalesReportClient } from "@/src/components/report/sales-report-client";
-import { currentUserSalesPermissions } from "@/src/lib/supabase/sales-permissions";
-import {
-  getSalesReport,
-  getSalesReportDeals,
-  parseReportRange,
-} from "@/src/lib/supabase/sales-report-queries";
-import { parseReportView } from "@/src/lib/types/sales-reports";
+import { ReportOverviewClient } from "@/src/components/report/report-overview-client";
+import { currentReportAccess } from "@/src/lib/supabase/report-permissions";
+import { getReportOverview } from "@/src/lib/supabase/report-overview-queries";
+import { parseReportQuery } from "@/src/lib/utils/report-filters";
 
-export const metadata = {
-  title: "Sales reports · Optimus Megatron Cars",
-};
+/*
+|--------------------------------------------------------------------------
+| THE OVERVIEW
+|--------------------------------------------------------------------------
+|
+| /admin/reports used to BE the sales report. Sprint 9 makes it the overview
+| and moves the sales report to /admin/reports/sales.
+|
+| That would break every link anybody has already saved, so the old links are
+| kept working — see the redirect below. The layout above this page has
+| already established that the person may open at least one report.
+*/
 
-interface ReportsPageProps {
-  searchParams: Promise<Record<string, string | undefined>>;
+interface OverviewPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-/**
- * Sprint 6 Phase 17 — sales reporting.
- *
- * Reading a report needs the same permission as reading the Sales list, and
- * every underlying query is row-level secured, so nobody sees a total built
- * from deals they could not open.
- */
-export default async function ReportsPage({ searchParams }: ReportsPageProps) {
-  const permissions = await currentUserSalesPermissions();
+export default async function ReportsOverviewPage({ searchParams }: OverviewPageProps) {
+  const params = await searchParams;
 
-  if (!permissions.view) {
-    return (
-      <div role="alert" className="surface-card flex max-w-2xl items-start gap-3 p-5">
-        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden="true" />
-        <div>
-          <p className="text-body-sm text-text-primary font-medium">
-            You don&apos;t have permission to view sales reports.
-          </p>
-          <p className="text-body-sm text-text-muted mt-1">Ask an administrator if you need access.</p>
-          <Link
-            href="/admin"
-            className="text-body-sm text-primary-text hover:text-primary-hover mt-3 inline-block"
-          >
-            Back to the dashboard
-          </Link>
-        </div>
-      </div>
-    );
+  /*
+   * Old links keep working.
+   *
+   * `view` is the sales report's own parameter — summary or table — and
+   * nothing else in the workspace uses it, so its presence identifies a link
+   * made before the sales report moved. Those go where they were going, with
+   * everything else they carried intact.
+   *
+   * `range` is NOT used as the signal, even though old links carry it,
+   * because the overview takes a range too: redirecting on `range` would
+   * make it impossible to look at the overview for last month.
+   */
+  if (params.view) {
+    const forwarded = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params)) {
+      const first = Array.isArray(value) ? value[0] : value;
+      if (first) forwarded.set(key, first);
+    }
+
+    redirect(`/admin/reports/sales?${forwarded.toString()}`);
   }
 
-  const params = await searchParams;
-  const range = parseReportRange(params.range);
-  const view = parseReportView(params.view);
+  const access = await currentReportAccess();
+  const query = parseReportQuery(params, "overview");
 
-  // Both views are fetched so switching between them is instant.
-  const [data, deals] = await Promise.all([getSalesReport(range), getSalesReportDeals(range)]);
+  const data = await getReportOverview(query.range, query.filters, {
+    customFrom: query.customFrom,
+    customTo: query.customTo,
+  });
 
-  return <SalesReportClient data={data} deals={deals} view={view} canExport={permissions.export} />;
+  return (
+    <ReportOverviewClient data={data} range={query.range} canSeeFinancial={access.financial} />
+  );
 }

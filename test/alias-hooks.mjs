@@ -54,7 +54,28 @@ function resolveToFile(absolute) {
   return null;
 }
 
+/*
+ * "server-only" is a marker package. Importing it is how a module declares
+ * that it must never reach the browser: Next's bundler makes the import
+ * fail if a client component pulls the module in, which is the only thing
+ * the package does.
+ *
+ * Plain Node cannot resolve it, so a server module carrying the guard
+ * cannot be imported by a test at all. Dropping the guard to make the
+ * tests run would trade a real protection for a convenience — the modules
+ * that carry it are the ones holding service-role queries. So it resolves
+ * to nothing here instead, which is exactly what it does at runtime.
+ */
+const MARKER_PACKAGES = new Set(["server-only", "client-only"]);
+
 export async function resolve(specifier, context, nextResolve) {
+  if (MARKER_PACKAGES.has(specifier)) {
+    return {
+      url: `data:text/javascript,export{}`,
+      shortCircuit: true,
+    };
+  }
+
   if (specifier.startsWith("@/")) {
     const absolute = path.join(root, specifier.slice(2));
     const file = resolveToFile(absolute);

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Banknote,
   BarChart3,
   FileSpreadsheet,
   FileText,
@@ -38,7 +37,6 @@ import {
 } from "@/src/lib/types/sales-reports";
 import { cn } from "@/src/lib/utils/cn";
 import { downloadExportFile } from "@/src/lib/utils/download-export-file";
-import { formatMoney } from "@/src/lib/utils/sales-format";
 
 interface SalesReportClientProps {
   data: SalesReportData;
@@ -46,6 +44,16 @@ interface SalesReportClientProps {
   deals: ReportDealsResult;
   view: ReportView;
   canExport: boolean;
+  /**
+   * False hides every money figure on this report.
+   *
+   * Gated on reports.financial, separately from sales.view. Somebody who may
+   * read the sales pipeline does not automatically get to see what the
+   * business took — a report aggregates in a way a paginated list does not,
+   * and row-level security decides which rows, not whether their total
+   * belongs on a card.
+   */
+  canSeeFinancial: boolean;
 }
 
 const VIEWS: { id: ReportView; label: string; Icon: typeof BarChart3 }[] = [
@@ -75,7 +83,7 @@ function SectionFailed({ what }: { what: string }) {
  * money is attributed to the month a deal **completed**, and counts of work
  * started are attributed to the month a deal was **created**.
  */
-export function SalesReportClient({ data, deals, view, canExport }: SalesReportClientProps) {
+export function SalesReportClient({ data, deals, view, canExport , canSeeFinancial }: SalesReportClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -127,6 +135,13 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
       setExporting(null);
     }
   };
+
+  /*
+   * Money columns are dropped rather than blanked, and the proportion tint
+   * goes with them: a tint derived from deal value would still show who sold
+   * the most even with the figures hidden.
+   */
+  const hiddenColumnIds = canSeeFinancial ? undefined : ["value"];
 
   const kpis = data.kpis;
   const currency = kpis?.currency ?? "AED";
@@ -210,6 +225,33 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
       </div>
 
       {/* =====================================================
+          COMPLETENESS
+      ===================================================== */}
+
+      {/*
+        What this report does NOT cover.
+
+        Sprint 6 capped every aggregate at 5,000 rows and asked for no count,
+        so a period holding more reported a partial total with nothing on the
+        page to say so. The figures now carry their own completeness and this
+        is where it is said — in the same words whether a query failed or a
+        cap bit, because in both cases the number on screen is not the whole
+        answer.
+
+        role="status" rather than "alert": it is information about the figures
+        below, not an interruption.
+      */}
+      {kpis?.notice && (
+        <div
+          role="status"
+          className="border-warning/40 bg-warning/10 flex items-start gap-2.5 rounded-lg border px-4 py-3"
+        >
+          <TriangleAlert className="text-warning mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <p className="text-body-sm text-text-primary">{kpis.notice}</p>
+        </div>
+      )}
+
+      {/* =====================================================
           KPIs
       ===================================================== */}
 
@@ -218,19 +260,52 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
       ) : (
         <section
           aria-label="Sales performance"
-          className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6"
+          className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5"
         >
-          <MetricCard label="Deals created" value={kpis.created} icon={<Handshake />} />
-          <MetricCard label="Completed" value={kpis.completed} icon={<TrendingUp />} />
-          <MetricCard label="Still open" value={kpis.open} icon={<Wallet />} />
           <MetricCard
-            label="Win rate"
-            value={kpis.winRate ?? 0}
-            suffix={kpis.winRate === null ? undefined : "%"}
+            label="Deals created"
+            value={kpis.created}
+            caption={`Started in ${rangeLabel.toLowerCase()}`}
+            icon={<Handshake />}
+          />
+          <MetricCard
+            label="Completed"
+            value={kpis.completed}
+            caption={`Closed in ${rangeLabel.toLowerCase()}`}
+            icon={<TrendingUp />}
+          />
+          <MetricCard
+            label="Still open"
+            value={kpis.open}
+            caption="Open right now, any start date"
+            icon={<Wallet />}
+          />
+          <MetricCard
+            label="Cancelled"
+            value={kpis.cancelled}
+            caption={`Of those started in ${rangeLabel.toLowerCase()}`}
+            icon={<TriangleAlert />}
+          />
+          {/*
+            The cohort rate, not completed-over-created.
+
+            The old card divided deals completed in the window by deals
+            created in it — two different sets of deals — so it read over
+            100% whenever a deal closed in a month it had not started in.
+            This asks one question of one population: of the deals started in
+            this period, how many have closed?
+          */}
+          <MetricCard
+            label="Closed so far"
+            value={kpis.cohortWinRate ?? 0}
+            suffix={kpis.cohortWinRate === null ? undefined : "%"}
+            caption={
+              kpis.cohortWinRate === null
+                ? "No deals started in this period"
+                : `${kpis.cohortCompleted} of ${kpis.created} started in ${rangeLabel.toLowerCase()}`
+            }
             icon={<Percent />}
           />
-          <MetricCard label="Cancelled" value={kpis.cancelled} icon={<TriangleAlert />} />
-          <MetricCard label="Collected" value={Math.round(kpis.collected)} icon={<Banknote />} />
         </section>
       )}
 
@@ -238,36 +313,71 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
           MONEY SUMMARY
       ===================================================== */}
 
-      {kpis && (
+      {kpis && canSeeFinancial && (
         <motion.section
           {...fadeUp(1)}
           aria-label="Money"
-          className="surface-card grid grid-cols-1 gap-4 p-5 sm:grid-cols-3"
+          className="surface-card grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 xl:grid-cols-5"
         >
           <div className="min-w-0">
             <p className="text-label">Completed deal value</p>
             <p className="text-text-primary mt-1 truncate text-[20px] font-semibold tabular-nums">
-              {formatMoney(kpis.completedValue, currency)}
+              {kpis.completedValue?.display ?? "Unavailable"}
             </p>
             <p className="text-caption text-text-subtle mt-0.5">
               Total due on deals completed in {rangeLabel.toLowerCase()}
             </p>
           </div>
 
+          {/*
+            Collected and net are two figures now, not one.
+
+            This used to be a single number netting refunds against receipts
+            and labelled "Verified collected", so a month that took AED 2m
+            and refunded AED 2m reported zero collected. That is true of the
+            net and false of the collection, and they are separate metrics by
+            definition.
+          */}
           <div className="min-w-0">
             <p className="text-label">Verified collected</p>
             <p className="text-text-primary mt-1 truncate text-[20px] font-semibold tabular-nums">
-              {formatMoney(kpis.collected, currency)}
+              {kpis.collected?.display ?? "Unavailable"}
             </p>
             <p className="text-caption text-text-subtle mt-0.5">
-              Payments in, less refunds out. Unverified money is excluded.
+              {kpis.collected === null
+                ? "This figure could not be loaded."
+                : "Verified payments in. Refunds are not deducted here. Unverified money is excluded."}
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-label">Refunds paid</p>
+            <p className="text-text-primary mt-1 truncate text-[20px] font-semibold tabular-nums">
+              {kpis.refunded?.display ?? "Unavailable"}
+            </p>
+            <p className="text-caption text-text-subtle mt-0.5">
+              {kpis.refunded === null
+                ? "This figure could not be loaded."
+                : "Verified refunds out, by payment date"}
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-label">Net cash movement</p>
+            <p className="text-text-primary mt-1 truncate text-[20px] font-semibold tabular-nums">
+              {kpis.netCash?.display ?? "Unavailable"}
+            </p>
+            <p className="text-caption text-text-subtle mt-0.5">
+              {kpis.netCash === null
+                ? "This figure could not be loaded."
+                : "Collected less refunds. Not the same as revenue."}
             </p>
           </div>
 
           <div className="min-w-0">
             <p className="text-label">Outstanding</p>
             <p className="text-text-primary mt-1 truncate text-[20px] font-semibold tabular-nums">
-              {formatMoney(kpis.outstanding, currency)}
+              {kpis.outstanding?.display ?? "Unavailable"}
             </p>
             <p className="text-caption text-text-subtle mt-0.5">
               Still to collect on confirmed deals, whenever they started
@@ -338,6 +448,7 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
               getRowHref={(row) => `/admin/sales?status=${encodeURIComponent(row.status)}`}
               emptyMessage="No deals were created in this period."
               failedLabel="status breakdown"
+              hiddenColumnIds={hiddenColumnIds}
               columns={[
                 {
                   id: "status",
@@ -350,8 +461,8 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
                   id: "value",
                   label: "Total due",
                   align: "right",
-                  value: (row) => row.value,
-                  render: (row) => formatMoney(row.value, currency),
+                  value: (row) => row.value.chart,
+                  render: (row) => row.value.display,
                 },
               ]}
             />
@@ -362,10 +473,11 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
               rows={data.byShowroom}
               getRowId={(row) => row.locationId}
               initialSortId="value"
-              shareValue={(row) => row.value}
+              shareValue={canSeeFinancial ? (row) => row.value.chart : undefined}
               getRowHref={(row) => `/admin/sales?showroom=${row.locationId}`}
               emptyMessage="No deal was completed in this period."
               failedLabel="showroom breakdown"
+              hiddenColumnIds={hiddenColumnIds}
               columns={[
                 { id: "locationName", label: "Showroom", value: (row) => row.locationName },
                 { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
@@ -373,8 +485,8 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
                   id: "value",
                   label: "Value",
                   align: "right",
-                  value: (row) => row.value,
-                  render: (row) => formatMoney(row.value, currency),
+                  value: (row) => row.value.chart,
+                  render: (row) => row.value.display,
                 },
               ]}
             />
@@ -386,10 +498,11 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
             rows={data.byOwner}
             getRowId={(row) => row.ownerId}
             initialSortId="value"
-            shareValue={(row) => row.value}
+            shareValue={canSeeFinancial ? (row) => row.value.chart : undefined}
             getRowHref={(row) => `/admin/sales?owner=${row.ownerId}`}
             emptyMessage="No deal is owned by anyone in this period yet."
             failedLabel="executive breakdown"
+            hiddenColumnIds={hiddenColumnIds}
             columns={[
               { id: "ownerName", label: "Executive", value: (row) => row.ownerName },
               { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
@@ -398,8 +511,8 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
                 id: "value",
                 label: "Value",
                 align: "right",
-                value: (row) => row.value,
-                render: (row) => formatMoney(row.value, currency),
+                value: (row) => row.value.chart,
+                render: (row) => row.value.display,
               },
             ]}
           />
@@ -410,9 +523,10 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
             rows={data.monthly}
             getRowId={(row) => row.month}
             initialSortId="month"
-            shareValue={(row) => row.value}
+            shareValue={canSeeFinancial ? (row) => row.value.chart : undefined}
             emptyMessage="No deal was completed in this period."
             failedLabel="monthly breakdown"
+            hiddenColumnIds={hiddenColumnIds}
             columns={[
               { id: "month", label: "Month", value: (row) => row.month },
               { id: "completed", label: "Completed", align: "right", value: (row) => row.completed },
@@ -420,8 +534,8 @@ export function SalesReportClient({ data, deals, view, canExport }: SalesReportC
                 id: "value",
                 label: "Value",
                 align: "right",
-                value: (row) => row.value,
-                render: (row) => formatMoney(row.value, currency),
+                value: (row) => row.value.chart,
+                render: (row) => row.value.display,
               },
             ]}
           />

@@ -98,7 +98,7 @@ export function FollowUpsTab({ leadId }: FollowUpsTabProps) {
   if (state.error) {
     return (
       <div className="py-6">
-        <p className="text-body-sm text-destructive">{state.error}</p>
+        <p className="text-body-sm text-danger">{state.error}</p>
       </div>
     );
   }

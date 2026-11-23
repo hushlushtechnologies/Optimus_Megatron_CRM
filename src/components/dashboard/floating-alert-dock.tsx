@@ -271,7 +271,7 @@ export function FloatingAlertDock({ alerts }: FloatingAlertDockProps) {
 
                   <span className="bg-danger mt-1.5 size-1.5 shrink-0 rounded-full shadow-[0_0_8px_rgba(248,113,113,0.7)]" />
 
-                  <span className="text-body-sm text-text-secondary group-hover:text-text-primary flex-1 leading-5 transition-colors">
+                  <span className="text-body-sm text-text-muted group-hover:text-text-primary flex-1 leading-5 transition-colors">
                     {alert.message}
                   </span>
 

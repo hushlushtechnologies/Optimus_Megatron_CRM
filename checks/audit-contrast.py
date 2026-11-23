@@ -41,15 +41,65 @@ PAIRS = [
     ("text-muted",   "card-hover", 4.5, "secondary text on a hovered row"),
     ("text-subtle",  "card-hover", 4.5, "captions on a hovered row"),
     ("text-primary", "surface",    4.5, "body text on the page background"),
-    ("primary",      "card",       3.0, "the gold accent on a card"),
-    ("success",      "card",       3.0, "a success badge on a card"),
-    ("warning",      "card",       3.0, "a warning badge on a card"),
-    ("danger",       "card",       3.0, "a danger badge on a card"),
-    ("info",         "card",       3.0, "an info badge on a card"),
+    # The focus ring. WCAG 1.4.11 wants 3:1 against what surrounds it, and
+    # it has to clear that on both the card and the page background,
+    # because a focused control can sit on either.
+    ("focus",        "card",       3.0, "the focus ring on a card"),
+    ("focus",        "surface",    3.0, "the focus ring on the page background"),
+
+    # These four are used as TEXT and icon colours — text-success,
+    # text-warning and so on — so the bar is 4.5:1, not the 3:1 this list
+    # used to ask of them. The old entries called them "badges", which was
+    # true when they were written; badges now carry their own Tailwind
+    # shades per theme (see badge-contrast.py) and no longer touch these
+    # tokens at all. Checking them as badges was measuring something that
+    # had stopped existing.
+    ("primary",      "card",       4.5, "the gold used as text or an icon on a card"),
+    ("success",      "card",       4.5, "success text on a card"),
+    ("warning",      "card",       4.5, "warning text on a card"),
+    ("danger",       "card",       4.5, "danger text on a card"),
+    ("info",         "card",       4.5, "info text on a card"),
+
+    # The foreground ("ink") variants. Checked against both light
+    # backgrounds, because semantic text appears on cards and on the page
+    # itself, and a value tuned only to the white card falls short on the
+    # page background.
+    ("primary-text",  "card",       4.5, "gold foreground on a card"),
+    ("primary-text",  "surface",    4.5, "gold foreground on the page background"),
+    ("success-text",  "card",       4.5, "success foreground on a card"),
+    ("success-text",  "surface",    4.5, "success foreground on the page background"),
+    ("warning-text",  "card",       4.5, "warning foreground on a card"),
+    ("warning-text",  "surface",    4.5, "warning foreground on the page background"),
+
     ("border",       "card",       1.0, "a card border (decorative)"),
 ]
 
+# ---------------------------------------------------------------------------
+# A known, measured gap — tracked rather than silently tolerated.
+#
+# In light mode the gold, green and amber tokens are too light to be read as
+# text on a white card. The fix is NOT to darken them: the same tokens back
+# 239 buttons, 54 pills and so on that carry dark text, and a value dark
+# enough to read on white is too dark to sit under dark text. That is
+# arithmetic, not taste — there is no single value that satisfies both, which
+# check_two_roles() below demonstrates.
+#
+# The real fix is a second token per colour for foreground use
+# (--omc-primary-ink and friends, already defined in globals.css) and a
+# migration of the ~514 text-/border- call sites onto them. That is a
+# reviewable change of its own rather than something to slip into a polish
+# pass, so it is recorded here and printed loudly.
+#
+# Anything NOT in this set is a regression and fails the check.
+# ---------------------------------------------------------------------------
+KNOWN_GAPS = {
+    ("light", "the gold used as text or an icon on a card"),
+    ("light", "success text on a card"),
+    ("light", "warning text on a card"),
+}
+
 failures = []
+known = []
 
 for theme, values in THEMES.items():
     print(f"\n{theme.upper()}")
@@ -60,9 +110,27 @@ for theme, values in THEMES.items():
             continue
         r = ratio(fg, bg)
         ok = r >= minimum
-        print(f"  {'ok  ' if ok else 'FAIL'} {r:5.2f}:1 (needs {minimum}) — {label}")
+        tracked = (theme, label) in KNOWN_GAPS
+
+        if ok:
+            mark = "ok  "
+        elif tracked:
+            mark = "GAP "
+        else:
+            mark = "FAIL"
+
+        print(f"  {mark} {r:5.2f}:1 (needs {minimum}) — {label}")
+
         if not ok:
-            failures.append(f"{theme}: {label} is {r:.2f}:1, needs {minimum}:1 ({fg} on {bg})")
+            detail = f"{theme}: {label} is {r:.2f}:1, needs {minimum}:1 ({fg} on {bg})"
+            (known if tracked else failures).append(detail)
+
+        # A gap that has been fixed should stop being listed as known, or
+        # the list rots into a permanent excuse.
+        if ok and tracked:
+            failures.append(
+                f"{theme}: {label} now passes at {r:.2f}:1 — remove it from KNOWN_GAPS"
+            )
 
 # Dark text on the gold primary, which is how every primary button is built.
 print("\nDARK-ON-GOLD (every primary button)")
@@ -73,12 +141,50 @@ for theme, values in THEMES.items():
     if not ok:
         failures.append(f"{theme}: button label is {r:.2f}:1 on the primary fill")
 
+def check_two_roles() -> None:
+    """
+    Show that the light-mode gold cannot serve both of its roles.
+
+    This is here so the KNOWN_GAPS entries above are backed by arithmetic
+    rather than by an assertion in a comment. If someone later proposes
+    "just darken the gold", this prints the reason that does not work.
+    """
+    white = THEMES["light"]["card"]
+    button_text = "#0b1220"
+
+    max_for_text = (luminance(white) + 0.05) / 4.5 - 0.05
+    min_for_fill = 4.5 * (luminance(button_text) + 0.05) - 0.05
+
+    print("\nWHY THE LIGHT GOLD CANNOT BE DARKENED INSTEAD")
+    print(f"  readable as text on {white}      needs luminance <= {max_for_text:.4f}")
+    print(f"  usable as a fill under {button_text}   needs luminance >= {min_for_fill:.4f}")
+    print(
+        "  => no single value satisfies both; foreground use needs its own token"
+        if max_for_text < min_for_fill
+        else "  => a single value could satisfy both — revisit KNOWN_GAPS"
+    )
+
+
+check_two_roles()
+
+if known:
+    print("\n" + "-" * 60)
+    print(f"{len(known)} KNOWN gap(s) — tracked in KNOWN_GAPS, not regressions:\n")
+    for k in known:
+        print(f"  {k}")
+    print("\n  Fix: migrate text-/border- call sites onto the --omc-*-text tokens.")
+    print("-" * 60)
+
 print("\n" + "=" * 60)
 if failures:
     print(f"{len(failures)} contrast failure(s):\n")
     for f in failures:
         print(f"  {f}")
 else:
-    print("Every token pair this module renders meets WCAG AA.")
+    print(
+        "No contrast regressions."
+        + (f" {len(known)} known gap(s) still open — see above." if known else
+           " Every token pair this module renders meets WCAG AA.")
+    )
 print("=" * 60)
 sys.exit(1 if failures else 0)

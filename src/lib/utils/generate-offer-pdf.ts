@@ -121,21 +121,31 @@ textColor: [31, 41, 55],
       ]),
     ),
     margin: { left: 14, right: 14 },
-    didDrawPage: () => {
-      const pageCount = doc.getNumberOfPages();
-      const current = doc.getCurrentPageInfo().pageNumber;
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.setTextColor(...GREY);
-      doc.text(
-        `Page ${current} of ${pageCount}`,
-        pageWidth - 14,
-        doc.internal.pageSize.getHeight() - 8,
-        { align: "right" },
-      );
-    },
   });
+
+  /*
+   * Footers last, once every page exists.
+   *
+   * These used to be stamped from didDrawPage, which fires while the table
+   * is still being laid out. getNumberOfPages() there returns the count so
+   * far, so every page came out reading "Page 3 of 3" — and the one thing
+   * "of N" is for is letting a reader notice a page missing from a
+   * printout. Counting after the fact is the fix.
+   */
+  const pageCount = doc.getNumberOfPages();
+
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...GREY);
+    doc.text(
+      `Page ${page} of ${pageCount}`,
+      pageWidth - 14,
+      doc.internal.pageSize.getHeight() - 8,
+      { align: "right" },
+    );
+  }
 
   return Buffer.from(doc.output("arraybuffer"));
 }

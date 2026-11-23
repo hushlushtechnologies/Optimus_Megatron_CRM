@@ -45,6 +45,16 @@ interface ReportBreakdownTableProps<TRow> {
   emptyMessage: string;
   /** What couldn't be loaded, for the error line. */
   failedLabel: string;
+  /**
+   * Column ids to leave out.
+   *
+   * Sprint 9 uses this for money: a person without reports.financial sees
+   * the same breakdown with its value column absent, rather than a second
+   * near-identical table defined for them. Dropping the column here rather
+   * than at each of the four call sites means a new breakdown cannot
+   * accidentally leak a money column by forgetting the check.
+   */
+  hiddenColumnIds?: readonly string[];
 }
 
 type Direction = "asc" | "desc";
@@ -53,20 +63,36 @@ export function ReportBreakdownTable<TRow>({
   title,
   description,
   rows,
-  columns,
+  columns: allColumns,
   getRowId,
   initialSortId,
   shareValue,
   getRowHref,
   emptyMessage,
   failedLabel,
+  hiddenColumnIds,
 }: ReportBreakdownTableProps<TRow>) {
+  /*
+   * Hidden columns are removed before anything else reads the list, so a
+   * hidden column cannot be sorted on, measured for the tint, or rendered.
+   * Filtering at render time only would leave it sortable by URL.
+   */
+  const columns = useMemo(
+    () =>
+      hiddenColumnIds?.length
+        ? allColumns.filter((column) => !hiddenColumnIds.includes(column.id))
+        : allColumns,
+    [allColumns, hiddenColumnIds],
+  );
+
   const [sortId, setSortId] = useState(initialSortId);
   const [direction, setDirection] = useState<Direction>("desc");
 
   const sorted = useMemo(() => {
     if (!rows) return [];
 
+    /* If the initial sort column was hidden, fall back to the first visible
+       one rather than sorting on nothing. */
     const column = columns.find((candidate) => candidate.id === sortId) ?? columns[0];
     if (!column) return rows;
 

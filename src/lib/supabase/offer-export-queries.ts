@@ -1,5 +1,4 @@
 import { createClient } from "@/src/lib/supabase/server";
-import type { OfferExportDataset } from "@/src/lib/types/offer-export";
 import { filsToDecimalString } from "@/src/lib/utils/sales-money";
 import {
   OFFER_TAB_STATUSES,

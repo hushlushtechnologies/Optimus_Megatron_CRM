@@ -7,7 +7,6 @@ import Link from "next/link";
 import { SalesStatusBadge } from "@/src/components/sales/sales-status-badge";
 import { useMotion } from "@/src/hooks/use-motion";
 import type { SalesReportData } from "@/src/lib/types/sales-reports";
-import { formatMoney } from "@/src/lib/utils/sales-format";
 
 interface ReportSummaryViewProps {
   data: SalesReportData;
@@ -32,7 +31,9 @@ function SectionFailed({ what }: { what: string }) {
  * what the table view is for. Lives in its own file because the report client
  * was becoming too long to read in one screen.
  */
-export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
+/* currency stays on the props so the parent needn't change, but it is no
+   longer read here: every money figure arrives preformatted on its Money. */
+export function ReportSummaryView({ data }: ReportSummaryViewProps) {
   const { fadeUp } = useMotion();
 
   return (
@@ -63,7 +64,7 @@ export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
                 >
                   <SalesStatusBadge status={row.status} size="sm" />
                   <span className="text-body-sm text-text-primary tabular-nums">
-                    {row.count} · {formatMoney(row.value, currency)}
+                    {row.count} · {row.value.display}
                   </span>
                 </li>
               ))}
@@ -92,7 +93,7 @@ export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
                 >
                   <span className="text-body-sm text-text-primary truncate">{row.locationName}</span>
                   <span className="text-body-sm text-text-muted tabular-nums">
-                    {row.completed} · {formatMoney(row.value, currency)}
+                    {row.completed} · {row.value.display}
                   </span>
                 </li>
               ))}
@@ -156,7 +157,7 @@ export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
                       {row.open}
                     </td>
                     <td className="text-body-sm text-text-primary py-2.5 text-right tabular-nums">
-                      {formatMoney(row.value, currency)}
+                      {row.value.display}
                     </td>
                   </tr>
                 ))}
@@ -180,8 +181,10 @@ export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
         ) : (
           <ul className="flex flex-col gap-2.5">
             {data.monthly.map((point) => {
-              const peak = Math.max(...(data.monthly ?? []).map((item) => item.value), 1);
-              const width = Math.max(2, Math.round((point.value / peak) * 100));
+              /* chart, not fils: a bar's width does not need to be exact to
+                 the fil, and Money.chart is the only number on a Money. */
+              const peak = Math.max(...(data.monthly ?? []).map((item) => item.value.chart), 1);
+              const width = Math.max(2, Math.round((point.value.chart / peak) * 100));
 
               return (
                 <li key={point.month} className="flex flex-col gap-1">
@@ -189,7 +192,7 @@ export function ReportSummaryView({ data, currency }: ReportSummaryViewProps) {
                     <span className="text-body-sm text-text-primary">{point.month}</span>
                     <span className="text-caption text-text-muted tabular-nums">
                       {point.completed} {point.completed === 1 ? "deal" : "deals"} ·{" "}
-                      {formatMoney(point.value, currency)}
+                      {point.value.display}
                     </span>
                   </div>
 

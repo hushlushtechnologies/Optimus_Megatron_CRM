@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { beginSalesAction } from "@/src/lib/supabase/sales-permissions";
 import { issueDocumentSchema, voidDocumentSchema } from "@/src/lib/validation/sales-documents";
 import { mapSalesDbError } from "@/src/lib/utils/sales-errors";
+import {
+  checkReceiptEligibility,
+  receiptRefusal,
+} from "@/src/lib/supabase/payment-receipt-queries";
 import type { DocumentActionResult, IssueDocumentResult } from "@/src/lib/types/sales-documents";
 
 interface IssuedRow {
@@ -27,6 +31,28 @@ export async function issueDocumentAction(input: unknown): Promise<IssueDocument
     return { error: parsed.error.issues[0]?.message ?? "Please check the details and try again." };
   }
   const v = parsed.data;
+
+  /*
+   * A receipt may only describe a verified, incoming payment.
+   *
+   * The queue's Receipt button already checks both, but a button is not a
+   * control: this action is reachable by anyone holding the documents
+   * permission, whatever the screen happened to render. The schema above
+   * checks only that a paymentId was supplied.
+   *
+   * Issuing one for a Recorded payment would have the dealership confirm
+   * in writing that it holds money nobody has checked arrived — the
+   * sprint's "treat Recorded as Verified", in the customer's hands.
+   * Issuing one for a refund would say the opposite of what happened.
+   *
+   * issue_sales_document may well enforce this too; it is not in this
+   * repository, so that cannot be relied on from here.
+   */
+  if (v.type === "Receipt" && v.paymentId) {
+    const refusal = receiptRefusal(await checkReceiptEligibility(v.paymentId));
+
+    if (refusal) return { error: refusal };
+  }
 
   const { data, error } = await start.supabase.rpc("issue_sales_document", {
     p_type: v.type,

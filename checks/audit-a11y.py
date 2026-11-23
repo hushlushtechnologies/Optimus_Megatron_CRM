@@ -129,14 +129,47 @@ for path in COMPONENTS:
 for path in COMPONENTS:
     text = strip_comments(path.read_text())
 
+    # A fixed width is w-[460px]. These are NOT fixed widths and must not be
+    # reported as such:
+    #
+    #   max-w-[460px]      a cap. With w-full this is the correct responsive
+    #                      pattern — full width on a phone, capped above it.
+    #                      This is what every filter drawer in the app does.
+    #   min-w-[460px]      handled separately below.
+    #   lg:w-[460px]       only applies from 1024px up, where 460px fits.
+    #
+    # The original pattern was \bw-\[(\d+)px\], and \b matches between the
+    # "-" and the "w" of "max-w-", so it flagged every correctly written
+    # drawer in the enquiries module. Two findings that stood in this audit
+    # for a sprint were both correct code — which is worse than no check,
+    # because a report that cries wolf gets skimmed and then ignored.
+    FIXED_WIDTH = re.compile(r"(?<![-:\w])w-\[(\d+)px\]")
+    RESPONSIVE_W = re.compile(r"\b(?:sm|md|lg|xl|2xl):w-\[(\d+)px\]")
+
     for line_no, line in enumerate(text.splitlines(), start=1):
-        for match in re.finditer(r"\bw-\[(\d+)px\]", line):
+        for match in FIXED_WIDTH.finditer(line):
             if int(match.group(1)) > 360:
-                note(path, line_no, f"fixed width {match.group(1)}px exceeds a small phone viewport")
-        if re.search(r"\boverflow-x-\w+", line) is None and re.search(r"\bmin-w-\[(\d+)px\]", line):
-            width = int(re.search(r"\bmin-w-\[(\d+)px\]", line).group(1))
-            if width > 360:
-                note(path, line_no, f"min-width {width}px with no scroll container")
+                note(
+                    path,
+                    line_no,
+                    f"fixed width {match.group(1)}px exceeds a small phone viewport",
+                )
+
+        # A responsive-prefixed fixed width is fine at its own breakpoint,
+        # but only if the unprefixed case is handled. Flag it when there is
+        # no w-full or w-auto alongside to cover phone widths.
+        for match in RESPONSIVE_W.finditer(line):
+            if int(match.group(1)) > 360 and not re.search(r"\bw-(?:full|auto)\b", line):
+                note(
+                    path,
+                    line_no,
+                    f"{match.group(0)} has no unprefixed width — phones get the browser default",
+                )
+
+        min_w = re.search(r"(?<![-:\w])min-w-\[(\d+)px\]", line)
+        if min_w and re.search(r"\boverflow-x-\w+", line) is None:
+            if int(min_w.group(1)) > 360:
+                note(path, line_no, f"min-width {min_w.group(1)}px with no scroll container")
 
 # =====================================================================
 # 5. Alerts need a role so a screen reader announces them

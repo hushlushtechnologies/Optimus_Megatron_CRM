@@ -1,4 +1,6 @@
 import type { SalesDealStatus } from "@/src/lib/types/sales";
+import type { SetCompleteness } from "@/src/lib/supabase/report-aggregate";
+import type { Money } from "@/src/lib/utils/report-money";
 
 /*
 |--------------------------------------------------------------------------
@@ -10,8 +12,13 @@ import type { SalesDealStatus } from "@/src/lib/types/sales";
 | applies, which means two people with different roles can legitimately see
 | different totals: each sees their own view of the business.
 |
-| Money is read as a number at the edge and only ever summed, never
-| multiplied or divided into money, so no rounding is introduced.
+| SPRINT 9: money is no longer read as a number. Every money figure is a
+| Money — exact fils as a string, a preformatted display string, and a lossy
+| number for chart geometry only. The float summing this file used to do is
+| explained in report-money.ts.
+|
+| A money field being null means its lookup FAILED. It does not mean zero. A
+| genuinely empty period returns a Money of zero, which displays as "AED 0.00".
 */
 
 export type ReportRange = "this-month" | "last-month" | "last-90" | "year" | "all";
@@ -25,51 +32,84 @@ export const REPORT_RANGES: { id: ReportRange; label: string }[] = [
 ];
 
 export interface SalesKpis {
-  /** Deals created in the period. */
+  /** Deals created in the period, by created_at. */
   created: number;
-  /** Deals completed in the period. */
+  /** Deals completed in the period, by completed_at. */
   completed: number;
+  /** Deals created in the period that are now Cancelled. */
   cancelled: number;
-  /** Still open at the end of the period. */
+  /** Still open right now, whenever they were created. Not period-bound. */
   open: number;
-  /** Total due across deals completed in the period. */
-  completedValue: number;
-  /** Verified payments in, less refunds out, in the period. */
-  collected: number;
-  /** Balance still outstanding on confirmed, not yet completed deals. */
-  outstanding: number;
-  /** Completed divided by created, as a whole percentage. Null when nothing was created. */
-  winRate: number | null;
-  /** Average value of a completed deal. Null when none completed. */
-  averageDealValue: number | null;
+
+  /** Total due across deals completed in the period. Null if the lookup failed. */
+  completedValue: Money | null;
+
+  /**
+   * Verified payments IN during the period. **Not** net of refunds.
+   *
+   * Sprint 6 netted refunds into this figure and called it "Collected", so a
+   * month that took AED 2m and refunded AED 2m reported zero. The two are
+   * separate metrics by definition and are now separate fields.
+   */
+  collected: Money | null;
+  /** Verified refunds OUT during the period, expressed positive. */
+  refunded: Money | null;
+  /** collected − refunded. Negative in a heavy refund month. */
+  netCash: Money | null;
+
+  /** Balance outstanding on Confirmed deals. Not Reserved or Negotiation. */
+  outstanding: Money | null;
+
+  /**
+   * Of the deals CREATED in this period, the share that have completed.
+   * Always 0–100. Null when nothing was created in the period.
+   *
+   * Replaces `winRate`, which divided deals completed in the window by deals
+   * created in the window — two different populations — and therefore
+   * exceeded 100% whenever the sales cycle outlasted the window.
+   */
+  cohortWinRate: number | null;
+  /** The numerator of cohortWinRate, shown so the rate can be checked. */
+  cohortCompleted: number;
+
+  /** Average value of a deal completed in the period. Null when none did. */
+  averageDealValue: Money | null;
+
   currency: string;
+
+  /** Which figures were capped or failed. */
+  completeness: SetCompleteness;
+  /** One sentence for the reader, or null when everything is complete. */
+  notice: string | null;
 }
 
 export interface StatusBreakdownRow {
   status: SalesDealStatus;
   count: number;
-  value: number;
+  value: Money;
 }
 
+/** Attributed by the deal's own owner, never the customer's relationship manager. */
 export interface OwnerPerformanceRow {
   ownerId: string;
   ownerName: string;
   completed: number;
   open: number;
-  value: number;
+  value: Money;
 }
 
 export interface ShowroomPerformanceRow {
   locationId: string;
   locationName: string;
   completed: number;
-  value: number;
+  value: Money;
 }
 
 export interface MonthlyPoint {
+  /** "Nov 2026", bucketed and labelled from the same Dubai month. */
   month: string;
   completed: number;
-  value: number;
+  value: Money;
 }
 
 /** Each section is null when its lookup failed, which is not the same as zero. */
@@ -80,7 +120,10 @@ export interface SalesReportData {
   byShowroom: ShowroomPerformanceRow[] | null;
   monthly: MonthlyPoint[] | null;
   range: ReportRange;
+  /** "November 2026" — for headers and exports. */
+  rangeLabel: string;
   from: string | null;
+  /** Exclusive end of the window. */
   to: string;
 }
 

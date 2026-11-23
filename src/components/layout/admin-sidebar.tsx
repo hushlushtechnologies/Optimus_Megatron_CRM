@@ -218,7 +218,7 @@ export function AdminSidebar({ userName, userRole }: AdminSidebarProps) {
                         isCollapsed ? "justify-center px-2" : "gap-3 px-3",
 
                         isActive
-                          ? "text-primary-light"
+                          ? "text-primary"
                           : ["text-text-subtle", "hover:bg-sidebar-hover", "hover:text-text-primary"],
                       )}
                     >

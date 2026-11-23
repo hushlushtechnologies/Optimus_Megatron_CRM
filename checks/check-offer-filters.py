@@ -61,16 +61,39 @@ else:
 
 # ------------------------------------------------------------------- 2. read
 
-page_src = read("app/admin/offers/page.tsx")
+# This used to look for an inline `const filters = { ... }` in page.tsx,
+# reading each key with a helper called `one`. The page has since been
+# refactored: the parsing moved into parseOfferFilters() and the helper was
+# renamed to oneParam. The code is correct; the check was looking in the
+# wrong file for the wrong name, and had been failing on correct code since
+# that refactor.
+#
+# So it now finds the parser wherever it is defined rather than assuming a
+# file, and accepts any single-param helper. Failing to find the parser at
+# all is still a failure — a check that verifies nothing must not pass.
+PARSER_RE = re.compile(
+    r"export function parseOfferFilters\([^)]*\)[^{]*\{(.*?)\n\}",
+    re.S,
+)
 
-filters_literal = re.search(r"const filters = \{(.*?)\n  \};", page_src, re.S)
-if filters_literal:
-    body = filters_literal.group(1)
-    for key in keys:
-        if not re.search(rf"\b{key}:\s*one\(params\.{key}\)", body):
-            failures.append(f"{key}: not read from searchParams in page.tsx")
+parser_body = None
+parser_file = None
+
+for candidate in sorted((ROOT / "src").rglob("*.ts")):
+    match = PARSER_RE.search(candidate.read_text(encoding="utf-8", errors="replace"))
+    if match:
+        parser_body = match.group(1)
+        parser_file = candidate.relative_to(ROOT)
+        break
+
+if parser_body is None:
+    failures.append("could not find parseOfferFilters() anywhere under src/")
 else:
-    failures.append("could not find the filters literal in page.tsx")
+    for key in keys:
+        # Any helper that pulls one value off the param bag is fine; what
+        # matters is that this key is read from params at all.
+        if not re.search(rf"\b{key}:\s*\w+\(\s*params\.{key}\b", parser_body):
+            failures.append(f"{key}: not read from searchParams in {parser_file}")
 
 # ------------------------------------------------------------------ 3. applied
 
