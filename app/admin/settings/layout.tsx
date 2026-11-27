@@ -51,12 +51,12 @@ export default async function SettingsLayout({
           </p>
         </div>
 
-        <SettingsSearch />
+        <SettingsSearch visibleIds={pages.map((page) => page.id)} />
       </header>
 
       <div className="flex min-w-0 flex-col gap-6 lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-8">
         <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
-          <SettingsNavigation pages={pages} />
+          <SettingsNavigation visibleIds={pages.map((page) => page.id)} />
         </aside>
 
         <div className="min-w-0">{children}</div>

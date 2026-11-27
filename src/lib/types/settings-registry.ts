@@ -565,3 +565,35 @@ export function searchSettings(term: string): readonly SettingsPage[] {
     .sort((a, b) => b.score - a.score || a.page.label.localeCompare(b.page.label))
     .map((entry) => entry.page);
 }
+
+/**
+ * Pages for a list of ids, in registry order.
+ *
+ * WHY THIS EXISTS — a server/client boundary problem.
+ *
+ * `SettingsPage.icon` is a React component. A Server Component cannot pass a
+ * component to a Client Component: React has to serialize the props, and a
+ * component is not serializable. Next.js reports it as "Only plain objects
+ * can be passed to Client Components from Server Components", once per page
+ * in the array.
+ *
+ * The layout and the overview both need a PERMISSION-FILTERED list, which only
+ * the server can compute. So the server sends the ids — strings, which
+ * serialize fine — and the client resolves them against the registry it
+ * imports itself. The filtering stays on the server; the component never
+ * crosses the boundary.
+ *
+ * settings-search.tsx worked this way from the start, which is why it was the
+ * one piece of the navigation that never threw.
+ *
+ * Registry order rather than the order the ids arrived in: the registry order
+ * IS the display order, and a caller that did `.map(p => p.id)` over a
+ * filtered list should not be able to reorder the menu by accident.
+ *
+ * An id with no registry entry is dropped rather than throwing. A stale id
+ * should not blank the whole navigation.
+ */
+export function resolveSettingsPages(ids: readonly string[]): readonly SettingsPage[] {
+  const wanted = new Set(ids);
+  return SETTINGS_PAGES.filter((page) => wanted.has(page.id));
+}

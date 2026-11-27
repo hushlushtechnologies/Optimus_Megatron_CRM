@@ -38,13 +38,30 @@ import {
 | reason for this to touch the network.
 */
 
-export function SettingsSearch() {
+export function SettingsSearch({ visibleIds }: { visibleIds: readonly string[] }) {
   const router = useRouter();
   const [term, setTerm] = useState("");
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const results = useMemo(() => searchSettings(term), [term]);
+  /*
+   * Results are narrowed to the pages this person may open.
+   *
+   * Until Sprint 10's fix this searched the whole registry, so somebody
+   * without, say, financial settings access could type "discount" and get a
+   * result they could not open — a page name is not sensitive, but offering
+   * somebody a door that is locked for them is a worse answer than not
+   * listing it, and the navigation beside it already hides those pages.
+   *
+   * The ids arrive from the server, which is where the permission filtering
+   * happens. They are ids rather than pages because SettingsPage carries its
+   * icon, and a React component cannot cross the server/client boundary.
+   */
+  const allowed = useMemo(() => new Set(visibleIds), [visibleIds]);
+  const results = useMemo(
+    () => searchSettings(term).filter((page) => allowed.has(page.id)),
+    [term, allowed],
+  );
   const showResults = focused && term.trim().length > 0;
 
   const go = (page: SettingsPage) => {

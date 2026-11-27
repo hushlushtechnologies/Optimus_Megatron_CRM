@@ -15,5 +15,5 @@ export const metadata = {
 export default async function SettingsOverviewPage() {
   const access = await currentSettingsAccess();
 
-  return <SettingsOverviewClient pages={visiblePages(access)} />;
+  return <SettingsOverviewClient visibleIds={visiblePages(access).map((page) => page.id)} />;
 }

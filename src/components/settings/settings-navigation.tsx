@@ -8,6 +8,7 @@ import { ChevronDown, Lock } from "lucide-react";
 import { cn } from "@/src/lib/utils/cn";
 import {
   SETTINGS_CATEGORIES,
+  resolveSettingsPages,
   type SettingsPage,
 } from "@/src/lib/types/settings-registry";
 
@@ -47,11 +48,18 @@ import {
 */
 
 interface SettingsNavigationProps {
-  /** Already filtered to what this person may open. */
-  pages: readonly SettingsPage[];
+  /**
+   * Ids of the pages this person may open, already filtered on the server.
+   *
+   * Ids rather than the pages themselves because SettingsPage carries its
+   * icon, which is a React component, and a component cannot be serialized
+   * across the server/client boundary. See resolveSettingsPages.
+   */
+  visibleIds: readonly string[];
 }
 
-export function SettingsNavigation({ pages }: SettingsNavigationProps) {
+export function SettingsNavigation({ visibleIds }: SettingsNavigationProps) {
+  const pages = resolveSettingsPages(visibleIds);
   const pathname = usePathname() ?? "";
 
   const categories = SETTINGS_CATEGORIES.filter((category) =>

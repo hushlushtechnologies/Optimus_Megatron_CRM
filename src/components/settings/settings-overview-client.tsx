@@ -7,6 +7,7 @@ import { ArrowRight, Lock } from "lucide-react";
 import { useMotion } from "@/src/hooks/use-motion";
 import {
   SETTINGS_CATEGORIES,
+  resolveSettingsPages,
   type SettingsPage,
 } from "@/src/lib/types/settings-registry";
 
@@ -33,11 +34,12 @@ import {
 */
 
 interface SettingsOverviewClientProps {
-  /** Already filtered to what this person may open. */
-  pages: readonly SettingsPage[];
+  /** Ids of the pages this person may open, filtered on the server. */
+  visibleIds: readonly string[];
 }
 
-export function SettingsOverviewClient({ pages }: SettingsOverviewClientProps) {
+export function SettingsOverviewClient({ visibleIds }: SettingsOverviewClientProps) {
+  const pages = resolveSettingsPages(visibleIds);
   const { fadeUp } = useMotion();
 
   const categories = SETTINGS_CATEGORIES.filter((category) =>
