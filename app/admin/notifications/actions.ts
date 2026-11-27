@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
+import { moduleFilter, type NotificationModule } from "@/src/lib/types/notification-catalog";
 import { NOTIFICATION_PAGE_SIZE } from "@/src/lib/types/notification";
 import type { AppNotification, NotificationFeed, NotificationFilter } from "@/src/lib/types/notification";
 
@@ -67,9 +68,23 @@ export async function getMyNotifications(
  * A failure is reported as `failed`, never as an empty list, so the page can
  * say it couldn't load instead of claiming there is nothing there.
  */
+/*
+ * PHASE 17: filtering by module.
+ *
+ * Done in the database, not after fetching. A client-side filter over one
+ * page of 25 would show "nothing here" while later pages held matches, and
+ * hasMore would be computed from rows that were then discarded — so the
+ * empty state would be wrong and the pagination would lie about it.
+ *
+ * The unread filter and the module filter are kept independent. The brief
+ * lists them as one set of options, but losing "unread" because you clicked
+ * "Leads" is a worse screen than having both, and the UI can still present
+ * them as one row of chips plus one toggle.
+ */
 export async function getNotificationFeed(
   filter: NotificationFilter = "all",
   page = 0,
+  module?: NotificationModule,
 ): Promise<NotificationFeed> {
   const supabase = await createClient();
   const {
@@ -92,6 +107,18 @@ export async function getNotificationFeed(
     .range(from, to);
 
   if (filter === "unread") rows = rows.is("read_at", null);
+
+  if (module) {
+    const condition = moduleFilter(module);
+    if (condition.kind === "in") {
+      rows = rows.in("type", [...condition.types]);
+    } else if (condition.types.length > 0) {
+      // "System" means anything the catalog does not recognise, so that a
+      // notification nobody has catalogued is still reachable rather than
+      // counting toward the unread badge from behind every filter.
+      rows = rows.not("type", "in", `(${condition.types.join(",")})`);
+    }
+  }
 
   const [page_, unread, total] = await Promise.all([
     rows,

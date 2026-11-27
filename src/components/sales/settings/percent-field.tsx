@@ -9,12 +9,18 @@ interface PercentFieldProps {
   onChange: (value: string) => void;
   error?: string;
   helper?: string;
+  /**
+   * Added in Sprint 10. Someone may be allowed to open a settings page
+   * without being allowed to change it, and a field they cannot save should
+   * not accept typing. Optional, so every existing caller is unchanged.
+   */
+  disabled?: boolean;
 }
 
 const ALLOWED = /^\d{0,3}(\.\d{0,2})?$/;
 
 /** A text field that only accepts a percentage: digits and at most two decimals. */
-export function PercentField({ label, value, onChange, error, helper }: PercentFieldProps) {
+export function PercentField({ label, value, onChange, error, helper, disabled }: PercentFieldProps) {
   const baseId = useId();
   const describedBy =
     [helper ? `${baseId}-helper` : null, error ? `${baseId}-error` : null].filter(Boolean).join(" ") ||
@@ -33,6 +39,7 @@ export function PercentField({ label, value, onChange, error, helper }: PercentF
           autoComplete="off"
           placeholder="0"
           value={value}
+          disabled={disabled}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           onChange={(event) => {
@@ -42,6 +49,7 @@ export function PercentField({ label, value, onChange, error, helper }: PercentF
           className={cn(
             "bg-card text-body text-text-primary placeholder:text-text-subtle focus-visible:ring-primary h-11 w-full rounded-md border pr-9 pl-3 tabular-nums focus-visible:ring-2 focus-visible:outline-none sm:h-10",
             error ? "border-red-500" : "border-border",
+            disabled && "cursor-not-allowed opacity-60",
           )}
         />
         <span

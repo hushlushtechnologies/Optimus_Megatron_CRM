@@ -56,57 +56,12 @@ export const approveDiscountSchema = z.object({
   note: z.string().max(300, "Keep the note under 300 characters."),
 });
 
-export const salesSettingsSchema = z
-  .object({
-    discountAutoApprovePercent: z
-      .string()
-      .trim()
-      .refine(isPercentString, "Enter a percentage from 0 to 100, with at most two decimals."),
-    feesEnabled: z.boolean(),
-    reservationDefaultDays: z
-      .number({ message: "Enter a whole number of days." })
-      .int("Enter a whole number of days.")
-      .min(1, "Hold for at least 1 day.")
-      .max(90, "The default hold can be at most 90 days."),
-    reservationMaxDays: z
-      .number({ message: "Enter a whole number of days." })
-      .int("Enter a whole number of days.")
-      .min(1, "Allow at least 1 day.")
-      .max(365, "The longest hold can be at most 365 days."),
-    depositMode: z.enum(["none", "fixed", "percent"]),
-    depositValue: z.string().trim().max(20),
-    confirmMinDepositPercent: z
-      .string()
-      .trim()
-      .refine(isPercentString, "Enter a percentage from 0 to 100, with at most two decimals."),
-    separateVerifier: z.boolean(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.reservationDefaultDays > value.reservationMaxDays) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["reservationDefaultDays"],
-        message: "The default hold can't be longer than the longest hold.",
-      });
-    }
-    if (value.depositMode === "fixed") {
-      const fils = toFils(value.depositValue);
-      if (fils === null || fils < BigInt(0)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["depositValue"],
-          message: "Enter an amount of zero or more, with at most two decimals.",
-        });
-      }
-    }
-    if (value.depositMode === "percent" && !isPercentString(value.depositValue)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["depositValue"],
-        message: "Enter a percentage from 0 to 100, with at most two decimals.",
-      });
-    }
-  });
+/*
+ * salesSettingsSchema was here. It required every editable sales_settings
+ * field at once, which paired with an action that wrote every column at once.
+ * Sprint 10 splits the settings across three pages, so both are gone; see
+ * validation/settings-sections.ts for the field-scoped schemas and the reason.
+ */
 
 export const feeTypeSchema = z
   .object({

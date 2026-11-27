@@ -63,6 +63,23 @@ function show(key: string, value: unknown): string {
 
 type Values = Record<string, unknown> | null;
 
+/**
+ * The columns this history row actually changed, ignoring bookkeeping columns.
+ *
+ * Sprint 10 reads this as well as describeSettingsChange: the settings pages
+ * are now separate, so each one shows only the history that belongs to it, and
+ * "belongs to it" means "changed one of my columns". Both callers share this
+ * function so that the list a page filters on and the sentences it renders can
+ * never disagree about what changed.
+ */
+export function changedKeys(oldValues: Values, newValues: Values): string[] {
+  if (!newValues) return [];
+  return Object.keys(newValues).filter((key) => {
+    if (IGNORED.has(key)) return false;
+    return JSON.stringify(oldValues?.[key]) !== JSON.stringify(newValues[key]);
+  });
+}
+
 /** Plain sentences describing what changed. An empty list means nothing worth showing changed. */
 export function describeSettingsChange(
   entity: "settings" | "fee" | "company" | "checklist",
@@ -80,15 +97,9 @@ export function describeSettingsChange(
       : entity === "checklist"
         ? `${String(newValues.label ?? "Check")}: `
         : "";
-  const changes: string[] = [];
 
-  for (const key of Object.keys(newValues)) {
-    if (IGNORED.has(key)) continue;
-    const before = oldValues?.[key];
-    const after = newValues[key];
-    if (JSON.stringify(before) === JSON.stringify(after)) continue;
-    changes.push(`${prefix}${LABELS[key] ?? key}: ${show(key, before)} to ${show(key, after)}`);
-  }
-
-  return changes;
+  return changedKeys(oldValues, newValues).map(
+    (key) =>
+      `${prefix}${LABELS[key] ?? key}: ${show(key, oldValues?.[key])} to ${show(key, newValues[key])}`,
+  );
 }

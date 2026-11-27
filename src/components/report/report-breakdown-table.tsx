@@ -141,7 +141,25 @@ export function ReportBreakdownTable<TRow>({
       ) : rows.length === 0 ? (
         <p className="text-body-sm text-text-muted">{emptyMessage}</p>
       ) : (
-        <div className="overflow-x-auto">
+        /*
+         * A wide table scrolls sideways inside its card.
+         *
+         * `scrollbar-hidden` is this project's convention — eighteen other
+         * scroll containers use it, the shared data table included — and
+         * leaving it off here is what put a visible horizontal scrollbar
+         * under every breakdown table on every report.
+         *
+         * Hiding the bar removes the only mouse affordance for scrolling,
+         * so the container is made focusable with a label, the way the
+         * test-drive calendar already does it. Without that a keyboard user
+         * has no route to the off-screen columns at all.
+         */
+        <div
+          role="region"
+          aria-label={`${title} — scrolls sideways`}
+          tabIndex={0}
+          className="scrollbar-hidden focus-visible:ring-primary min-w-0 overflow-x-auto overscroll-x-contain rounded-lg focus-visible:ring-2 focus-visible:outline-none"
+        >
           <table className="w-full border-collapse">
             <caption className="sr-only">
               {title}. Sorted by {columns.find((column) => column.id === sortId)?.label ?? ""},{" "}

@@ -124,11 +124,22 @@ export interface LeadSourceOption {
   requires_detail: boolean;
 }
 
+/**
+ * Sources to choose from on the lead detail page.
+ *
+ * The is_active filter was missing here while every other option list in this
+ * file had one — including getActiveLeadStages, whose name says so. It had no
+ * visible effect because nothing could retire a source: there was no editor.
+ * Sprint 10 adds one, so from now on a retired source would have disappeared
+ * from the customer form, the new-lead form and every filter bar, and stayed
+ * on this one picker.
+ */
 export async function getLeadSourceOptions(): Promise<LeadSourceOption[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("customer_sources")
     .select("id, name, requires_detail")
+    .eq("is_active", true)
     .order("sort_order");
   return data ?? [];
 }

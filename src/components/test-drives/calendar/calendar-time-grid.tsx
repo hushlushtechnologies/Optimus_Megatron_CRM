@@ -47,7 +47,7 @@ export function CalendarTimeGrid({
       role="region"
       aria-label={ariaLabel}
       tabIndex={0}
-      className="border-border bg-card focus-visible:ring-primary overflow-x-auto rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
+      className="scrollbar-hidden border-border bg-card focus-visible:ring-primary overflow-x-auto overscroll-x-contain rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
     >
       <div className={days.length > 1 ? "min-w-[760px]" : undefined}>
         <div

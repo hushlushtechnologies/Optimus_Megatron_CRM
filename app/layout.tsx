@@ -17,11 +17,31 @@ export const metadata: Metadata = {
   description: "Admin dashboard for Optimus Megatron Cars, UAE premium & luxury automotive marketplace.",
 };
 
+/*
+ * Runs in <head> before anything else, which is what stops a light-themed
+ * page flashing dark on every navigation. It cannot import, so the
+ * resolution rule below is a hand-written copy of resolveTheme() in
+ * src/lib/theme/constants.ts.
+ *
+ * Two copies of a rule is how a rule drifts, so this copy is not trusted:
+ * test/theme-test.mts reads this exact string out of this file, runs it
+ * against a fake document, localStorage and matchMedia, and asserts it agrees
+ * with resolveTheme() for every combination of stored value and OS setting.
+ * Change one without the other and that test fails.
+ *
+ * Keep it small and keep it in a try/catch. Anything that throws here leaves
+ * the page unstyled.
+ */
 const themeInitScript = `
 (function () {
   try {
     var saved = localStorage.getItem('${THEME_STORAGE_KEY}');
-    if (saved === 'light') {
+    var light =
+      saved === 'light' ||
+      (saved === 'system' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-color-scheme: light)').matches);
+    if (light) {
       document.documentElement.classList.add('light');
     }
   } catch (e) {}

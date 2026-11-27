@@ -2,63 +2,38 @@
 
 import { revalidatePath } from "next/cache";
 import { beginSalesAction } from "@/src/lib/supabase/sales-permissions";
-import { feeTypeSchema, salesSettingsSchema } from "@/src/lib/validation/sales-pricing";
+import { feeTypeSchema } from "@/src/lib/validation/sales-pricing";
 import { mapSalesDbError } from "@/src/lib/utils/sales-errors";
 import { filsToDecimalString, toFils } from "@/src/lib/utils/sales-money";
 import type { SettingsActionResult } from "@/src/lib/types/sales-pricing";
 
+/*
+|------------------------------------------------------------------------------
+| updateSalesSettingsAction was here, and has been removed on purpose.
+|------------------------------------------------------------------------------
+|
+| It wrote all eight editable sales_settings columns in one UPDATE, which was
+| right while one form held all eight fields. Sprint 10 splits that form across
+| three pages, and an all-columns write from a page that shows two of them
+| sends the other six as they were when the page loaded — so saving a hold
+| length could put the discount threshold back without a trace.
+|
+| Replaced by three field-scoped actions in
+| app/admin/settings/operations/settings-actions.ts, each writing only its own
+| page's columns. The matching schema (salesSettingsSchema) is gone from
+| validation/sales-pricing.ts for the same reason: a schema that demands every
+| field is an invitation to write every field.
+|
+| saveFeeTypeAction below is untouched. It always wrote one fee row at a time,
+| which is why fees were never part of this problem.
+|
+|------------------------------------------------------------------------------
+*/
+
 function refresh() {
-  revalidatePath("/admin/sales/settings");
+  revalidatePath("/admin/settings/operations/sales");
   revalidatePath("/admin/sales");
   revalidatePath("/admin/reservations");
-}
-
-export async function updateSalesSettingsAction(input: unknown): Promise<SettingsActionResult> {
-  const start = await beginSalesAction("settings");
-  if (!start.ok) return { error: start.error };
-
-  const parsed = salesSettingsSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Please check the settings and try again." };
-  }
-  const v = parsed.data;
-
-  let depositValue = "0";
-  if (v.depositMode === "fixed") {
-    const fils = toFils(v.depositValue);
-    if (fils === null) return { error: "Please check the deposit amount." };
-    depositValue = filsToDecimalString(fils);
-  } else if (v.depositMode === "percent") {
-    depositValue = v.depositValue;
-  }
-
-  const { data, error } = await start.supabase
-    .from("sales_settings")
-    .update({
-      discount_auto_approve_percent: v.discountAutoApprovePercent,
-      fees_enabled: v.feesEnabled,
-      reservation_default_days: v.reservationDefaultDays,
-      reservation_max_days: v.reservationMaxDays,
-      reservation_deposit_mode: v.depositMode,
-      reservation_deposit_value: depositValue,
-      confirm_min_deposit_percent: v.confirmMinDepositPercent,
-      payments_require_separate_verifier: v.separateVerifier,
-      updated_by: start.userId,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", true)
-    .select("id");
-
-  if (error) {
-    console.error("updateSalesSettingsAction error:", error);
-    return { error: mapSalesDbError(error) };
-  }
-  if (!data || data.length === 0) {
-    return { error: "The settings could not be saved. You may not have permission to change them." };
-  }
-
-  refresh();
-  return { error: null };
 }
 
 export async function saveFeeTypeAction(input: unknown): Promise<SettingsActionResult> {

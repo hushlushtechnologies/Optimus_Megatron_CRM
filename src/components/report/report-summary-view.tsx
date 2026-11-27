@@ -127,7 +127,14 @@ export function ReportSummaryView({ data }: ReportSummaryViewProps) {
         ) : data.byOwner.length === 0 ? (
           <p className="text-body-sm text-text-muted">No deal is owned by anyone in this period yet.</p>
         ) : (
-          <div className="overflow-x-auto">
+          /* Same convention and the same keyboard route as the breakdown
+             tables — this one is min-w-md, so it scrolls readily. */
+          <div
+            role="region"
+            aria-label="Sales executive breakdown — scrolls sideways"
+            tabIndex={0}
+            className="scrollbar-hidden focus-visible:ring-primary min-w-0 overflow-x-auto overscroll-x-contain rounded-lg focus-visible:ring-2 focus-visible:outline-none"
+          >
             <table className="w-full min-w-md border-collapse">
               <caption className="sr-only">Deals completed and still open for each sales executive</caption>
               <thead>

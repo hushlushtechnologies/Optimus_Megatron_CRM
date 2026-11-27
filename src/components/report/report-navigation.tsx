@@ -58,8 +58,18 @@ export function ReportNavigation({ sections }: ReportNavigationProps) {
 
   const suffix = carried.toString() ? `?${carried.toString()}` : "";
 
+  /*
+   * scrollbar-hidden matches the rest of the app's scroll containers; the
+   * tab row showed a visible bar under it on anything below ~1280px.
+   *
+   * No tabIndex here, unlike the breakdown tables: the children are links,
+   * so Tab already reaches them and the browser scrolls them into view.
+   */
   return (
-    <nav aria-label="Reports" className="-mx-1 overflow-x-auto px-1 pb-1">
+    <nav
+      aria-label="Reports"
+      className="scrollbar-hidden -mx-1 overflow-x-auto px-1 pb-1"
+    >
       <ul className="flex min-w-max items-center gap-1">
         {sections.map((section) => {
           /* Exact match for the overview, prefix match for the rest, so
@@ -88,7 +98,7 @@ export function ReportNavigation({ sections }: ReportNavigationProps) {
                     transition={{ type: "spring", stiffness: 420, damping: 34 }}
                   />
                 )}
-                <span className="relative z-10">{section.label}</span>
+                <span className="relative z-10">{section.navLabel ?? section.label}</span>
               </Link>
             </li>
           );

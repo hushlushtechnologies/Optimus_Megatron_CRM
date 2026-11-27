@@ -1,5 +1,6 @@
 "use server";
 
+import { notifyPaymentVerifiers } from "@/src/lib/notifications/create-notification";
 import { getPaymentRules } from "@/src/lib/supabase/sales-payment-queries";
 import { beginSalesAction, type SalesSupabaseClient } from "@/src/lib/supabase/sales-permissions";
 import type { BulkPaymentActionResult, PaymentActionResult } from "@/src/lib/types/sales-payments";
@@ -39,21 +40,57 @@ export async function recordPaymentAction(input: unknown): Promise<PaymentAction
   const fils = toFils(v.amount);
   if (fils === null) return { error: "Please check the amount and try again." };
 
-  const { error } = await start.supabase.from("sales_payments").insert({
-    deal_id: v.dealId,
-    reservation_id: v.reservationId,
-    direction: v.kind === "Refund" ? "out" : "in",
-    kind: v.kind,
-    amount: filsToDecimalString(fils),
-    method: v.method,
-    reference: v.reference === "" ? null : v.reference,
-    paid_on: v.paidOn,
-    notes: v.notes.trim() === "" ? null : v.notes.trim(),
-  });
+  const { data, error } = await start.supabase
+    .from("sales_payments")
+    .insert({
+      deal_id: v.dealId,
+      reservation_id: v.reservationId,
+      direction: v.kind === "Refund" ? "out" : "in",
+      kind: v.kind,
+      amount: filsToDecimalString(fils),
+      method: v.method,
+      reference: v.reference === "" ? null : v.reference,
+      paid_on: v.paidOn,
+      notes: v.notes.trim() === "" ? null : v.notes.trim(),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     console.error("recordPaymentAction error:", error);
     return { error: mapSalesDbError(error) };
+  }
+
+  /*
+   * SPRINT 10 PHASE 19: tell whoever can verify this.
+   *
+   * Recording a payment is a claim that money arrived; verifying it is the
+   * confirmation. When the separate-verifier rule is on, the person who just
+   * recorded it is specifically the one who may NOT confirm it — so until now
+   * a recorded payment sat waiting with nobody told it existed. The brief
+   * lists "Payment Verification Required" as a notification; it did not
+   * exist, and this is it.
+   *
+   * Only when the rule is on. With it off, the recorder can verify their own
+   * payment, so there is nobody else who needs to act and a notification
+   * would be noise.
+   *
+   * A refund is money going out and is not something anybody verifies in,
+   * so it is left alone.
+   *
+   * Nothing here can fail the payment. The payment is already written and
+   * returned below whatever happens; notifyPaymentVerifiers logs and swallows
+   * its own errors, exactly as every other notification helper does. A
+   * notification that failed must never un-record money that arrived.
+   */
+  const rules = await getPaymentRules();
+  if (v.kind !== "Refund" && rules.separateVerifier !== false) {
+    await notifyPaymentVerifiers({
+      paymentId: data.id as string,
+      title: "A payment needs verifying",
+      description: `${v.method} payment recorded. It needs someone other than the person who recorded it to confirm the money arrived.`,
+      recordedBy: start.userId,
+    });
   }
 
   refresh(v.dealId, v.reservationId);

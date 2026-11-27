@@ -18,9 +18,48 @@ import pathlib
 REPO = pathlib.Path("/home/claude/hushlushtechnologies/optimus_megatron_crm")
 
 # Written or substantially changed in Sprint 7.
-COMPONENTS = sorted((REPO / "src/components/enquiries").glob("*.tsx")) + sorted(
-    (REPO / "src/components/enquiries/form").glob("*.tsx")
-) + [REPO / "src/components/customers/profile-tabs/customer-enquiries-tab.tsx"]
+# WHAT THIS SCANS, AND WHY IT CHANGED
+#
+# This used to scan src/components/enquiries only — the module it was written
+# for during Sprint 7 — plus one customer tab. Forty-one files, about five per
+# cent of the component tree.
+#
+# So its clean bill of health meant "the enquiries module is fine", while the
+# report read as though the application had been checked. The horizontal
+# scrollbars reported in Test Drives, Sales and Reports were in files this
+# audit had never opened.
+#
+# It now walks every component and page. That is the only scope at which a
+# responsive audit means anything: the bug is always in the module nobody
+# thought to look at.
+COMPONENTS = sorted(
+    path
+    for directory in ("src/components", "app")
+    for path in (REPO / directory).rglob("*.tsx")
+    if "node_modules" not in str(path)
+)
+
+# ---------------------------------------------------------------------------
+# A RATCHET FOR THE DECORATIVE-ICON BACKLOG
+#
+# Widening this audit from the enquiries module to the whole application, and
+# reading icon names from each file's own lucide-react import instead of a
+# hand-kept pattern, took the icon findings from a handful to 121. They are
+# real: an icon inside a labelled IconButton should carry aria-hidden so a
+# screen reader announces the button's name once rather than twice.
+#
+# They are also not all the same fix. Most sit inside a control that already
+# has an aria-label, where aria-hidden is plainly right. A few are the only
+# content of a control whose name comes from a Tooltip, and hiding the icon
+# there without first giving the control a name would make it anonymous —
+# worse than the thing being fixed.
+#
+# So they are not auto-fixed, and they are not ignored either. The count is
+# pinned. A new one fails the check; clearing some and lowering the number
+# is the way the backlog shrinks. If the count drops without the baseline
+# moving, the check says so, so the number cannot quietly drift out of date.
+# ---------------------------------------------------------------------------
+ICON_BACKLOG = 121
 
 findings: list[str] = []
 
@@ -69,18 +108,50 @@ for path in COMPONENTS:
 #
 # An icon beside a word that already says the same thing reads twice.
 
-ICON_NAMES = re.compile(
-    r"<(Archive|ArrowRightLeft|ArrowUpRight|CalendarClock|Check\w*|Clock|Download|"
-    r"FileSpreadsheet|FileText|Flag|Gavel|Info|Inbox|Link2|Link2Off|Lock|Mail\w*|"
-    r"MessageSquare\w*|PencilLine|Plus|RefreshCw|Search|Share2|ShieldAlert|Sparkles|"
-    r"StickyNote|TriangleAlert|UserCheck|UserCog|UserPlus|Users|X)\b([^>]*?)/?>",
-    flags=re.S,
+# WHICH NAMES ARE ICONS
+#
+# This used to be a hand-kept list with wildcards — Check\w*, Mail\w*,
+# MessageSquare\w* — meant to catch CheckCircle and MailOpen. It also caught
+# every component whose name happens to start the same way: CheckRow,
+# Checklist, CheckInDeskClient, CheckInTestDriveDialog. Four files' worth of
+# findings that were not icons at all.
+#
+# So the names now come from each file's own lucide-react import. That is
+# exactly the set of icons the file can render, it needs no maintenance, and
+# it cannot collide with a local component.
+LUCIDE_IMPORT_RE = re.compile(
+    r'import\s*\{([^}]*)\}\s*from\s*["\']lucide-react["\']', re.S
 )
+
+
+def icon_names(text: str) -> set[str]:
+    names: set[str] = set()
+    for block in LUCIDE_IMPORT_RE.findall(text):
+        for part in block.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            # Handle `Check as CheckIcon` — the local alias is what's rendered.
+            if " as " in part:
+                part = part.split(" as ")[-1].strip()
+            if part and part[0].isupper():
+                names.add(part)
+    return names
+
 
 for path in COMPONENTS:
     text = strip_comments(path.read_text())
 
-    for match in ICON_NAMES.finditer(text):
+    names = icon_names(text)
+    if not names:
+        continue
+
+    icon_re = re.compile(
+        r"<(" + "|".join(sorted(map(re.escape, names), key=len, reverse=True)) + r")\b([^>]*?)/?>",
+        flags=re.S,
+    )
+
+    for match in icon_re.finditer(text):
         attrs = match.group(2) or ""
 
         if "aria-hidden" in attrs or "aria-label" in attrs:
@@ -167,8 +238,14 @@ for path in COMPONENTS:
                 )
 
         min_w = re.search(r"(?<![-:\w])min-w-\[(\d+)px\]", line)
-        if min_w and re.search(r"\boverflow-x-\w+", line) is None:
-            if int(min_w.group(1)) > 360:
+        if min_w and int(min_w.group(1)) > 360:
+            # The scroll container is usually the PARENT element, not this
+            # line — which is how the test-drive calendar's correct
+            # `overflow-x-auto` wrapper around a `min-w-[760px]` child was
+            # reported as having no scroll container at all.
+            all_lines = text.splitlines()
+            window = "\n".join(all_lines[max(0, line_no - 12) : line_no])
+            if re.search(r"\boverflow-(?:x-)?(?:auto|scroll)", window) is None:
                 note(path, line_no, f"min-width {min_w.group(1)}px with no scroll container")
 
 # =====================================================================
@@ -226,12 +303,49 @@ if not has_global_guard:
 print(f"\nChecked {len(COMPONENTS)} components")
 print("=" * 60)
 
-if findings:
-    print(f"{len(findings)} finding(s):\n")
-    for item in findings:
+icon_findings = [f for f in findings if "icon without aria-hidden" in f]
+other_findings = [f for f in findings if "icon without aria-hidden" not in f]
+
+if other_findings:
+    print(f"{len(other_findings)} finding(s) to fix:\n")
+    for item in other_findings:
         print(f"  {item}")
-else:
-    print("No findable accessibility or responsive issues in the Sprint 7 components.")
+    print()
+
+failed = bool(other_findings)
+
+if icon_findings:
+    count = len(icon_findings)
+    if count > ICON_BACKLOG:
+        print(
+            f"{count} decorative-icon finding(s) — {count - ICON_BACKLOG} MORE than the "
+            f"pinned backlog of {ICON_BACKLOG}:\n"
+        )
+        for item in icon_findings[-(count - ICON_BACKLOG) :]:
+            print(f"  {item}")
+        print("\n  Add aria-hidden=\"true\" to the new one(s), or raise ICON_BACKLOG")
+        print("  deliberately with a reason.\n")
+        failed = True
+    elif count < ICON_BACKLOG:
+        print(
+            f"{count} decorative-icon finding(s) — {ICON_BACKLOG - count} FEWER than the "
+            f"pinned backlog of {ICON_BACKLOG}."
+        )
+        print(f"  Good. Lower ICON_BACKLOG to {count} so the gain is held.\n")
+        failed = True
+    else:
+        print(f"{count} decorative-icon finding(s), matching the pinned backlog.")
+        print("  Pre-existing and tracked; see ICON_BACKLOG for why they are not")
+        print("  auto-fixed. Run with --list to see them.\n")
+
+if not findings:
+    print("No findable accessibility or responsive issues.")
+
+if "--list" in sys.argv and icon_findings:
+    print("Decorative-icon backlog:\n")
+    for item in icon_findings:
+        print(f"  {item}")
+    print()
 
 print("=" * 60)
-sys.exit(1 if findings else 0)
+sys.exit(1 if failed else 0)

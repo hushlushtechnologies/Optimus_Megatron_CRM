@@ -210,8 +210,18 @@ export const NAV_SECTIONS: NavSection[] = [
         status: "live",
       },
       {
-        label: "Sales Settings",
-        href: "/admin/sales/settings",
+        /*
+         * One Settings entry, which is Sprint 10's headline rule: all
+         * business and system configuration lives under /admin/settings and
+         * the main sidebar carries a single destination for it.
+         *
+         * This replaced "Sales Settings" → /admin/sales/settings. That URL
+         * still works — it redirects — so bookmarks and older notification
+         * links are unaffected. What changed is that the sidebar no longer
+         * advertises one module's settings as though it were the only one.
+         */
+        label: "Settings",
+        href: "/admin/settings",
         icon: SlidersHorizontal,
         status: "live",
       },

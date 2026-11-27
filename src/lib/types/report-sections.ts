@@ -56,6 +56,14 @@ export type SectionStatus = "ready" | "planned";
 export interface ReportSection {
   id: ReportSectionId;
   label: string;
+  /**
+   * A shorter label for the navigation row, where eight tabs compete for
+   * width. Measured: with the full labels the row needs 1,019px, so it
+   * scrolls on a 1280px screen once the sidebar is accounted for. The full
+   * label is still used for page titles, breadcrumbs and export headers,
+   * where there is room and the longer name is clearer.
+   */
+  navLabel?: string;
   href: string;
   /** Shown under the page title. */
   description: string;
@@ -97,6 +105,7 @@ export const REPORT_SECTIONS: readonly ReportSection[] = [
   {
     id: "customers",
     label: "Customers & Leads",
+    navLabel: "Customers",
     href: "/admin/reports/customers",
     description: "Who is buying, where they came from, and how leads are progressing.",
     anyOf: [],
@@ -129,6 +138,7 @@ export const REPORT_SECTIONS: readonly ReportSection[] = [
   {
     id: "promotions",
     label: "Promotions & Loyalty",
+    navLabel: "Promotions",
     href: "/admin/reports/promotions",
     description: "Campaign take-up, discounts given and points movement.",
     anyOf: ["offers.view", "loyalty.view"],
