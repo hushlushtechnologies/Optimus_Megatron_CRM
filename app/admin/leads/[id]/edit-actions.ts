@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/src/lib/supabase/server";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 const updateLeadSchema = z.object({
   carId: z.string().uuid().nullable(),
@@ -55,7 +55,7 @@ export async function updateLead(
   leadId: string,
   input: { carId: string | null; sourceId: string | null; sourceDetail: string },
 ): Promise<{ error: string | null; changed: boolean }> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error, changed: false };
 
   const parsed = updateLeadSchema.safeParse(input);

@@ -2,8 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
-import { assertCanDeleteLeads } from "@/src/lib/supabase/lead-permissions";
 import { addLeadTag, removeLeadTag } from "@/app/admin/leads/[id]/tags-actions";
 import { createFollowUp } from "@/app/admin/leads/[id]/follow-up-actions";
 import {
@@ -15,6 +13,7 @@ import {
 } from "@/src/lib/notifications/lead-notifications";
 import { BULK_CONCURRENCY, MAX_BULK_LEADS } from "@/src/lib/utils/lead-limits";
 import type { FollowUpType, LeadTemperature } from "@/src/lib/types/lead";
+import { assertCanDeleteLeads, assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 // --- Stage moves ---
 
@@ -108,7 +107,7 @@ async function moveLeadStageCore(
 }
 
 export async function moveLeadStage(leadId: string, newStageId: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const result = await moveLeadStageCore(leadId, newStageId, true);
@@ -187,7 +186,7 @@ async function assignLeadStaffCore(
 }
 
 export async function assignLeadStaff(leadId: string, newStaffId: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const result = await assignLeadStaffCore(leadId, newStaffId, true);
@@ -198,7 +197,7 @@ export async function assignLeadStaff(leadId: string, newStaffId: string) {
 // --- Temperature ---
 
 export async function changeLeadTemperature(leadId: string, newTemperature: LeadTemperature) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const supabase = await createClient();
@@ -247,7 +246,7 @@ async function getLeadWithStageType(leadId: string) {
 }
 
 export async function markLeadWon(leadId: string, notes: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const supabase = await createClient();
@@ -303,7 +302,7 @@ export async function markLeadWon(leadId: string, notes: string) {
 }
 
 export async function markLeadLost(leadId: string, lostReasonId: string, notes: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   if (!lostReasonId) return { error: "Select a lost reason." };
@@ -410,7 +409,7 @@ function summarize(succeeded: number, failed: number, verb: string): string {
 }
 
 export async function bulkAssignStaff(leadIds: string[], staffId: string): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -454,7 +453,7 @@ export async function bulkAssignStaff(leadIds: string[], staffId: string): Promi
 }
 
 export async function bulkChangeStage(leadIds: string[], stageId: string): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -506,7 +505,7 @@ export async function bulkChangeStage(leadIds: string[], stageId: string): Promi
 }
 
 export async function bulkAddTag(leadIds: string[], tagId: string): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -522,7 +521,7 @@ export async function bulkAddTag(leadIds: string[], tagId: string): Promise<Bulk
 }
 
 export async function bulkRemoveTag(leadIds: string[], tagId: string): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -541,7 +540,7 @@ export async function bulkChangeTemperature(
   leadIds: string[],
   temperature: LeadTemperature,
 ): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -562,7 +561,7 @@ export async function bulkScheduleFollowUp(
   date: string,
   time: string,
 ): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -579,7 +578,7 @@ export async function bulkScheduleFollowUp(
 }
 
 export async function bulkArchiveLeads(leadIds: string[]): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);
@@ -614,7 +613,7 @@ export async function bulkArchiveLeads(leadIds: string[]): Promise<BulkResult> {
 }
 
 export async function bulkRestoreLeads(leadIds: string[]): Promise<BulkResult> {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   const ids = normalizeIds(leadIds);

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
 import { slugify } from "@/src/lib/utils/slugify";
 import { addCarDraftSchema, getPublishBlockers, type AddCarDraftValues } from "@/src/lib/validation/car";
+import { assertCanManageInventory } from "@/src/lib/supabase/inventory-permissions";
 
 function mapSaveError(error: { code?: string; message: string }): string {
   if (error.code === "23505") {
@@ -86,6 +87,9 @@ function cleanDraftValues(values: AddCarDraftValues) {
 }
 
 export async function saveCarDraft(carId: string | null, values: AddCarDraftValues) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", carId: null };
+
   const parsed = addCarDraftSchema.safeParse(values);
   if (!parsed.success) {
     return { error: "Please fix the highlighted fields.", carId: null };
@@ -139,6 +143,9 @@ export async function saveCarRecord(
   values: AddCarDraftValues,
   options: SaveOptions = {},
 ) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", carId: null, blockers: [] };
+
   const parsed = addCarDraftSchema.safeParse(values);
   if (!parsed.success) {
     return {
@@ -216,6 +223,9 @@ export async function saveCarRecord(
 }
 
 export async function createBrand(name: string) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", brand: null };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("brands")
@@ -232,6 +242,9 @@ export async function createBrand(name: string) {
 }
 
 export async function createModel(brandId: string, name: string) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", model: null };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("models")
@@ -248,6 +261,9 @@ export async function createModel(brandId: string, name: string) {
 }
 
 export async function createVariant(modelId: string, name: string) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", variant: null };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("variants")

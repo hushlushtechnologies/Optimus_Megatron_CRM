@@ -1,54 +1,42 @@
-import { createClient } from "@/src/lib/supabase/server";
+import "server-only";
 
-const CUSTOMER_MANAGER_ROLES = ["Super Admin", "Admin", "Manager", "Sales Executive"];
+import { requireModulePermission } from "@/src/lib/supabase/module-permissions";
 
-export async function assertCanManageCustomers(): Promise<{
-  allowed: boolean;
-  error: string | null;
-}> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+/*
+| Sprint 11: customers.manage and customers.delete replace two role-name
+| arrays. The arrays survive only as the transition fallback described in
+| module-permissions.ts.
+|
+| Worth knowing while reading the call sites: assertCanManageCustomers() also
+| guards every LEAD action — nineteen call sites, and the leads half of them
+| has nothing to do with customers. Those now call assertCanManageLeads()
+| instead, which holds leads.manage. The two keys are granted to the same four
+| roles, so nothing changes today; they are separable from now on.
+*/
+const CUSTOMER_MANAGER_ROLES = ["Super Admin", "Admin", "Manager", "Sales Executive"] as const;
+const ELEVATED_CUSTOMER_ROLES = ["Super Admin", "Admin", "Manager"] as const;
 
-  if (!user) {
-    return { allowed: false, error: "You must be signed in to do this." };
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
-  const roleName = (profile?.roles as unknown as { name: string } | null)?.name;
-
-  if (!roleName || !CUSTOMER_MANAGER_ROLES.includes(roleName)) {
-    return {
-      allowed: false,
-      error: "You don't have permission to perform this action.",
-    };
-  }
-
-  return { allowed: true, error: null };
+export async function assertCanManageCustomers(): Promise<{ allowed: boolean; error: string | null }> {
+  return requireModulePermission(
+    "customers.manage",
+    CUSTOMER_MANAGER_ROLES,
+    "You don't have permission to perform this action.",
+  );
 }
 
-const ELEVATED_CUSTOMER_ROLES = ["Super Admin", "Admin", "Manager"];
-
 export async function assertCanDeleteCustomers(): Promise<{ allowed: boolean; error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  return requireModulePermission(
+    "customers.delete",
+    ELEVATED_CUSTOMER_ROLES,
+    "You don't have permission to permanently delete a customer.",
+  );
+}
 
-  if (!user) {
-    return { allowed: false, error: "You must be signed in to do this." };
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
-  const roleName = (profile?.roles as unknown as { name: string } | null)?.name;
-
-  if (!roleName || !ELEVATED_CUSTOMER_ROLES.includes(roleName)) {
-    return {
-      allowed: false,
-      error: "Only Super Admin, Admin, or Manager can permanently delete a customer.",
-    };
-  }
-
-  return { allowed: true, error: null };
+/** Edit and delete notes written by other members of staff. */
+export async function assertCanManageAllCustomerNotes(): Promise<{ allowed: boolean; error: string | null }> {
+  return requireModulePermission(
+    "customers.notes_manage",
+    ELEVATED_CUSTOMER_ROLES,
+    "You can only edit your own notes.",
+  );
 }

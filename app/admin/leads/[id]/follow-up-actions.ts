@@ -5,11 +5,11 @@ import { dubaiToIso } from "@/src/lib/utils/format-date";
 
 import { createClient } from "@/src/lib/supabase/server";
 
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 
 import { getLeadFollowUps } from "@/src/lib/supabase/lead-follow-up-queries";
 
 import type { FollowUpType, LeadFollowUp } from "@/src/lib/types/lead";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 /* =========================================================
    GET FOLLOW-UPS
@@ -65,7 +65,7 @@ export async function createFollowUp(
   time: string,
   notes: string,
 ) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {
@@ -124,7 +124,7 @@ export async function editFollowUp(
   time: string,
   notes: string,
 ) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {
@@ -173,7 +173,7 @@ export async function editFollowUp(
 ========================================================= */
 
 export async function completeFollowUp(followUpId: string, leadId: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {
@@ -233,7 +233,7 @@ export async function completeFollowUp(followUpId: string, leadId: string) {
 ========================================================= */
 
 export async function cancelFollowUp(followUpId: string, leadId: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {
@@ -293,7 +293,7 @@ export async function cancelFollowUp(followUpId: string, leadId: string) {
 ========================================================= */
 
 export async function markFollowUpMissed(followUpId: string, leadId: string) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {
@@ -358,7 +358,7 @@ export async function rescheduleFollowUp(
   newDate: string,
   newTime: string,
 ) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   if (!newDate) return { error: "A new date is required." };

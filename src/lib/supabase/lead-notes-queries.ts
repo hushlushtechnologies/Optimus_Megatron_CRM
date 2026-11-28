@@ -1,7 +1,9 @@
 import { createClient } from "@/src/lib/supabase/client";
 import type { LeadNote } from "@/src/lib/types/lead";
+import { decideModulePermission, type ModuleSupabaseClient } from "@/src/lib/supabase/module-permission-core";
 
-const ELEVATED_ROLES = ["Super Admin", "Admin", "Manager"];
+const ELEVATED_LEAD_ROLES = ["Super Admin", "Admin", "Manager"] as const;
+
 
 export interface LeadNotesResult {
   notes: LeadNote[];
@@ -34,12 +36,17 @@ export async function getLeadNotesWithAuthors(leadId: string): Promise<LeadNotes
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: currentProfile } = user
-    ? await supabase.from("profiles").select("roles(name)").eq("id", user.id).single()
-    : { data: null };
-
-  const currentRoleName = (currentProfile?.roles as unknown as { name: string } | null)?.name;
-  const canManageAllNotes = !!currentRoleName && ELEVATED_ROLES.includes(currentRoleName);
+  const canManageAllNotes = user
+    ? (
+        await decideModulePermission(
+          supabase as unknown as ModuleSupabaseClient,
+          user.id,
+          "leads.notes_manage",
+          ELEVATED_LEAD_ROLES,
+          "",
+        )
+      ).allowed
+    : false;
 
   return {
     notes: (notes ?? []) as LeadNote[],

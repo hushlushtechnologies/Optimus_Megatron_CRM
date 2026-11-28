@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
 import type { CarMedia } from "@/src/lib/types/inventory";
+import { assertCanManageInventory } from "@/src/lib/supabase/inventory-permissions";
 
 interface CreateMediaInput {
   carId: string;
@@ -16,6 +17,9 @@ interface CreateMediaInput {
 }
 
 export async function createCarMediaRecord(input: CreateMediaInput) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory.", media: null };
+
   const supabase = await createClient();
 
   const { count } = await supabase
@@ -52,6 +56,9 @@ export async function createCarMediaRecord(input: CreateMediaInput) {
 }
 
 export async function deleteCarMediaRecord(mediaId: string) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory." };
+
   const supabase = await createClient();
   const { error } = await supabase.from("car_media").delete().eq("id", mediaId);
 
@@ -65,6 +72,9 @@ export async function deleteCarMediaRecord(mediaId: string) {
 }
 
 export async function setFeaturedCarImage(carId: string, mediaId: string) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory." };
+
   const supabase = await createClient();
 
   await supabase
@@ -84,6 +94,9 @@ export async function setFeaturedCarImage(carId: string, mediaId: string) {
 }
 
 export async function reorderCarMedia(updates: { id: string; sort_order: number }[]) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory." };
+
   const supabase = await createClient();
 
   const results = await Promise.all(
@@ -103,6 +116,9 @@ export async function updateCarMediaMeta(
   mediaId: string,
   values: { title?: string | null; subtype?: string | null },
 ) {
+  const permission = await assertCanManageInventory();
+  if (!permission.allowed) return { error: permission.error ?? "You don't have permission to change inventory." };
+
   const supabase = await createClient();
   const { error } = await supabase.from("car_media").update(values).eq("id", mediaId);
 

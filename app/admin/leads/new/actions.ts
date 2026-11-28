@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/src/lib/supabase/server";
 import { dubaiToIso } from "@/src/lib/utils/format-date";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 
 import { createCustomer } from "@/app/admin/customers/new/actions";
 
 import { addCustomerDefaults } from "@/src/lib/validation/customer";
 
 import { addLeadSchema, type AddLeadValues } from "@/src/lib/validation/lead";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 // =========================================================
 // TYPES
@@ -111,7 +111,7 @@ export async function createLead(values: AddLeadValues) {
   // PERMISSION
   // =======================================================
 
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
 
   if (!permission.allowed) {
     return {

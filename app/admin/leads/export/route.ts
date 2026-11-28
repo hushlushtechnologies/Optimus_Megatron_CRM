@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MAX_BULK_LEADS } from "@/src/lib/utils/lead-limits";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 import { getLeadExportRows } from "@/src/lib/supabase/lead-export-queries";
 import { parseLeadFilters } from "@/src/lib/utils/lead-filters";
 import { generateLeadExcel } from "@/src/lib/utils/generate-lead-excel";
 import { generateLeadPdf } from "@/src/lib/utils/generate-lead-pdf";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 export async function GET(request: NextRequest) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) {
     return NextResponse.json({ error: permission.error }, { status: 403 });
   }

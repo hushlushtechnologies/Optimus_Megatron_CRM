@@ -105,8 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Staff & Users",
         href: "/admin/users",
         icon: Users,
-        status: "soon",
-        note: "Arrives with Staff Management",
+        status: "live",
       },
       {
         label: "Enquiry Requests",

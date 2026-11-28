@@ -1,30 +1,18 @@
-import { createClient } from "@/src/lib/supabase/server";
+import "server-only";
 
-const INVENTORY_MANAGER_ROLES = ["Super Admin", "Admin", "Manager", "Inventory Manager"];
+import { requireModulePermission } from "@/src/lib/supabase/module-permissions";
 
-export async function assertCanManageInventory(): Promise<{
-  allowed: boolean;
-  error: string | null;
-}> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+/*
+| Sprint 11: this module now authorises on inventory.manage rather than on a
+| list of role names. The array below is kept only as the transition fallback
+| described in module-permissions.ts, and is removed once sql/17 is verified.
+*/
+const INVENTORY_MANAGER_ROLES = ["Super Admin", "Admin", "Manager", "Inventory Manager"] as const;
 
-  if (!user) {
-    return { allowed: false, error: "You must be signed in to do this." };
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
-
-  const roleName = (profile?.roles as unknown as { name: string } | null)?.name;
-
-  if (!roleName || !INVENTORY_MANAGER_ROLES.includes(roleName)) {
-    return {
-      allowed: false,
-      error: "You don't have permission to perform this action.",
-    };
-  }
-
-  return { allowed: true, error: null };
+export async function assertCanManageInventory(): Promise<{ allowed: boolean; error: string | null }> {
+  return requireModulePermission(
+    "inventory.manage",
+    INVENTORY_MANAGER_ROLES,
+    "You don't have permission to perform this action.",
+  );
 }

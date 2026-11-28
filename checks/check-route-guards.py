@@ -64,6 +64,31 @@ GUARDED = [
 NESTED_NOT_A_GUARD = "app/admin/settings/layout.tsx"
 
 
+def function_body(text, name):
+    """
+    The source of one exported function, from its signature to the next
+    top-level export or the end of the file.
+
+    Deliberately crude — it only has to be tight enough that a sibling
+    function's code does not count as this one's.
+    """
+    start = re.search(rf"export\s+(?:async\s+)?function\s+{re.escape(name)}\b", text)
+    if not start:
+        return None
+
+    rest = text[start.end() :]
+    nxt = re.search(r"\nexport\s", rest)
+    return rest[: nxt.start()] if nxt else rest
+
+
+# Gate helpers a guarded layout is allowed to delegate to, and the file each
+# one must live in. Adding a name here is a deliberate act: the helper is then
+# checked for reading the signed-in user itself.
+DELEGATES = [
+    ("currentStaffGate", "src/lib/supabase/staff-permissions.ts"),
+]
+
+
 def main():
     problems = []
     passed = []
@@ -82,8 +107,70 @@ def main():
         text = path.read_text(encoding="utf-8", errors="replace")
 
         # 2. a redirect when there is no user
-        has_user_read = re.search(r"auth\.getUser\(\)|getUser\(\)", text)
+        #
+        # The layout may read the user itself, or delegate to a named gate
+        # helper. Delegation is followed one level: the helper must exist and
+        # must itself read the user, and the layout must still own the
+        # redirect. Accepting the mere presence of a call would turn this
+        # check into "does the file mention a function", which is how a guard
+        # check stops guarding anything.
+        has_user_read = bool(re.search(r"auth\.getUser\(\)|getUser\(\)", text))
+
+        if not has_user_read:
+            for helper_name, helper_rel in DELEGATES:
+                if not re.search(rf"\b{helper_name}\s*\(", text):
+                    continue
+
+                helper_path = ROOT / helper_rel
+                if not helper_path.exists():
+                    problems.append(
+                        f'{guard["layout"]} delegates its gate to {helper_name}(), but '
+                        f"{helper_rel} does not exist."
+                    )
+                    break
+
+                helper_text = helper_path.read_text(encoding="utf-8", errors="replace")
+                body = function_body(helper_text, helper_name)
+
+                if body is None:
+                    problems.append(
+                        f'{guard["layout"]} delegates its gate to {helper_name}(), but no '
+                        f"function by that name is exported from {helper_rel}."
+                    )
+                    break
+
+                # Scoped to that function's own body, not the whole file. The
+                # first version searched the file, and staff-permissions.ts
+                # happens to contain two functions that read the user — so
+                # gutting the one the layout actually calls left the other's
+                # call behind to satisfy the check.
+                if re.search(r"auth\.getUser\(\)", body):
+                    has_user_read = True
+                else:
+                    problems.append(
+                        f'{guard["layout"]} delegates its gate to {helper_name}() in '
+                        f"{helper_rel}, but that function never reads the signed-in user. "
+                        f"Every page under {guard['segment']} would be reachable without signing in."
+                    )
+                break
+
         has_redirect = re.search(r"redirect\(\s*[\"'`]/login", text)
+
+        # A layout that delegates must also BRANCH on what it gets back.
+        # Reading the gate and ignoring it is the same as having no gate, and
+        # it is the quieter failure of the two: everything still renders.
+        if re.search(r"\bcurrentStaffGate\s*\(", text):
+            # Specifically the "anything other than ok" branch. An earlier
+            # version also accepted `state === "<anything but ok>"`, which the
+            # signed-out redirect satisfies on its own — so deleting the branch
+            # that stops suspended accounts still looked fine.
+            acts_on_state = re.search(r"state\s*!==\s*[\"']ok[\"']", text)
+            if not acts_on_state:
+                problems.append(
+                    f'{guard["layout"]} calls currentStaffGate() but never branches on the '
+                    f"state it returns, so a suspended, deactivated or role-less account would "
+                    f"reach every page under {guard['segment']}."
+                )
         if not (has_user_read and has_redirect):
             missing = []
             if not has_user_read:

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/src/lib/supabase/server";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 interface LeadTagActionResult {
   error: string | null;
@@ -19,7 +19,7 @@ function revalidateLeadPaths(leadId: string) {
  */
 export async function addLeadTag(leadId: string, tagId: string): Promise<LeadTagActionResult> {
   try {
-    const permission = await assertCanManageCustomers();
+    const permission = await assertCanManageLeads();
 
     if (!permission.allowed) {
       return {
@@ -121,7 +121,7 @@ export async function addLeadTag(leadId: string, tagId: string): Promise<LeadTag
  */
 export async function removeLeadTag(leadId: string, tagId: string): Promise<LeadTagActionResult> {
   try {
-    const permission = await assertCanManageCustomers();
+    const permission = await assertCanManageLeads();
 
     if (!permission.allowed) {
       return {
@@ -207,7 +207,7 @@ export async function syncLeadTags(
   newTagIds: string[],
 ): Promise<LeadTagActionResult> {
   try {
-    const permission = await assertCanManageCustomers();
+    const permission = await assertCanManageLeads();
 
     if (!permission.allowed) {
       return {

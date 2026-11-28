@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 import type { CommunicationType } from "@/src/lib/supabase/lead-communications-queries";
+import { assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 export async function logLeadCommunication(
   leadId: string,
@@ -13,7 +13,7 @@ export async function logLeadCommunication(
   summary: string,
   relatedCarId: string | null,
 ) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error };
 
   if (!summary.trim()) return { error: "Summary is required." };

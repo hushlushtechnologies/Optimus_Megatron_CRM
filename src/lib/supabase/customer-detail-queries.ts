@@ -3,6 +3,10 @@ import { createAdminClient } from "@/src/lib/supabase/admin";
 
 import type { CustomerProfile } from "@/src/lib/types/customer";
 import type { CustomerTag } from "@/src/lib/supabase/customer-lookups";
+import { decideModulePermission, type ModuleSupabaseClient } from "@/src/lib/supabase/module-permission-core";
+
+/** Transition fallback only — see module-permissions.ts. */
+const ELEVATED_CUSTOMER_NOTE_ROLES = ["Super Admin", "Admin", "Manager"] as const;
 
 /* =========================================================
    TYPES
@@ -322,12 +326,17 @@ export async function getCustomerNotesWithAuthors(customerId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: currentProfile } = user
-    ? await supabase.from("profiles").select("roles(name)").eq("id", user.id).single()
-    : { data: null };
-  const currentRoleName = (currentProfile?.roles as unknown as { name: string } | null)?.name;
-  const canManageAllNotes =
-    !!currentRoleName && ["Super Admin", "Admin", "Manager"].includes(currentRoleName);
+  const canManageAllNotes = user
+    ? (
+        await decideModulePermission(
+          supabase as unknown as ModuleSupabaseClient,
+          user.id,
+          "customers.notes_manage",
+          ELEVATED_CUSTOMER_NOTE_ROLES,
+          "",
+        )
+      ).allowed
+    : false;
 
   return { notes: notes ?? [], authorNames, currentUserId: user?.id ?? null, canManageAllNotes };
 }

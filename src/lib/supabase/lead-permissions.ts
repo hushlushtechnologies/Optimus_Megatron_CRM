@@ -1,23 +1,39 @@
-import { createClient } from "@/src/lib/supabase/server";
+import "server-only";
 
-const ELEVATED_LEAD_ROLES = ["Super Admin", "Admin", "Manager"];
+import { requireModulePermission } from "@/src/lib/supabase/module-permissions";
+
+/*
+| Sprint 11: leads.manage, leads.delete and leads.notes_manage replace the
+| role-name arrays. The arrays survive only as the transition fallback
+| described in module-permissions.ts.
+|
+| leads.manage is granted to exactly the roles that CUSTOMER_MANAGER_ROLES
+| held, because until now every lead action was guarded by the customer array.
+*/
+const LEAD_MANAGER_ROLES = ["Super Admin", "Admin", "Manager", "Sales Executive"] as const;
+const ELEVATED_LEAD_ROLES = ["Super Admin", "Admin", "Manager"] as const;
+
+export async function assertCanManageLeads(): Promise<{ allowed: boolean; error: string | null }> {
+  return requireModulePermission(
+    "leads.manage",
+    LEAD_MANAGER_ROLES,
+    "You don't have permission to perform this action.",
+  );
+}
 
 export async function assertCanDeleteLeads(): Promise<{ allowed: boolean; error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  return requireModulePermission(
+    "leads.delete",
+    ELEVATED_LEAD_ROLES,
+    "You don't have permission to permanently delete a lead.",
+  );
+}
 
-  if (!user) {
-    return { allowed: false, error: "You must be signed in to do this." };
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
-  const roleName = (profile?.roles as unknown as { name: string } | null)?.name;
-
-  if (!roleName || !ELEVATED_LEAD_ROLES.includes(roleName)) {
-    return { allowed: false, error: "Only Super Admin, Admin, or Manager can permanently delete a lead." };
-  }
-
-  return { allowed: true, error: null };
+/** Edit and delete notes written by other members of staff. */
+export async function assertCanManageAllLeadNotes(): Promise<{ allowed: boolean; error: string | null }> {
+  return requireModulePermission(
+    "leads.notes_manage",
+    ELEVATED_LEAD_ROLES,
+    "You can only edit your own notes.",
+  );
 }

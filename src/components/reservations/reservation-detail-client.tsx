@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, Phone } from "lucide-react";
+import { ArrowLeft, Phone, UserCog } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { CustomerAvatar } from "@/src/components/customers/customer-avatar";
 import { SalesExpiryChip } from "@/src/components/sales/sales-expiry-chip";
@@ -13,6 +14,7 @@ import {
   effectiveReservationStatus,
 } from "@/src/components/reservations/reservation-status-badge";
 import { RESERVATION_ACTION_ICON } from "@/src/components/reservations/reservation-actions-menu";
+import { ReservationOwnerDialog } from "@/src/components/reservations/reservation-owner-dialog";
 import { useReservationActions } from "@/src/components/reservations/use-reservation-actions";
 import { useMotion } from "@/src/hooks/use-motion";
 import { RESERVATION_ACTION_META, availableReservationActions } from "@/src/lib/utils/reservation-actions";
@@ -22,6 +24,7 @@ import { formatFils } from "@/src/lib/utils/sales-money";
 import { formatDateTimeFull } from "@/src/lib/utils/test-drive-format";
 import type { ReservationDetailData } from "@/src/lib/types/reservations";
 import type { SalesPermissions } from "@/src/lib/utils/sales-permissions";
+import type { AssignableStaff } from "@/src/lib/supabase/reservation-owner-queries";
 import { PaymentsPanel } from "@/src/components/sales/payments/payments-panel";
 import { RESERVATION_PAYMENT_KINDS } from "@/src/lib/utils/sales-payments";
 import { toFils } from "@/src/lib/utils/sales-money";
@@ -37,6 +40,8 @@ interface ReservationDetailClientProps {
   payments: DealPayment[] | null;
   separateVerifier: boolean | null;
   documents: SalesDocumentItem[] | null;
+  /** Active staff who may own a reservation, read on the server. */
+  assignableOwners: AssignableStaff[];
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -55,10 +60,12 @@ export function ReservationDetailClient({
   payments,
   separateVerifier,
   documents,
+  assignableOwners,
 }: ReservationDetailClientProps) {
   const { reservation: r, timeline, settings } = data;
   const { fadeUp } = useMotion();
   const actions = useReservationActions(settings);
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
 
   const effective = effectiveReservationStatus(r);
   const available = availableReservationActions(r, permissions, currentUserId);
@@ -275,7 +282,27 @@ export function ReservationDetailClient({
         >
           <p className="text-label">Details</p>
           <dl className="divide-border divide-y">
-            <Row label="Owner">{r.owner_name ?? <span className="text-text-subtle">Unassigned</span>}</Row>
+            <Row label="Owner">
+              <span className="flex flex-wrap items-center gap-2">
+                {r.owner_name ?? <span className="text-text-subtle">Unassigned</span>}
+
+                {/*
+                  Only a manager can hand a reservation to somebody else, which
+                  is the same permission createReservationAction() requires to
+                  assign one to anybody but yourself. The action checks again.
+                */}
+                {permissions.reservationsConfirm && (
+                  <button
+                    type="button"
+                    onClick={() => setOwnerDialogOpen(true)}
+                    className="text-text-muted hover:text-text-primary inline-flex items-center gap-1 text-[12px] transition-colors"
+                  >
+                    <UserCog className="size-3.5" aria-hidden="true" />
+                    Hand over
+                  </button>
+                )}
+              </span>
+            </Row>
             <Row label="Source">{RESERVATION_SOURCE_LABELS[r.source]}</Row>
             <Row label="Requested">
               {formatDateTimeFull(r.requested_at)}
@@ -330,6 +357,15 @@ export function ReservationDetailClient({
       </div>
 
       {actions.dialogs}
+
+      <ReservationOwnerDialog
+        open={ownerDialogOpen}
+        onClose={() => setOwnerDialogOpen(false)}
+        reservationId={r.id}
+        currentOwnerId={r.owner_id}
+        currentOwnerName={r.owner_name}
+        assignable={assignableOwners}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { getReservationDetail } from "@/src/lib/supabase/reservation-queries";
 import { isUuid } from "@/src/lib/utils/search-term";
 import { ReservationDetailClient } from "@/src/components/reservations/reservation-detail-client";
 import { getPaymentRules, getReservationPayments } from "@/src/lib/supabase/sales-payment-queries";
+import { getAssignableReservationOwners } from "@/src/lib/supabase/reservation-owner-queries";
 import { getSalesDocuments } from "@/src/lib/supabase/sales-document-queries";
 
 interface ReservationPageProps {
@@ -49,10 +50,11 @@ export default async function ReservationPage({ params }: ReservationPageProps) 
     );
   }
 
-  const [result, payments, rules] = await Promise.all([
+  const [result, payments, rules, assignableOwners] = await Promise.all([
     getReservationDetail(id),
     getReservationPayments(id),
     getPaymentRules(),
+    getAssignableReservationOwners(),
   ]);
   if (result.status === "not_found") notFound();
 
@@ -74,6 +76,7 @@ export default async function ReservationPage({ params }: ReservationPageProps) 
       payments={payments}
       separateVerifier={rules.separateVerifier}
       documents={documents}
+      assignableOwners={assignableOwners}
     />
   );
 }

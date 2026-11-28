@@ -2,10 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/lib/supabase/server";
-import { assertCanManageCustomers } from "@/src/lib/supabase/customer-permissions";
 import type { LeadNote } from "@/src/lib/types/lead";
-
-const ELEVATED_ROLES = ["Super Admin", "Admin", "Manager"];
+import { assertCanManageAllLeadNotes, assertCanManageLeads } from "@/src/lib/supabase/lead-permissions";
 
 async function assertCanModifyLeadNote(noteId: string): Promise<{ allowed: boolean; error: string | null }> {
   const supabase = await createClient();
@@ -14,23 +12,21 @@ async function assertCanModifyLeadNote(noteId: string): Promise<{ allowed: boole
   } = await supabase.auth.getUser();
   if (!user) return { allowed: false, error: "You must be signed in to do this." };
 
-  const [{ data: note }, { data: profile }] = await Promise.all([
+  const [{ data: note }, elevated] = await Promise.all([
     supabase.from("lead_notes").select("created_by").eq("id", noteId).single(),
-    supabase.from("profiles").select("roles(name)").eq("id", user.id).single(),
+    assertCanManageAllLeadNotes(),
   ]);
 
-  const roleName = (profile?.roles as unknown as { name: string } | null)?.name;
   const isOwner = note?.created_by === user.id;
-  const isElevated = !!roleName && ELEVATED_ROLES.includes(roleName);
 
-  if (!isOwner && !isElevated) {
+  if (!isOwner && !elevated.allowed) {
     return { allowed: false, error: "You can only edit or archive notes you created." };
   }
   return { allowed: true, error: null };
 }
 
 export async function createLeadNote(leadId: string, noteText: string, isInternal: boolean) {
-  const permission = await assertCanManageCustomers();
+  const permission = await assertCanManageLeads();
   if (!permission.allowed) return { error: permission.error, note: undefined };
 
   if (!noteText.trim()) return { error: "Note cannot be empty.", note: undefined };
